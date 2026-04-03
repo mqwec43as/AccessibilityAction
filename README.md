@@ -3,4 +3,4 @@
 The codes here need to be ran via Java Code action, which is available only on v6.6 upwards.
 
 >[!WARNING]
->The codes in this repo were mainly generated with the assistance using AI tools.
+>The codes in this repo were mainly generated with the assistance of AI tools.
