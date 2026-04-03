@@ -1,0 +1,63 @@
+name: Release AccessibilityAction Zip
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Create Zip Archive
+        run: |
+          # 1. Enter the folder
+          cd code
+          
+          # 2. Create the zip (using ** for recursive exclusion patterns)
+          zip -r AccessibilityAction.zip . \
+          -x "**/*.sync-conflict*" \
+          "**/~syncthing~*" \
+          "**/log.txt" \
+          "*.db" \
+          "*.mp4" \
+          "*.java.cache" \
+          "*.disk" \
+          "**/.demo/*" \
+          "**/.dev/*" \
+          "**/cache/*" \
+          "**/.git/*" \
+          "**/.github/*" \
+          "**/.*"
+
+          # 3. MOVE the zip to the root workspace so the next steps find it
+          mv AccessibilityAction.zip ../AccessibilityAction.zip
+
+      - name: Create Release and Upload Asset
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          files: AccessibilityAction.zip
+          # Ensure this path to your notes is correct relative to the root
+          body_path: releases/${{ github.ref_name }}/release_notes.md
+          generate_release_notes: true
+
+      - name: Upload Artifacts (Manual Run)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v6
+        with:
+          path: AccessibilityAction.zip
+          if-no-files-found: error
