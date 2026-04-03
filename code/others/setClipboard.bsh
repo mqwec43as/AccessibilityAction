@@ -1,0 +1,37 @@
+import android.content.Context;
+import android.content.ClipboardManager;
+import android.content.ClipData;
+import com.joaomgcd.taskerm.action.java.JavaCodeException;
+
+/*───────────────────────────────────────────────────────────────
+setClipboard(String text)
+**Sets System Clipboard**
+Copies the provided text to the Android system clipboard.
+
+Arguments:
+
+* text → The string content to copy.
+
+Example:
+setClipboard("Hello from Tasker!");
+───────────────────────────────────────────────────────────────*/
+setClipboard(text) {
+	if (text == null) {
+		return;
+	}
+
+
+	/* Get the Clipboard Manager service. */
+	cm = context.getSystemService(Context.CLIPBOARD_SERVICE);
+
+	if (cm == null) {
+		throw new JavaCodeException("Failed to get ClipboardManager service.");
+	}
+
+	/* Create a ClipData object with the text. Label is set to 'Tasker'. */
+	clip = ClipData.newPlainText("Tasker", text);
+
+	/* Set the primary clip. */
+	cm.setPrimaryClip(clip);
+
+}

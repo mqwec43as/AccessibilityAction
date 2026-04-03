@@ -1,0 +1,31 @@
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.graphics.Rect;
+import java.util.HashMap;
+import java.util.Map;
+
+/*───────────────────────────────────────────────────────────────
+getNodeCoordinates(AccessibilityNodeInfo node)
+**Get Node Center Coordinates**
+Calculates the center pixel coordinates of a node.
+Uses standard integer division. Note: In integer math, 1 / 2 = 0.
+
+Arguments:
+
+* node → The accessibility node to measure.
+
+Example:
+coords = getNodeCoordinates(node);
+───────────────────────────────────────────────────────────────*/
+public Object getNodeCoordinates(AccessibilityNodeInfo node) {
+	if (node == null) {
+		return null;
+	}
+	Rect rect = new Rect();
+	node.getBoundsInScreen(rect);
+	int centerX = rect.left + (rect.width() / 2);
+	int centerY = rect.top + (rect.height() / 2);
+
+	_result.x = centerX;
+	_result.y = centerY;
+	return _result;
+}

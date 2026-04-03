@@ -1,0 +1,74 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
+import java.util.ArrayList;
+import java.util.HashMap;
+/*───────────────────────────────────────────────────────────────
+ * collapse(String key, String value, int index, boolean checkparent)
+ * **Collapse Node**
+ * Finds and collapses the target node, or a sibling expandable parent/child.
+ *
+ * Arguments:
+ * * - key → Target node selector type.
+ * * - value → Target node identifier.
+ * * - index → Node index (0 for first match).
+ * * - checkParent → true = search parent chain, false = search child hierarchy.
+ *
+ * Example:
+ * collapse("text", "Details", 0, true);
+ * ───────────────────────────────────────────────────────────────*/
+collapse(AccessibilityNodeInfo node, int index, boolean checkparent) {
+	if (node == null) return;
+	AccessibilityNodeInfo node = getNode(key, value, index);
+	if (node == null) return;
+
+	AccessibilityNodeInfo candidate = node;
+
+	if (checkparent) {
+		// climb up to collapsible parent
+		while (candidate != null) {
+			if (isExpandable(candidate) &&
+				candidate.getActionList().contains(
+					new AccessibilityNodeInfo.AccessibilityAction(
+						AccessibilityNodeInfo.ACTION_COLLAPSE, null))) {
+				break;
+			}
+			candidate = candidate.getParent();
+		}
+	} else {
+		candidate = findExpandableChild(candidate);
+	}
+
+	if (candidate == null) return false;
+	candidate.performAction(AccessibilityNodeInfo.ACTION_COLLAPSE
+	candidate.refresh();
+	if (stepDelay > 0) wait(stepDelay);
+	return candidate;
+}
+
+collapse(String key, String value, int index, boolean checkparent) {
+	AccessibilityNodeInfo node = getNode(key, value, index);
+	return collapse(node, index, checkparent);
+
+}
+
+collapse(ArrayList nodes, int index, boolean checkparent) {
+	node = toNode(nodes);
+	if (node == null) return;
+	return collapse(node, index, checkparent);
+}
+
+collapse(HashMap nodes, int index, boolean checkparent) {
+	node = toNode(nodes);
+	if (node == null) return;
+	return collapse(node, index, checkparent);
+}
+
+collapse(HashMap nodes, String key, int index, boolean checkparent) {
+	node = toNode(nodes, key);
+	if (node == null) return;
+	return collapse(node, index, checkparent);
+}

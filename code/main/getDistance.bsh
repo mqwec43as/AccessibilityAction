@@ -1,0 +1,23 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI.
+───────────────────────────────────────────────────────────────*/
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.graphics.Rect;
+import android.graphics.Point;
+
+/*───────────────────────────────────────────────────────────────
+getDistance(AccessibilityNodeInfo node1, AccessibilityNodeInfo node2)
+**Calculate Distance Between Two Nodes**
+───────────────────────────────────────────────────────────────*/
+getDistance(AccessibilityNodeInfo node1, AccessibilityNodeInfo node2) {
+    Point c1 = (Point) getCoordinates(node1);
+    Point c2 = (Point) getCoordinates(node2);
+    
+    if (c1 == null || c2 == null) return 99999.0;
+    
+    // Calculate differences
+    double dx = c1.x - c2.x;
+    double dy = c1.y - c2.y;
+    
+    return Math.sqrt(dx * dx + dy * dy);
+}

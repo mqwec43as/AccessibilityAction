@@ -1,0 +1,33 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
+import java.util.List;
+/*───────────────────────────────────────────────────────────────
+ * findExpandableChild(AccessibilityNodeInfo node)
+ * **Find Expandable Child**
+ * Searches downwards for the first child node that is currently expandable.
+ *
+ * Arguments:
+ * * - node → The starting node.
+ *
+ * Example:
+ * AccessibilityNodeInfo hiddenDetails = findExpandableChild(sectionHeader);
+ * ───────────────────────────────────────────────────────────────*/
+AccessibilityNodeInfo findExpandableChild(AccessibilityNodeInfo node) {
+	if (node == null) return null;
+	if (isExpandable(node)) {
+		for (AccessibilityNodeInfo.AccessibilityAction a: node.getActionList()) {
+			if (a.getId() == AccessibilityNodeInfo.ACTION_COLLAPSE)
+				return node;
+		}
+	}
+	for (int i = 0; i < node.getChildCount(); i++) {
+		AccessibilityNodeInfo child = node.getChild(i);
+		AccessibilityNodeInfo found = findExpandableChild(child);
+		if (found != null) return found;
+	}
+	return null;
+}

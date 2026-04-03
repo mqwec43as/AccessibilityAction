@@ -1,0 +1,167 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.os.Bundle;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+/*───────────────────────────────────────────────────────────────
+setSelection(...)
+**Sets Text Selection/Cursor Position**
+Finds a node and sets the text selection range. Useful for
+highlighting text or moving the cursor in an input field.
+
+Arguments:
+
+* target/nodes → The specific node or collection.
+* start → Starting index (0-based).
+* end → Ending index (-1 usually indicates end of text).
+* value → The text/ID value to search for the field.
+* key → The attribute to search by (default is "text").
+* index → The instance index if multiple matches exist.
+* timeout → Max time to wait for the node.
+
+Returns:
+
+* The AccessibilityNodeInfo where selection was set, or null.
+───────────────────────────────────────────────────────────────*/
+
+/* Base Selection Logic */
+setSelection(AccessibilityNodeInfo target, int start, int end) {
+	if (target == null) return null;
+
+
+	/* Handle -1 as a shortcut for the end of the current text */
+	if (end == -1 && target.getText() != null) {
+		end = target.getText().length();
+	}
+
+	args = new Bundle();
+	args.putInt("ACTION_ARGUMENT_SELECTION_START_INT", start);
+	args.putInt("ACTION_ARGUMENT_SELECTION_END_INT", end);
+	target.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, args);
+	target.refresh();
+	if (stepDelay > 0) wait(stepDelay);
+	return target;
+
+
+
+}
+
+/* Collection Overloads */
+setSelection(ArrayList nodes, int start, int end) {
+	return setSelection(toNode(nodes), start, end);
+}
+
+setSelection(ArrayList nodes, int index, int start, int end) {
+	return setSelection(toNode(nodes, index), start, end);
+}
+
+setSelection(HashMap nodes, int start, int end) {
+	return setSelection(toNode(nodes), start, end);
+}
+
+setSelection(HashMap nodes, String key, int start, int end) {
+	return setSelection(toNode(nodes, key), start, end);
+}
+
+/* Basic Search Overloads (Text-based) */
+setSelection(String value, int start, int end) {
+	return setSelection("text", value, start, end, 0);
+}
+
+setSelection(String value, int start, int end, int index) {
+	return setSelection("text", value, start, end, index);
+}
+
+setSelection(String value, int start, int end, long timeout) {
+	return setSelection(getNode(getRoot(), "text", value, 0, timeout), start, end);
+}
+
+/* Key-Value Search Overloads */
+setSelection(String key, String value, int start, int end) {
+	return setSelection(key, value, start, end, 0);
+}
+
+setSelection(String key, String value, int start, int end, int index) {
+	node = getNode(getRoot(), key, value, index);
+	return setSelection(node, start, end);
+}
+
+setSelection(String key, String value, int start, int end, int index, long timeout) {
+	return setSelection(getNode(getRoot(), key, value, index, timeout), start, end);
+}
+
+/* Focus and Shortcut Overloads */
+setSelection(int start, int end) {
+	/* Targets the currently focused input field */
+	return setSelection("focus", null, start, end, 0);
+}
+
+setSelection() {
+	/* Select All on the focused field */
+	return setSelection("focus", null, 0, -1, 0);
+}
+
+/* Complex Search Overloads (Root and Configs) */
+setSelection(AccessibilityNodeInfo root, String value, int start, int end) {
+	return setSelection(getNode(root, value), start, end);
+}
+
+setSelection(String value, int start, int end, Object[][] argsConfigs) {
+	return setSelection(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs), start, end);
+}
+
+/* Parent and Sibling Overloads */
+setSelection(String value, int start, int end, int parentLevel, String siblingValue) {
+	return setSelection(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), start, end);
+}
+
+setSelection(String key, String value, int start, int end, int parentLevel, String siblingKey, String siblingValue) {
+	return setSelection(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), start, end);
+}
+
+/* AccessibilityNodeInfo Root specific variants */
+setSelection(AccessibilityNodeInfo root, String key, String value, int start, int end, int index, long timeout) {
+	return setSelection(getNode(root, key, value, index, timeout), start, end);
+}
+
+import android.view.accessibility.AccessibilityNodeInfo;
+
+/*───────────────────────────────────────────────────────────────
+setSelection(AccessibilityNodeInfo root, ...)
+**New Overloads with Root Entry Parameter**
+These methods allow setting text selection on nodes found
+relative to a specific AccessibilityNodeInfo root instead of
+the global root.
+───────────────────────────────────────────────────────────────*/
+
+setSelection(AccessibilityNodeInfo root, String value, int start, int end, int index) {
+	return setSelection(getNode(root, "text", value, index), start, end);
+}
+
+setSelection(AccessibilityNodeInfo root, String value, int start, int end, long timeout) {
+	return setSelection(getNode(root, "text", value, 0, timeout), start, end);
+}
+
+setSelection(AccessibilityNodeInfo root, String key, String value, int start, int end) {
+	return setSelection(root, key, value, start, end, 0);
+}
+
+setSelection(AccessibilityNodeInfo root, String key, String value, int start, int end, int index) {
+	return setSelection(getNode(root, key, value, index), start, end);
+}
+
+setSelection(AccessibilityNodeInfo root, String value, int start, int end, Object[][] argsConfigs) {
+	return setSelection(getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs), start, end);
+}
+
+setSelection(AccessibilityNodeInfo root, String value, int start, int end, int parentLevel, String siblingValue) {
+	return setSelection(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), start, end);
+}
+
+setSelection(AccessibilityNodeInfo root, String key, String value, int start, int end, int parentLevel, String siblingKey, String siblingValue) {
+	return setSelection(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), start, end);
+}

@@ -1,0 +1,64 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+
+/*───────────────────────────────────────────────────────────────
+  findNearbyNodes(AccessibilityNodeInfo sourceNode, int parentLevel, String key, String value)
+  **Climb, Search, and Sort Siblings**
+  Climbs the tree to find matching nodes and returns them sorted by distance.
+  ───────────────────────────────────────────────────────────────*/
+ArrayList findNearbyNodes(sourceNode, parentLevel, key, value) {
+	if (sourceNode == null || sourceNode == void) return new ArrayList();
+	currentParent = sourceNode;
+	climbed = 0;
+	while (climbed < parentLevel) {
+		tempParent = currentParent.getParent();
+		if (tempParent == null) break;
+		currentParent = tempParent;
+		climbed++;
+	}
+
+	nearbyCandidates = findNodes(currentParent, key, value);
+	nearbyNodes = new ArrayList();
+	
+	limit = (nearbyDistance == void) ? 10000.0 : (double) nearbyDistance;
+
+	for (k = 0; k < nearbyCandidates.size(); k++) {
+		cand = (AccessibilityNodeInfo) nearbyCandidates.get(k);
+		dist = getDistance(cand, sourceNode);
+		
+		/* Match only within the radius */
+		if (dist <= limit) {
+			Map item = new HashMap();
+			item.put("node", cand);
+			item.put("distance", new Double(dist));
+			nearbyNodes.add(item);
+		}
+	}
+
+	/* Sort: Shortest (nearest) first, Furthest last */
+	distComparator = new Comparator() {
+		compare(Object a, Object b) {
+			double d1 = ((Double) ((Map) a).get("distance")).doubleValue();
+			double d2 = ((Double) ((Map) b).get("distance")).doubleValue();
+			if (d1 < d2) return -1;
+			if (d1 > d2) return 1;
+			return 0;
+		}
+	};
+	Collections.sort(nearbyNodes, distComparator);
+
+	finalResults = new ArrayList();
+	for (k = 0; k < nearbyNodes.size(); k++) {
+		finalResults.add(((Map) nearbyNodes.get(k)).get("node"));
+	}
+	return finalResults;
+}
+

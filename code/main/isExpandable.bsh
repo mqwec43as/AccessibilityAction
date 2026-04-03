@@ -1,0 +1,28 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
+import java.util.List;
+/*───────────────────────────────────────────────────────────────
+ * isExpandable(AccessibilityNodeInfo node)
+ * **Check Expandable State**
+ * Checks if a UI node can be expanded or collapsed.
+ *
+ * Arguments:
+ * * - node → The node to check.
+ *
+ * Example:
+ * if (isExpandable(settingsGroup)) { ... }
+ * ───────────────────────────────────────────────────────────────*/
+boolean isExpandable(AccessibilityNodeInfo node) {
+	if (node == null) return false;
+	for (AccessibilityNodeInfo.AccessibilityAction action: node.getActionList()) {
+		int id = action.getId();
+		if (id == AccessibilityNodeInfo.ACTION_EXPAND || id == AccessibilityNodeInfo.ACTION_COLLAPSE) {
+			return true;
+		}
+	}
+	return false;
+}

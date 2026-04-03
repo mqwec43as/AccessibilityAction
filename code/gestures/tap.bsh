@@ -1,0 +1,248 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI.
+───────────────────────────────────────────────────────────────*/
+import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.GestureDescription;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.graphics.Path;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
+import android.content.Context;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.Callable;
+import io.reactivex.subjects.CompletableSubject;
+import com.joaomgcd.taskerm.action.java.ClassImplementation;
+
+public boolean tap(double x, double y, long duration) {
+	Object accessibilityService = tasker.getAccessibilityService();
+	if (accessibilityService == null) return false;
+
+	AccessibilityService service = (AccessibilityService) accessibilityService;
+
+	try {
+		// Get screen size
+		WindowManager wm = (WindowManager) service.getSystemService(Context.WINDOW_SERVICE);
+		DisplayMetrics dm = new DisplayMetrics();
+		wm.getDefaultDisplay().getRealMetrics(dm);
+
+		int screenWidth = dm.widthPixels;
+		int screenHeight = dm.heightPixels;
+
+		// Normalize if between -1 and 1
+		if (Math.abs(x) <= 1.0f) x *= screenWidth;
+		if (Math.abs(y) <= 1.0f) y *= screenHeight;
+
+		// Tap path
+		Path path = new Path();
+		path.moveTo((float) x,(float) y);
+
+		GestureDescription.StrokeDescription stroke =
+			new GestureDescription.StrokeDescription(path, 0, duration, false);
+
+		GestureDescription gesture =
+			new GestureDescription.Builder().addStroke(stroke).build();
+
+		HandlerThread handlerThread = new HandlerThread("TapThread");
+		handlerThread.start();
+		Handler handler = new Handler(handlerThread.getLooper());
+
+		CompletableSubject signal = CompletableSubject.create();
+
+		ClassImplementation impl = new ClassImplementation() {
+			public Object run(Callable supercaller, String methodName, Object[] args) {
+				if (methodName.equals("onCompleted")) {
+					signal.onComplete();
+				} else if (methodName.equals("onCancelled")) {
+					signal.onError(new RuntimeException("Tap cancelled"));
+				}
+				return null;
+			}
+		};
+
+		Object callbackObj = tasker.implementClass(
+			AccessibilityService.GestureResultCallback.class,
+			impl
+		);
+
+		AccessibilityService.GestureResultCallback callback =
+			(AccessibilityService.GestureResultCallback) callbackObj;
+
+		service.dispatchGesture(gesture, callback, handler);
+
+		signal.blockingAwait();
+		handlerThread.quitSafely();
+
+		return true;
+
+	} catch (Exception e) {
+		return false;
+	}
+}
+
+
+/*─────────────────────────────────────────────────────────────── 
+  COORDINATE OVERLOADS
+───────────────────────────────────────────────────────────────*/
+
+boolean tap(double startx, double starty) {
+	return tap(startx, starty,20L);
+}
+
+boolean tap(int x, int y, long duration) {
+	return tap((double) x, (double) y, duration);
+}
+
+boolean tap(int x, int y) {
+	return tap((double) x, (double) y,20L);
+}
+
+boolean tap(float x, float y) {
+	// Screen percentage check
+	if (x >=1f || y >=1f) return false;
+	return tap((double) x, (double) y,20L);
+}
+
+boolean tap(float x, float y, long duration) {
+	if (x >=1f || y >=1f) return false;
+	return tap((double) x, (double) y, duration);
+}
+
+/*─────────────────────────────────────────────────────────────── 
+  NODE & SEARCH OVERLOADS
+───────────────────────────────────────────────────────────────*/
+
+boolean tap(AccessibilityNodeInfo node, long duration) {
+	if (node == null) return false;
+	Point coor = getCoordinates(node);
+	debugMe(node);
+	return tap(coor.x, coor.y, duration);
+}
+
+boolean tap(AccessibilityNodeInfo node) {
+	return tap(coor.x, coor.y, 20L);
+}
+/* Collection Overloads */
+boolean tap(ArrayList nodes, long duration) {
+	return tap(toNode(nodes), duration);
+}
+
+boolean tap(ArrayList nodes, int index, long duration) {
+	return tap(toNode(nodes, index), duration);
+}
+
+boolean tap(HashMap nodes, long duration) {
+	return tap(toNode(nodes), duration);
+}
+
+boolean tap(HashMap nodes, String key, long duration) {
+	return tap(toNode(nodes, key), duration);
+}
+
+boolean tap(String key, String value, int index, long duration) {
+	node = getNode(getRoot(), key, value, index);
+	if (node == null) {
+		throw new com.joaomgcd.taskerm.action.java.JavaCodeException("No node found for key=" + key + ", value=" + value);
+	}
+	return tap(node, duration);
+}
+
+/* Basic Search Overloads (Text-based) */
+boolean tap(String value, long duration) {
+	return tap("text", value, 0, duration);
+}
+
+boolean tap(String value, int index, long duration) {
+	return tap(getNode(getRoot(), "text", value, index, waitNodesTimeout), duration);
+}
+
+boolean tap(String value, long timeout, long duration) {
+	return tap(getNode(getRoot(), "text", value, 0, timeout), duration);
+}
+
+boolean tap(String value, int index, long timeout, long duration) {
+	return tap(getNode(getRoot(), "text", value, index, timeout), duration);
+}
+
+/* Key-Value Search Overloads */
+boolean tap(String key, String value, long duration) {
+	return tap(key, value, 0, duration);
+}
+
+boolean tap(String key, String value, int index, long timeout, long duration) {
+	return tap(getNode(getRoot(), key, value, index, timeout), duration);
+}
+
+/* Complex Search Overloads */
+boolean tap(AccessibilityNodeInfo root, String value, long duration) {
+	return tap(getNode(root, value), duration);
+}
+
+boolean tap(String value, Object[][] argsConfigs, long duration) {
+	return tap(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs), duration);
+}
+
+boolean tap(String value, int parentLevel, String siblingValue, long duration) {
+	return tap(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), duration);
+}
+
+boolean tap(String key, String value, int parentLevel, String siblingValue, long duration) {
+	return tap(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), duration);
+}
+
+boolean tap(String key, String value, int parentLevel, String siblingKey, String siblingValue, long duration) {
+	return tap(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), duration);
+}
+
+boolean tap(String key, String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue, long duration) {
+	return tap(getNode(getRoot(), key, value, index, timeout, parentLevel, siblingKey, siblingValue), duration);
+}
+
+/* AccessibilityNodeInfo Root specific variants */
+boolean tap(AccessibilityNodeInfo root, String key, String value, int index, long timeout, long duration) {
+	return tap(getNode(root, key, value, index, timeout), duration);
+}
+
+boolean tap(AccessibilityNodeInfo root, String value, int index, long duration) {
+	return tap(getNode(root, "text", value, index), duration);
+}
+
+boolean tap(AccessibilityNodeInfo root, String value, long timeout, long duration) {
+	return tap(getNode(root, "text", value, 0, timeout), duration);
+}
+
+boolean tap(AccessibilityNodeInfo root, String value, int index, long timeout, long duration) {
+	return tap(getNode(root, "text", value, index, timeout), duration);
+}
+
+boolean tap(AccessibilityNodeInfo root, String key, String value, long duration) {
+	return tap(root, key, value, 0, duration);
+}
+
+boolean tap(AccessibilityNodeInfo root, String key, String value, int index, long duration) {
+	node = getNode(root, key, value, index);
+	if (node == null) {
+		throw new com.joaomgcd.taskerm.action.java.JavaCodeException("No node found for key=" + key + ", value=" + value + " under provided root");
+	}
+	return tap(node, duration);
+}
+
+boolean tap(AccessibilityNodeInfo root, String value, Object[][] argsConfigs, long duration) {
+	return tap(getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs), duration);
+}
+
+boolean tap(AccessibilityNodeInfo root, String value, int parentLevel, String siblingValue, long duration) {
+	return tap(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), duration);
+}
+
+boolean tap(AccessibilityNodeInfo root, String key, String value, int parentLevel, String siblingValue, long duration) {
+	return tap(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), duration);
+}
+
+boolean tap(AccessibilityNodeInfo root, String key, String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue, long duration) {
+	return tap(getNode(root, key, value, index, timeout, parentLevel, siblingKey, siblingValue), duration);
+}

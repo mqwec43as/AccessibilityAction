@@ -1,0 +1,104 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+/*───────────────────────────────────────────────────────────────
+
+* hasNode(ArrayList nodes)
+* **Verify Node Presence in List**
+* Checks if the list is non-empty and contains at least one
+* valid AccessibilityNodeInfo object.
+* Arguments:
+* * nodes → The ArrayList to check.
+
+
+* Returns:
+* boolean → True if a valid node is found.
+*───────────────────────────────────────────────────────────────*/
+boolean hasNode(ArrayList nodes) {
+	if (nodes == null || nodes.isEmpty()) return false;
+	for (int i = 0; i < nodes.size(); i++) {
+		item = nodes.get(i);
+		if (item instanceof AccessibilityNodeInfo) return true;
+	}
+	return false;
+}
+
+/*───────────────────────────────────────────────────────────────
+ * hasNode(HashMap nodes)
+ * **Verify Node Presence in Map**
+ * Checks if the map is non-empty and contains at least one
+ * valid AccessibilityNodeInfo value.
+ * Arguments:
+ * * nodes → The HashMap to check.
+ * Returns:
+ * boolean → True if a valid node is found.
+ *───────────────────────────────────────────────────────────────*/
+boolean hasNode(HashMap nodes) {
+	if (nodes == null || nodes.isEmpty()) return false;
+	it = nodes.values().iterator();
+	while (it.hasNext()) {
+		item = it.next();
+		if (item instanceof AccessibilityNodeInfo) return true;
+	}
+	return false;
+}
+
+/*───────────────────────────────────────────────────────────────
+ * hasNode(HashMap nodes, String key)
+ * **Verify Specific Key is a Node**
+ * Checks if a specific key exists and if its value is
+ * an instance of AccessibilityNodeInfo.
+ * Arguments:
+ * * nodes → The HashMap to check.
+ * * key   → The specific key to validate.
+ * Returns:
+ * boolean → True if the key exists and holds a valid node.
+ *───────────────────────────────────────────────────────────────*/
+boolean hasNode(HashMap nodes, String key) {
+	if (nodes == null || key == null) return false;
+	if (!nodes.containsKey(key)) return false;
+	item = nodes.get(key);
+	if (item instanceof ArrayList) {
+		return hasNode(item);
+	}
+	return item instanceof AccessibilityNodeInfo;
+}
+
+/*───────────────────────────────────────────────────────────────
+
+* hasNode(HashMap nodes, Object[][] targets)
+* **Verify Required Keys are Nodes**
+* Checks if the map contains all target keys AND ensures the
+* values associated with those keys are AccessibilityNodeInfo.
+* Arguments:
+* * nodes   → The HashMap to validate.
+* * targets → 2D array where targets[i][0] is the required key.
+* Returns:
+* boolean → True only if ALL targets exist and are valid nodes.
+*───────────────────────────────────────────────────────────────*/
+boolean hasNode(HashMap nodes, Object[][] targets) {
+	if (nodes == null || targets == null || targets.length == 0) return false;
+	for (int i = 0; i < targets.length; i++) {
+		targetKey = targets[i][0];
+
+		/* Check key existence */
+		if (!nodes.containsKey(targetKey)) return false;
+
+		/* Check if the value is actually a node */
+		item = nodes.get(targetKey);
+		if (!(item instanceof AccessibilityNodeInfo)) return false;
+
+
+
+	}
+	return true;
+}
+
+boolean hasNode(Object[][] targets, HashMap nodes) {
+	return hasNode(nodes, targets);
+}

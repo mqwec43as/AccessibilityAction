@@ -1,0 +1,401 @@
+/*───────────────────────────────────────────────────────────────
+This code was primarily generated using AI with minimal human editing.
+─────────────────────────────────────────────────────────────── */
+
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
+import android.view.GestureDetector;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+
+import com.google.android.material.button.MaterialButton;
+import com.joaomgcd.taskerm.action.java.JavaCodeException;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import bsh.This;
+
+
+/*───────────────────────────────────────────────────────────────
+  dp(int value)
+  ───────────────────────────────────────────────────────────────*/
+public int dp(int value) {
+	return (int) TypedValue.applyDimension(
+		TypedValue.COMPLEX_UNIT_DIP,
+		value,
+		context.getResources().getDisplayMetrics()
+	);
+}
+
+/*───────────────────────────────────────────────────────────────
+	AssistButton(int initialX, int initialY)
+	Display overlay that control StructureOverlay to inspect accessibility tree
+
+	Args:
+		- initialX: x position of the overlay, support values between 0 and 1 for percentages of the screen
+		- initialY: y position of the overlay, support values between 0 and 1 for percentages of the screen
+
+	Returns:
+		- bsh.This AssistButton	
+
+	Methods:
+		- boolean isRemoved():
+			- Returns true if the overlay is removed
+		- MaterialButton addButton(Drawable drawable):
+			- Adds a button to the overlay
+		- View addView(View view):
+			- Adds a view to the overlay
+		- void remove():
+			- Removes the overlay
+		- void show():
+			- Displays the overlay
+		- void hide():
+  ───────────────────────────────────────────────────────────────*/
+public This AssistButton(int initialX, int initialY) {
+
+	final Object accessibilityService = tasker.getAccessibilityService();
+	if (accessibilityService == null) {
+		throw new JavaCodeException("Accessibility Service not running.");
+	}
+
+	boolean useA11y = true;
+	This activeStructure;
+	boolean isRemoved;
+	boolean useA11yStructure;
+	boolean isAttached;
+
+	isRemoved() {
+		return activeStructure != null && activeStructure.isRemoved();
+	}
+
+	Context assistContext = useA11y ? accessibilityService : context.getApplicationContext();
+	WindowManager windowManager = (WindowManager) assistContext.getSystemService(Context.WINDOW_SERVICE);
+
+	int assistOverlayType = useA11y ?
+		WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY :
+		WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+
+	/* THEME */
+	This tm = ThemeManager(assistContext);
+	tm.setThemeDark();
+
+	/* ROOT & CONTAINER SETUP */
+	FrameLayout assistButton = new FrameLayout(assistContext);
+	LinearLayout container = new LinearLayout(assistContext);
+	container.setOrientation(LinearLayout.VERTICAL);
+
+	GradientDrawable bg = new GradientDrawable();
+	bg.setShape(GradientDrawable.RECTANGLE);
+	bg.setCornerRadius(dp(28));
+	bg.setColor(tm.attr("colorSurfaceContainerHighest"));
+
+	container.setBackground(bg);
+	container.setPadding(dp(6), dp(6), dp(6), dp(6));
+
+	FrameLayout.LayoutParams containerParams = new FrameLayout.LayoutParams(-1, -2);
+	container.setLayoutParams(containerParams);
+	assistButton.addView(container);
+
+	List buttons = new ArrayList();
+	Handler mainHandler = new Handler(Looper.getMainLooper());
+	GestureDetector detector;
+
+	/* WINDOW PARAMS */
+	WindowManager.LayoutParams assistParams = new WindowManager.LayoutParams(
+		dp(64), dp(72),
+		assistOverlayType,
+		WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+		PixelFormat.TRANSLUCENT
+	);
+	assistParams.gravity = Gravity.TOP | Gravity.LEFT;
+	assistParams.x = initialX;
+	assistParams.y = initialY;
+
+	/*────────────────────────────
+	  UTILITY METHODS
+	────────────────────────────*/
+
+	ensureLayout(View v) {
+		if (v.getLayoutParams() == null) {
+			v.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+		}
+	}
+
+	refreshSize() {
+		container.measure(
+			View.MeasureSpec.makeMeasureSpec(assistParams.width, View.MeasureSpec.EXACTLY),
+			View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+		);
+		int measuredHeight = container.getMeasuredHeight();
+		assistParams.height = measuredHeight;
+
+		if (!isAttached) return;
+		try {
+			windowManager.updateViewLayout(assistButton, (WindowManager.LayoutParams) assistParams);
+		} catch (e) {}
+	}
+
+	/* Modified styling to include inter-button spacing */
+	styleButton(MaterialButton btn, boolean isFirst) {
+		/* Set Layout Params with Top Margin only if NOT the first item */
+		int topMargin = isFirst ? 0 : dp(6);
+		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
+		lp.setMargins(0, topMargin, 0, 0);
+		btn.setLayoutParams(lp);
+		btn.setIconSize(dp(32));
+		btn.setIconPadding(0);
+		btn.setInsetTop(0);
+		btn.setInsetBottom(0);
+		btn.setMinimumWidth(0);
+		btn.setMinimumHeight(0);
+		btn.setPadding(0, 0, 0, 0);
+		btn.setGravity(Gravity.CENTER); // Gravity.CENTER
+		btn.setIconGravity(2); // MaterialButton.ICON_GRAVITY_TEXT_START
+	}
+
+	addButton(Drawable drawable) {
+		ContextThemeWrapper btnWrap = tm.wrapper("Widget.Material3.Button.TonalButton");
+		MaterialButton btn = new MaterialButton(btnWrap);
+		btn.setIcon(drawable);
+
+		/* If container has no views, this is the first. 
+		   Otherwise, add margin to separate from the previous button. */
+		boolean isFirst = (container.getChildCount() == 0);
+		styleButton(btn, isFirst);
+
+		container.addView(btn);
+		buttons.add(btn);
+		refreshSize();
+		return btn;
+	}
+
+	addView(View view) {
+		if (view == null) return null;
+		ensureLayout(view);
+		container.addView(view);
+		buttons.add(view);
+		refreshSize();
+		return view;
+	}
+
+	/*────────────────────────────
+	  HANDLE (Added first, so it gets 0 top margin)
+	────────────────────────────*/
+	MaterialButton handle = new MaterialButton(assistContext);
+	styleButton(handle, true);
+	handle.setIcon(tm.attr("mw_image_filter_center_focus"));
+	container.addView(handle);
+
+	/* INITIAL BUTTON (Added second, will get the top margin) */
+
+	MaterialButton secondBtn = addButton(tm.attr("mw_action_accessibility"));
+	setSecond() {
+		// Determine colors based on state
+		int bgColor;
+		int iconColor;
+		if (useA11yStructure) {
+			// Active State
+			bgColor = tm.attr("colorPrimary");
+			iconColor = tm.attr("colorOnPrimary");
+		} else {
+			// Inactive State (Transparent or Surface)
+			bgColor = Color.TRANSPARENT;
+			iconColor = tm.attr("colorOnSurface");
+		}
+		secondBtn.setSupportBackgroundTintList(android.content.res.ColorStateList.valueOf(bgColor));
+		secondBtn.setIconTint(android.content.res.ColorStateList.valueOf(iconColor));
+	}
+	setSecond();
+
+	secondListener() {
+		onSingleTapConfirmed() {
+			vibrate(secondBtn);
+			useA11yStructure = !useA11yStructure;
+			removeStructure();
+			if (useA11yStructure) {
+				tasker.showToast("Use accessibility");
+			} else {
+				tasker.showToast("Use normal overlay");
+			}
+			setSecond();
+		}
+		onLongPress() {
+			vibrate(secondBtn);
+			This a11y = tasker.getJavaVariable("a11Y");
+			if (useA11yStructure) {
+				a11y.useA11yOffset = !a11y.useA11yOffset;
+				tasker.showToast("A11y Offset: " + a11y.useA11yOffset);
+			} else {
+				a11y.useOffset = !a11y.useOffset;
+				tasker.showToast("Offset: " + a11y.useOffset);
+			}
+			removeStructure();
+		}
+		return this;
+	}
+
+	This secondGesture = SimpleGesture(secondBtn, secondListener());
+	/*────────────────────────────
+	  DRAG & REMOVE LOGIC
+	────────────────────────────*/
+	float initialTouchX;
+	float initialTouchY;
+
+	fallback(MotionEvent motionEvent) {
+		float startFingerX = motionEvent.getRawX();
+		float startFingerY = motionEvent.getRawY();
+		int startViewX = initialX + (int)(startFingerX - initialTouchX);
+		int startViewY = initialY + (int)(startFingerY - initialTouchY);
+		assistParams.x = startViewX;
+		assistParams.y = startViewY;
+		try {
+			windowManager.updateViewLayout(assistButton, assistParams);
+		} catch (e) {}
+	}
+
+	remove() {
+		mainHandler.post(new Runnable() {
+			run() {
+				try {
+					windowManager.removeView(assistButton);
+				} catch (e) {}
+			}
+		});
+		tasker.getJavaVariable("a11Y").clean();
+	}
+
+	removeStructure() {
+		mainHandler.post(new Runnable() {
+			run() {
+				if (activeStructure != null && !activeStructure.isRemoved()) {
+					activeStructure.remove();
+				}
+			}
+		});
+	}
+
+	displayOverlay() {
+		mainHandler.post(displayOverlay);
+	}
+
+	displayStructure() {
+		try {
+			if (useA11yStructure) remove();
+			activeStructure = StructureOverlay(useA11yStructure);
+			activeStructure.show();
+			if (useA11yStructure) displayOverlay();
+		} catch (e) {
+			tasker.showToast(e.getMessage());
+		}
+	}
+
+	toggleStructure() {
+		try {
+			if (activeStructure != null && !activeStructure.isRemoved()) {
+				activeStructure.remove();
+			} else {
+				displayStructure();
+			}
+		} catch (e) {
+			tasker.showToast(e.getMessage());
+		}
+	}
+
+	/*────────────────────────────
+	  GESTURE LISTENER
+	────────────────────────────*/
+	gestureListener() {
+		onLongPress() {
+			vibrate(assistButton);
+			tasker.showToast("Closing Overlays");
+			remove();
+			removeStructure();
+		}
+		onSingleTapConfirmed() {
+			toggleStructure();
+		}
+		onDoubleTap() {
+			if (activeStructure != null) activeStructure.unhideBoxes();
+			return true;
+		}
+		return this;
+	}
+
+	This simpleGesture = SimpleGesture(handle, gestureListener());
+
+	handle.setOnTouchListener(new View.OnTouchListener() {
+		onTouch(View v, MotionEvent event) {
+			detector.onTouchEvent(event);
+			switch (event.getAction()) {
+				case 0: // ACTION_DOWN
+					initialX = assistParams.x;
+					initialY = assistParams.y;
+					initialTouchX = event.getRawX();
+					initialTouchY = event.getRawY();
+					return true;
+				case 2: // ACTION_MOVE
+					assistParams.x = initialX + (int)(event.getRawX() - initialTouchX);
+					assistParams.y = initialY + (int)(event.getRawY() - initialTouchY);
+					try {
+						windowManager.updateViewLayout(assistButton, assistParams);
+					} catch (e) {}
+					return true;
+			}
+			return false;
+		}
+	});
+
+	Runnable displayOverlay = new Runnable() {
+		run() {
+			if (detector == null) {
+				detector = simpleGesture.getDetector();
+			}
+
+			secondGesture.listen();
+			windowManager.addView(assistButton, assistParams);
+		}
+	};
+
+	show() {
+		mainHandler.post(displayOverlay);
+	}
+
+	assistButton.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+		onViewAttachedToWindow(View v) {
+			isAttached = true;
+			refreshSize();
+		}
+		onViewDetachedFromWindow(View v) {
+			isAttached = false;
+		}
+	});
+
+	return this;
+}
+
+public This AssistButton(float x, float y) {
+	DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+	int width = metrics.widthPixels;
+	int height = metrics.heightPixels;
+	int finalX = (x >=0f && x <=1f) ? (int)(x * width) : (int) x;
+	int finalY = (y >=0f && y <=1f) ? (int)(y * height) : (int) y;
+	return AssistButton(finalX, finalY);
+}
+
+public This AssistButton(double x, double y) {
+	return AssistButton((float) x, (float) y);
+}

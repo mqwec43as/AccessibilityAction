@@ -1,0 +1,49 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+/*───────────────────────────────────────────────────────────────
+ * scrollBackward(String key, String value, int index)
+ * **Scroll Backward**
+ * Scrolls the scrollable container **backward** (e.g., up/left).
+ * If no parameters, scrolls the first scrollable container on the screen.
+ *
+ * Arguments:
+ * * - key → Target node selector type.
+ * * - value → Target node identifier.
+ * * - index → Node index (0 for first match).
+ *
+ * Example (Screen-wide):
+ * scrollBackward();
+ * ───────────────────────────────────────────────────────────────*/
+scrollBackward(AccessibilityNodeInfo target, int index) {
+	target = getNode(key, value, index);
+	while (!target.isScrollable() && target.getParent() != null)
+		target = target.getParent();
+	target.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+	target.refresh();
+	if (stepDelay > 0) wait(stepDelay);
+	return target;
+}
+
+scrollBackward(String key, String value, int index) {
+	target = getNode(key, value, index);
+	return scrollBackward(target, index);
+}
+
+scrollBackward() {
+	AccessibilityNodeInfo root = getRoot();
+	if (root == null) {
+		tasker.log("No active root window found.", LOG_FILE);
+		return false;
+	}
+
+	AccessibilityNodeInfo scrollNode = findScrollableNode(root);
+	if (scrollNode == null) {
+		tasker.log("No scrollable node found on screen.", LOG_FILE);
+		return false;
+	}
+
+	return scollBackward(scrollNode, 0);
+}

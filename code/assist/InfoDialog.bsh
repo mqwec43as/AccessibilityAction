@@ -1,0 +1,295 @@
+/*────────────────────────────────────────────────────────────────
+This code was primarily generated using AI with minimal human editing.
+──────────────────────────────────────────────────────────────── */
+
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Spanned;
+import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
+import android.view.GestureDetector;
+import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import bsh.This;
+
+
+
+/*───────────────────────────────────────────────────────────────
+  UTILITY METHODS
+  Helper functions for data processing and UI scaling
+  ───────────────────────────────────────────────────────────────*/
+public int dp(int value) {
+	return (int) TypedValue.applyDimension(
+		TypedValue.COMPLEX_UNIT_DIP,
+		value,
+		context.getResources().getDisplayMetrics()
+	);
+}
+
+/*───────────────────────────────────────────────────────────────
+	GET NODE DATA
+	Extracts data from a given node
+  ─────────────────────────────────────────────────────────────── */
+public Map getNodeData(Object node) {
+	data = new HashMap();
+	if (node == null) return data;
+
+	data.put("class", node.getClassName());
+	data.put("id", node.getViewIdResourceName());
+
+	Rect bounds = new Rect();
+	node.getBoundsInScreen(bounds);
+	data.put("bounds", "[" + bounds.left + ", " + bounds.top + " - " + bounds.right + ", " + bounds.bottom + "]");
+
+	Point coor = getCoordinates(node);
+	data.put("coordinates", coor.x + ", " + coor.y);
+
+	txt = getText(node);
+	data.put("text", txt);
+
+	data.put("clickable", new Boolean(node.isClickable()));
+	data.put("enabled", new Boolean(node.isEnabled()));
+	data.put("focusable", new Boolean(node.isFocusable()));
+	data.put("scrollable", new Boolean(node.isScrollable()));
+	data.put("children", String.valueOf(node.getChildCount()));
+
+	return data;
+}
+
+/*───────────────────────────────────────────────────────────────
+  UI COMPONENT FACTORIES
+  Methods for creating reusable UI elements
+  ───────────────────────────────────────────────────────────────*/
+
+public Chip createPropertyChip(Context ctx, String value, boolean isActive) {
+	final Chip chip = new Chip(ctx);
+	final String valStr = value == null ? "null" : value;
+
+	chip.setText(valStr);
+	chip.setCheckable(false);
+	chip.setClickable(true);
+	chip.setChecked(isActive);
+	chip.setAlpha(isActive ? 1.0f : 0.4f);
+
+	chip.setOnClickListener(new View.OnClickListener() {
+		onClick(View v) {
+			vibrate(v);
+			chip.setChecked(isActive);
+			ClipboardManager clipboard = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
+			ClipData clip = ClipData.newPlainText("NodeData", valStr);
+			clipboard.setPrimaryClip(clip);
+			Toast.makeText(ctx, "Copied: " + valStr, Toast.LENGTH_SHORT).show();
+		}
+	});
+
+	return chip;
+}
+
+/*───────────────────────────────────────────────────────────────
+	INFO DIALOG CLASS
+	InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overlayType)
+  	Creates an info dialog for a given node
+
+	Parameters:
+		targetNode: AccessibilityNodeInfo
+		ctx: Context
+		overlayType: int
+	
+	Returns:
+		bsh.This InfoDialog
+	
+	Methods:
+		- show() shows info dialog.
+		- remove() removes info dialog.
+		- isRemoved() returns true if info is removed.
+
+  ───────────────────────────────────────────────────────────────*/
+
+public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overlayType) {
+	final WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
+	final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+	tm = ThemeManager(ctx);
+	tm.setThemeDark();
+	info = getNodeData(targetNode);
+
+	/*  ROOT CONTAINER SETUP */
+	final LinearLayout root = new LinearLayout(ctx);
+	root.setOrientation(LinearLayout.VERTICAL);
+	root.setPadding(dp(8), dp(8), dp(8), dp(8));
+	GradientDrawable bg = new GradientDrawable();
+	bg.setColor((int) tm.attr("colorSurface"));
+	bg.setCornerRadius(48f);
+	root.setBackground(bg);
+
+	/*  HEADER & DRAG HANDLE */
+	LinearLayout header = new LinearLayout(ctx);
+	header.setOrientation(LinearLayout.VERTICAL);
+	header.setGravity(Gravity.CENTER);
+	header.setPadding(0, dp(8), 0, dp(8));
+
+	View handle = new View(ctx);
+	GradientDrawable handleBg = new GradientDrawable();
+	handleBg.setColor((int) tm.attr("colorPrimary"));
+	handleBg.setCornerRadius(48f);
+	handle.setBackground(handleBg);
+	header.addView(handle, new LinearLayout.LayoutParams(dp(64), dp(8)));
+	root.addView(header);
+
+	/*  CONTENT AREA (Scrollable) */
+	ScrollView scroller = new ScrollView(ctx);
+	LinearLayout content = new LinearLayout(ctx);
+	content.setOrientation(LinearLayout.VERTICAL);
+	content.setPadding(40, 0, 40, 0);
+
+	/*  CHIP GROUP (Properties & Actions) */
+	ChipGroup chipGroup = new ChipGroup(ctx);
+	chipGroup.setChipSpacingVertical(0);
+
+	chipGroup.addView(createPropertyChip(ctx, (String) info.get("id"), true));
+	chipGroup.addView(createPropertyChip(ctx, (String) info.get("class"), true));
+	chipGroup.addView(createPropertyChip(ctx, (String) info.get("bounds"), true));
+	chipGroup.addView(createPropertyChip(ctx, (String) info.get("coordinates"), true));
+
+	String[] props = new String[] { "clickable", "enabled", "focusable", "scrollable" };
+	for (int i = 0; i < props.length; i++) {
+		boolean state = ((Boolean) info.get(props[i])).booleanValue();
+		chipGroup.addView(createPropertyChip(ctx, props[i], state));
+	}
+	chipGroup.addView(createPropertyChip(ctx, "Children: " + info.get("children"), true));
+
+	/*  TEXT INPUT & SELECTION COPY */
+	if (info.get("text") != null && info.get("text").length() > 0) {
+		TextInputLayout textInput = new TextInputLayout(ctx);
+		final TextInputEditText edit = new TextInputEditText(ctx);
+		edit.setText(info.get("text").toString());
+		edit.setMaxLines(6);
+		edit.setShowSoftInputOnFocus(false);
+		textInput.addView(edit);
+		content.addView(textInput);
+		Chip copyTextChip = createPropertyChip(ctx, "Copy Text", true);
+		copyTextChip.setOnClickListener(new View.OnClickListener() {
+			onClick(View v) {
+				vibrate(v);
+				int start = edit.getSelectionStart();
+				int end = edit.getSelectionEnd();
+				String fullText = edit.getText().toString();
+				String toCopy = (start != end) ? fullText.substring(Math.min(start, end), Math.max(start, end)) : fullText;
+
+				if (toCopy != null && !toCopy.equals("")) {
+					ClipboardManager clipboard = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
+					ClipData clip = ClipData.newPlainText("NodeData", toCopy);
+					clipboard.setPrimaryClip(clip);
+					String display = toCopy.length() > 20 ? toCopy.substring(0, 20) + "..." : toCopy;
+					showToast("Copied: " + display);
+				}
+			}
+		});
+		chipGroup.addView(copyTextChip, 0);
+	}
+	content.addView(chipGroup);
+
+	/*  CLOSE ACTION */
+	MaterialButton btn = new MaterialButton(ctx);
+	btn.setText("Close Inspector");
+	btn.setOnClickListener(new View.OnClickListener() {
+		onClick(View v) {
+			vibrate(v);
+			wm.removeView(root);
+		}
+	});
+
+	scroller.addView(content);
+	root.addView(scroller, new LinearLayout.LayoutParams(-1, 0, 1.0f));
+	root.addView(btn);
+
+	/* WINDOW PARAMS & GESTURES */
+	final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+		(int)(ctx.getResources().getDisplayMetrics().widthPixels * 0.85),
+		WindowManager.LayoutParams.WRAP_CONTENT,
+		overlayType,
+		WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+		android.graphics.PixelFormat.TRANSLUCENT
+	);
+	params.gravity = Gravity.CENTER;
+
+	/* Logic Definitions */
+	remove() {
+		mainHandler.post(new Runnable() {
+			run() { try { wm.removeView(root); } catch (e) {} }
+		});
+	}
+
+	listen() {
+		onHold() { remove(); }
+		return this;
+	}
+
+	This listener = listen();
+	This rootGesture = SimpleGesture(root, listener);
+
+	handle.setOnTouchListener(new View.OnTouchListener() {
+		float initialX, initialY;
+		float initialTouchX, initialTouchY;
+		onTouch(View v, MotionEvent event) {
+			switch (event.getAction()) {
+				case 0: // ACTION_DOWN
+					initialX = params.x;
+					initialY = params.y;
+					initialTouchX = event.getRawX();
+					initialTouchY = event.getRawY();
+					return true;
+				case 2: // ACTION_MOVE
+					params.x = (int)(initialX + (event.getRawX() - initialTouchX));
+					params.y = (int)(initialY + (event.getRawY() - initialTouchY));
+					try { wm.updateViewLayout(root, params); } catch (e) {}
+					return true;
+			}
+			return false;
+		}
+	});
+
+	mainHandler.post(new Runnable() {
+		run() {
+			rootGesture.listen();
+			wm.addView(root, params);
+		}
+	});
+
+	return this;
+}
+
+public This InfoDialog(AccessibilityNodeInfo targetNode) {
+	Context accessibilityService = tasker.getAccessibilityService();
+	if (accessibilityService == null) return null;
+	int overlayType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
+	return InfoDialog(targetNode, accessibilityService, overlayType);
+}

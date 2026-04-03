@@ -1,0 +1,166 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+/*───────────────────────────────────────────────────────────────
+select(...)
+**Performs Select Action**
+Finds a node using the provided criteria and performs an
+ACTION_SELECT. This is typically used for items in a list,
+tabs, or specific selectable UI elements.
+
+Arguments:
+
+* target/nodes → The specific node or collection to select.
+* value → The text value to search for.
+* key → The attribute to search by (default is "text").
+* index → The instance index if multiple matches exist.
+* timeout → Max time to wait for the node.
+* parentLevel/sibling → Criteria for complex node location.
+
+Returns:
+
+* The AccessibilityNodeInfo that was selected, or null.
+───────────────────────────────────────────────────────────────*/
+
+/* Base Select Logic */
+select(AccessibilityNodeInfo target) {
+	if (target == null) return null;
+
+
+	target.performAction(AccessibilityNodeInfo.ACTION_SELECT);
+
+	if (stepDelay > 0) wait(stepDelay);
+	target.refresh();
+	return target;
+
+
+
+}
+
+/* Collection Overloads */
+select(ArrayList nodes) {
+	return select(toNode(nodes));
+}
+
+select(ArrayList nodes, int index) {
+	return select(toNode(nodes, index));
+}
+
+
+select(HashMap nodes) {
+	return select(toNode(nodes));
+}
+
+select(HashMap nodes, String key) {
+	return select(toNode(nodes, key));
+}
+
+/* Basic Search Overloads (Text-based) */
+select(String value) {
+	return select("text", value, 0);
+}
+
+select(String value, int index) {
+	return select("text", value, index);
+}
+
+select(String value, long timeout) {
+	return select(getNode(getRoot(), "text", value, 0, timeout));
+}
+
+select(String value, int index, long timeout) {
+	return select(getNode(getRoot(), "text", value, index, timeout));
+}
+
+/* Key-Value Search Overloads */
+select(String key, String value) {
+	return select(key, value, 0);
+}
+
+select(String key, String value, int index) {
+	return select(getNode(getRoot(), key, value, index));
+}
+
+select(String key, String value, int index, long timeout) {
+	return select(getNode(getRoot(), key, value, index, timeout));
+}
+
+/* Focus and Shortcut Overloads */
+select() {
+	/* Selects the currently focused node */
+	return select("focus", null, 0);
+}
+
+/* Complex Search Overloads (Root and Configs) */
+select(AccessibilityNodeInfo root, String value) {
+	return select(getNode(root, value));
+}
+
+select(String value, Object[][] argsConfigs) {
+	return select(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs));
+}
+
+/* Parent and Sibling Overloads */
+// select(String value, String siblingValue) {
+// 	return select(getNode(getRoot(), "text", value, 0, waitNodesTimeout, 0, "text", siblingValue));
+// }
+
+select(String value, int parentLevel, String siblingValue) {
+	return select(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue));
+}
+
+select(String key, String value, int parentLevel, String siblingKey, String siblingValue) {
+	return select(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue));
+}
+
+/* AccessibilityNodeInfo Root specific variants */
+select(AccessibilityNodeInfo root, String key, String value, int index, long timeout) {
+	return select(getNode(root, key, value, index, timeout));
+}
+
+import android.view.accessibility.AccessibilityNodeInfo;
+
+/*───────────────────────────────────────────────────────────────
+select(AccessibilityNodeInfo root, ...)
+**New Overloads with Root Entry Parameter**
+These methods allow performing a selection action on nodes found
+relative to a specific AccessibilityNodeInfo root instead of
+the global root.
+───────────────────────────────────────────────────────────────*/
+
+select(AccessibilityNodeInfo root, String value, int index) {
+	return select(getNode(root, "text", value, index));
+}
+
+select(AccessibilityNodeInfo root, String value, long timeout) {
+	return select(getNode(root, "text", value, 0, timeout));
+}
+
+select(AccessibilityNodeInfo root, String value, int index, long timeout) {
+	return select(getNode(root, "text", value, index, timeout));
+}
+
+select(AccessibilityNodeInfo root, String key, String value) {
+	return select(root, key, value, 0);
+}
+
+select(AccessibilityNodeInfo root, String key, String value, int index) {
+	return select(getNode(root, key, value, index));
+}
+
+select(AccessibilityNodeInfo root, String value, Object[][] argsConfigs) {
+	return select(getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs));
+}
+
+select(AccessibilityNodeInfo root, String value, int parentLevel, String siblingValue) {
+	return select(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue));
+}
+
+select(AccessibilityNodeInfo root, String key, String value, int parentLevel, String siblingKey, String siblingValue) {
+	return select(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue));
+}

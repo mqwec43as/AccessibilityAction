@@ -1,0 +1,55 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+import java.lang.CharSequence;
+
+/**
+ * Performs a manual, recursive search of the accessibility tree for a given text.
+ * Used as a fallback when system-level search is unreliable.
+ */
+ArrayList recursiveTextSearch(AccessibilityNodeInfo root, String target) {
+	ArrayList resultNodes = new ArrayList();
+	if (root == null) return resultNodes;
+
+	ArrayList stack = new ArrayList();
+	stack.add(root);
+	String lowerTarget = target.toLowerCase();
+
+	while (!stack.isEmpty()) {
+		AccessibilityNodeInfo n = (AccessibilityNodeInfo) stack.remove(0);
+		if (n == null) continue;
+
+		CharSequence cs = n.getText();
+		CharSequence desc = n.getContentDescription();
+
+		boolean matched = false;
+		if (cs != null) {
+			// Case-insensitive containment match on getText()
+			if (cs.toString().toLowerCase().indexOf(lowerTarget) >= 0) {
+				matched = true;
+			}
+		}
+		// Only check desc if not already matched
+		if (!matched && desc != null) {
+			// Case-insensitive containment match on getContentDescription()
+			if (desc.toString().toLowerCase().indexOf(lowerTarget) >= 0) {
+				matched = true;
+			}
+		}
+
+		if (matched) {
+			resultNodes.add(n);
+			n.recycle();
+		}
+
+		// Recurse to children
+		for (int i = 0; i < n.getChildCount(); i++) {
+			AccessibilityNodeInfo c = n.getChild(i);
+			if (c != null) stack.add(c);
+		}
+	}
+	return resultNodes;
+}

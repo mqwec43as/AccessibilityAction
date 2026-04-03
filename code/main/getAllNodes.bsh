@@ -1,0 +1,72 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.accessibilityservice.AccessibilityService;
+import java.util.ArrayList;
+/*───────────────────────────────────────────────────────────────
+ * getAllNodes()
+ * **Find All Nodes**
+ * Retrieves all accessibility nodes from the active window recursively.
+ *
+ * Returns:
+ *   ArrayList → List of all nodes found (empty if unavailable).
+ *
+ * Example:
+ *   nodes = getAllNodes();
+ *───────────────────────────────────────────────────────────────*/
+ArrayList getAllNodes() {
+	AccessibilityService service = getService();
+	if (service == null) {
+		tasker.log("Accessibility service not active!", LOG_FILE);
+		return new ArrayList();
+	}
+	AccessibilityNodeInfo root = service.getRootInActiveWindow();
+	if (root == null) {
+		tasker.log("No active root node (screen inaccessible).", LOG_FILE);
+		return new ArrayList();
+	}
+	ArrayList nodes = service.getChildrenRecursive(root);
+	if (nodes == null) {
+		tasker.log("No nodes found.", LOG_FILE);
+		return new ArrayList();
+	}
+	return nodes;
+}
+
+ArrayList getAllNodes(AccessibilityNodeInfo node) {
+	AccessibilityService service = getService();
+	if (service == null) {
+		tasker.log("Accessibility service not active!", LOG_FILE);
+		return new ArrayList();
+	}
+	if (node == null) {
+		tasker.log("No nodes found.", LOG_FILE);
+		return new ArrayList();
+	}
+	ArrayList nodes = service.getChildrenRecursive(node);
+	if (nodes == null) {
+		tasker.log("No nodes found.", LOG_FILE);
+		return new ArrayList();
+	}
+	return nodes;
+}
+
+ArrayList getAllNodes(ArrayList nodes) {
+	return getAllNodes(toNode(nodes));
+}
+
+ArrayList getAllNodes(ArrayList nodes, int index) {
+	return getAllNodes(toNode(nodes, index));
+}
+
+ArrayList getAllNodes(HashMap nodes) {
+	return getAllNodes(toNode(nodes));
+}
+
+ArrayList getAllNodes(HashMap nodes, String key) {
+	return getAllNodes(toNode(nodes, key));
+}
+
+

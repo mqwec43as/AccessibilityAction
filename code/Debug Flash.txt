@@ -1,0 +1,13 @@
+long startTime = System.currentTimeMillis();
+MAIN_DIRECTORY = new File(getSourceFileInfo()).getParentFile().getAbsolutePath();
+source(MAIN_DIRECTORY + "/import.java");
+click("id", "net.dinglisch.android.taskerm:id/button_add_action");
+setText("text", "Filter", "Flash");
+click("Flash");
+click("id", "net.dinglisch.android.taskerm:id/checkbox", 1, "Tasker Layout");
+setText("id", "net.dinglisch.android.taskerm:id/edittext", "Debug %caller(<)", 2, "Title");
+setText("id", "net.dinglisch.android.taskerm:id/edittext", "%caller(+=:=)", 2, "Text");
+setText("id", "net.dinglisch.android.taskerm:id/edittext", "5000", 2, "Timeout");
+setText("id", "net.dinglisch.android.taskerm:id/edittext", "Debug", 2, "id");
+end = System.currentTimeMillis() - startTime;
+tasker.showToast(end.toString() + " ms");

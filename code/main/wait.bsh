@@ -1,0 +1,31 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import java.util.concurrent.TimeUnit;
+if (RUNNING_ENV == "TASKER") {
+	import io.reactivex.Completable;
+}
+/*───────────────────────────────────────────────────────────────
+ * wait(long ms)
+ * **Waits for Delay**
+ * Suspends execution for a specified duration in milliseconds.
+ *
+ * Arguments:
+ * * - ms → Duration to wait in milliseconds.
+ *
+ * Example:
+ * // Wait for half a second
+ * wait(500);
+ * ───────────────────────────────────────────────────────────────*/
+void wait(long ms) {
+	if (RUNNING_ENV == "TASKER") {
+		try {
+			Completable.timer(ms, TimeUnit.MILLISECONDS).blockingAwait();
+		} catch (Exception e) {
+			tasker.log("wait interrupted: ", LOG_FILE);
+		}
+	} else if (RUNNING_ENV = "MACRODROID") {
+		Thread.sleep(ms);
+	}
+}

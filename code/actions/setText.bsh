@@ -1,0 +1,182 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.os.Bundle;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+/*───────────────────────────────────────────────────────────────
+setText(...)
+**Sets Text Content**
+Finds an editable node using the provided criteria and sets its
+text content using ACTION_SET_TEXT.
+
+Arguments:
+
+* target/nodes → The specific node or collection to modify.
+* text → The string content to input.
+* value → The text/ID value to search for the field.
+* key → The attribute to search by (default is "text").
+* index → The instance index if multiple matches exist.
+* timeout → Max time to wait for the node.
+
+Returns:
+
+* The AccessibilityNodeInfo where text was set, or null.
+───────────────────────────────────────────────────────────────*/
+
+/* Base SetText Logic */
+setText(AccessibilityNodeInfo target, String text) {
+	if (target == null) return null;
+	args = new Bundle();
+	args.putCharSequence("ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE", text);
+	debugMe(target);
+	target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args);
+	target.refresh();
+	if (stepDelay > 0) wait(stepDelay);
+	return target;
+
+}
+
+/* Collection Overloads */
+setText(ArrayList nodes, String text) {
+	return setText(toNode(nodes), text);
+}
+
+setText(ArrayList nodes, int index, String text) {
+	return setText(toNode(nodes, index), text);
+}
+
+
+setText(HashMap nodes, String text) {
+	return setText(toNode(nodes), text);
+}
+
+setText(HashMap nodes, String key, String text) {
+	return setText(toNode(nodes, key), text);
+}
+
+/* Basic Search Overloads (Text-based) */
+setText(String value, String text) {
+	return setText("text", value, text, 0);
+}
+
+setText(String value, String text, int index) {
+	return setText("text", value, text, index);
+}
+
+setText(String value, String text, long timeout) {
+	return setText(getNode(getRoot(), "text", value, 0, timeout), text);
+}
+
+setText(String value, String text, int index, long timeout) {
+	return setText(getNode(getRoot(), "text", value, index, timeout), text);
+}
+
+/* Key-Value Search Overloads */
+setText(String key, String value, String text) {
+	return setText(key, value, text, 0);
+}
+
+setText(String key, String value, String text, int index) {
+	node = getNode(getRoot(), key, value, index);
+	return setText(node, text);
+}
+
+setText(String key, String value, String text, int index, long timeout) {
+	return setText(getNode(getRoot(), key, value, index, timeout), text);
+}
+
+setText(String key, String value, String text, int parentLevel, String siblingValue) {
+	return setText(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), text);
+}
+
+/* Focus and Special Overloads */
+setText(String text) {
+	/* Targets the currently focused input field */
+	return setText("focus", null, text, 0);
+}
+
+/* Complex Search Overloads (Root and Configs) */
+setText(AccessibilityNodeInfo root, String value, String text) {
+	return setText(getNode(root, value), text);
+}
+
+setText(String value, String text, Object[][] argsConfigs) {
+	return setText(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs), text);
+}
+
+/* Parent and Sibling Overloads */
+// setText(String value, String text, String siblingValue) {
+// 	return setText(getNode(getRoot(), "text", value, 0, waitNodesTimeout, 0, "text", siblingValue), text);
+// }
+
+setText(String value, String text, int parentLevel, String siblingValue) {
+	return setText(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), text);
+}
+
+setText(String key, String value, String text, int parentLevel, String siblingKey, String siblingValue) {
+	return setText(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), text);
+}
+
+/* AccessibilityNodeInfo Root specific variants */
+setText(AccessibilityNodeInfo root, String key, String value, String text, int index, long timeout) {
+	return setText(getNode(root, key, value, index, timeout), text);
+}
+
+import android.view.accessibility.AccessibilityNodeInfo;
+
+/*───────────────────────────────────────────────────────────────
+setText(AccessibilityNodeInfo root, ...)
+**New Overloads with Root Entry Parameter**
+These methods allow setting text on nodes found relative to
+a specific AccessibilityNodeInfo root instead of the global root.
+───────────────────────────────────────────────────────────────*/
+
+setText(AccessibilityNodeInfo root, String value, String text, int index) {
+	return setText(getNode(root, "text", value, index), text);
+}
+
+setText(AccessibilityNodeInfo root, String value, String text, long timeout) {
+	return setText(getNode(root, "text", value, 0, timeout), text);
+}
+
+setText(AccessibilityNodeInfo root, String value, String text, int index, long timeout) {
+	return setText(getNode(root, "text", value, index, timeout), text);
+}
+
+setText(AccessibilityNodeInfo root, String key, String value, String text) {
+	return setText(root, key, value, text, 0);
+}
+
+setText(AccessibilityNodeInfo root, String key, String value, String text, int index) {
+	node = getNode(root, key, value, index);
+	return setText(node, text);
+}
+
+setText(AccessibilityNodeInfo root, String value, String text, Object[][] argsConfigs) {
+	return setText(getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs), text);
+}
+
+// setText(AccessibilityNodeInfo root, String value, String text, String siblingValue) {
+// 	return setText(getNode(root, "text", value, 0, waitNodesTimeout, 0, "text", siblingValue), text);
+// }
+
+setText(AccessibilityNodeInfo root, String value, String text, int parentLevel, String siblingValue) {
+	return setText(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), text);
+}
+
+setText(AccessibilityNodeInfo root, String key, String value, String text, int parentLevel, String siblingValue) {
+	return setText(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), text);
+}
+
+setText(AccessibilityNodeInfo root, String key, String value, String text, int parentLevel, String siblingKey, String siblingValue) {
+	return setText(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), text);
+}
+
+setText(AccessibilityNodeInfo root, String key, String value, String text, int index, int parentLevel, String siblingKey, String siblingValue) {
+	return setText(getNode(root, key, value, index, waitNodesTimeout, parentLevel, siblingKey, siblingValue), text);
+}
+

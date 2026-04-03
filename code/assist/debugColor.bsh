@@ -1,0 +1,73 @@
+/*────────────────────────────────────────────────────────────────
+This code was primarily generated using AI with minimal human editing.
+──────────────────────────────────────────────────────────────── */
+
+import android.graphics.Color; 
+
+// Debug colors
+DEBUG_COLOR = new Object[][] {
+	{
+		"default",
+		5,
+		Color.GREEN,
+		Color.TRANSPARENT
+	},
+	{
+		"findNodes",
+		4,
+		Color.YELLOW,
+		Color.TRANSPARENT
+	},
+	{
+		"waitNodes",
+		4,
+		Color.YELLOW,
+		Color.TRANSPARENT
+	},
+	{
+		"tap",
+		5,
+		Color.YELLOW,
+		Color.TRANSPARENT
+	},
+	{
+		"setText",
+		5,
+		Color.RED,
+		Color.TRANSPARENT
+	}
+};
+
+debugColor() {
+	return DEBUG_COLOR;
+}
+
+/*────────────────────────────────────────────────────────────────
+	debugColor(String methodName)
+	Get color for given method name
+  ──────────────────────────────────────────────────────────────── */
+public Object[] debugColor(String methodName) {
+    Object[] result = null;
+    Object[] defaultResult = null;
+
+    for (int i = 0; i < DEBUG_COLOR.length; i++) {
+        Object[] entry = (Object[]) DEBUG_COLOR[i];
+        String name = (String) entry[0];
+
+        if (name.equals("default")) {
+            defaultResult = entry;
+        }
+
+        if (name.equals(methodName)) {
+            result = entry;
+            break;
+        }
+    }
+
+    if (result == null) {
+        return defaultResult;
+    }
+
+    return result;
+}
+

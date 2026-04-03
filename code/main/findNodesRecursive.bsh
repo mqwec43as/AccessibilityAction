@@ -1,0 +1,111 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.lang.CharSequence;
+
+/*───────────────────────────────────────────────────────────────
+  findNodesRecursive(AccessibilityNodeInfo root, String key, String value)
+  **Find Multiple Nodes**
+  Finds all UI nodes matching a selector ("id", "text", "regex", "focus", "class") 
+  using a manual recursive stack-based approach for maximum reliability 
+  in the BeanShell environment.
+ 
+  Arguments:
+   - root  → The starting node for the search.
+   - key   → Selector type ("id", "text", "class", "regex", "focus").
+   - value → Selector value to match.
+ 
+  Example:
+  ArrayList buttons = findNodesRecursive(getRoot(), "text", "Save");
+  ───────────────────────────────────────────────────────────────*/
+ArrayList findNodesRecursive(AccessibilityNodeInfo root, String key, String value) {
+	ArrayList nodes = new ArrayList();
+	if (root == null) {
+		return nodes;
+	}
+
+	/* Use a stack for manual recursion to avoid deep nesting and handle the tree efficiently */
+	ArrayList stack = new ArrayList();
+	stack.add(root);
+
+	/* Pre-process values for performance */
+	String lowerValue = (value != null) ? value.toLowerCase() : "";
+	Pattern regexPattern = null;
+	if ("regex".equals(key)) {
+		regexPattern = Pattern.compile(value);
+	}
+
+	while (!stack.isEmpty()) {
+		/* Pop the first element from our manual stack */
+		AccessibilityNodeInfo n = (AccessibilityNodeInfo) stack.remove(0);
+		if (n == null) {
+			continue;
+		}
+
+		boolean isMatch = false;
+
+		/* ID Match */
+		if ("id".equals(key)) {
+			String viewId = n.getViewIdResourceName();
+			if (viewId != null && viewId.equals(value)) {
+				isMatch = true;
+			}
+		}
+		/* Class Match */
+		else if ("class".equals(key)) {
+			CharSequence className = n.getClassName();
+			if (className != null && className.toString().equals(value)) {
+				isMatch = true;
+			}
+		}
+		/* Text/Description Match (Containment & Case-Insensitive) */
+		else if ("text".equals(key)) {
+			CharSequence txt = n.getText();
+			CharSequence desc = n.getContentDescription();
+
+			if (txt != null && txt.toString().toLowerCase().indexOf(lowerValue) >= 0) {
+				isMatch = true;
+			} else if (desc != null && desc.toString().toLowerCase().indexOf(lowerValue) >= 0) {
+				isMatch = true;
+			}
+		}
+		/* Regex Match */
+		else if ("regex".equals(key)) {
+			CharSequence txt = n.getText();
+			CharSequence desc = n.getContentDescription();
+			if ((txt != null && regexPattern.matcher(txt).find()) ||
+				(desc != null && regexPattern.matcher(desc).find())) {
+				isMatch = true;
+			}
+		}
+		/* Focus Match (Input or Accessibility) */
+		else if ("focus".equals(key)) {
+			if (n.isFocused() || n.isAccessibilityFocused()) {
+				isMatch = true;
+			}
+		}
+
+		/* If we found a match, add to list. 
+		   Note: We do not recycle here if we are returning the node to the user,
+		   as they might need to perform actions on it. */
+		if (isMatch) {
+			nodes.add(n);
+			if (findFirst != void && findFirst) return nodes;
+		}
+
+		/* Add children to the stack to continue recursion */
+		for (int i = 0; i < n.getChildCount(); i++) {
+			AccessibilityNodeInfo child = n.getChild(i);
+			if (child != null) {
+				stack.add(child);
+			}
+		}
+	}
+
+	return nodes;
+}

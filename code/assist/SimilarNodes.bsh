@@ -1,0 +1,143 @@
+/*────────────────────────────────────────────────────────────────
+This code was generated using AI with minimal human editing.
+──────────────────────────────────────────────────────────────── */
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.graphics.Color;
+import bsh.This;
+
+/*────────────────────────────────────────────────────────────────
+	SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox)
+	Custom class to manage similar nodes for given node on given screen
+
+	Parameters:
+		- AccessibilityNodeInfo rootNode, root node of the screen
+		- Map nodeBoxesMap, Map of node boxes retrieved from StructureOverlay
+		- This nodeBox, node box of the current node NodeBox
+
+	Returns:
+		bsh.This SimilarNodes
+	
+	Methods:
+		- highlight(AccessibilityNodeInfo targetNode, int strokeColor, int fillColor)
+		- highlightText() highlights similar nodes based on text
+		- highlightId() highlights similar nodes based on id
+		- highlightAll() highlights all similar nodes
+		- reset() resets all highlighted nodes
+		- int getTextCount() get number of  similar text nodes
+		- int getIdCount() get number of similar id nodes
+		- String getSimilarText() get similar text
+
+	Notes:
+		- Will need to make this class to manage the highlight and search mechanics for StructureOverlay.
+		- And name it NodesFinder.
+  ──────────────────────────────────────────────────────────────── */
+
+SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
+	AccessibilityNodeInfo node = nodeBox.node;
+	String text = getText(node);
+	int textIndex;
+	List textBoxes = new ArrayList();
+	List textNodes = new ArrayList();
+
+	String id = node.getViewIdResourceName();
+	int idIndex;
+	List idBoxes = new ArrayList();
+	List idNodes = new ArrayList();
+
+
+	if (text != null && text.length() > 0) {
+		textNodes = findNodes(rootNode, "text", text);
+		if (!textNodes.isEmpty()) {
+			textIndex = textNodes.indexOf(node);
+			textNodes.remove(node);
+		}
+	}
+	if (id != null && id.length() > 0) {
+		idNodes = findNodes(rootNode, "id", id);
+		if (!idNodes.isEmpty()) {
+			idIndex = idNodes.indexOf(node);
+			idNodes.remove(node);
+		}
+	}
+
+	highlight(AccessibilityNodeInfo targetNode, int strokeColor, int fillColor) {
+		This nodeBox = nodeBoxesMap.get(targetNode);
+		if (nodeBox == null) return null;
+		nodeBox.setColor(4, strokeColor, fillColor);
+		return nodeBox;
+	}
+
+	highlightText() {
+		if (!textNodes.isEmpty()) {
+			textBoxes.clear();
+			for (int i = 0; i < textNodes.size(); i++) {
+				AccessibilityNodeInfo targetNode = (AccessibilityNodeInfo) textNodes.get(i);
+				if (targetNode == node) continue;
+				This targetBox = highlight(targetNode, Color.MAGENTA, Color.TRANSPARENT);
+				if (targetBox != null) textBoxes.add(targetBox);
+			}
+		}
+
+	}
+
+	highlightId() {
+		if (!idNodes.isEmpty()) {
+			idBoxes.clear();
+			for (int i = 0; i < idNodes.size(); i++) {
+				AccessibilityNodeInfo targetNode = (AccessibilityNodeInfo) idNodes.get(i);
+				if (targetNode == node) continue;
+				This targetBox = highlight(targetNode, Color.CYAN, Color.TRANSPARENT);
+				if (targetBox != null) idBoxes.add(targetBox);
+			}
+		}
+	}
+
+	highlightAll() {
+		highlightId();
+		highlightText();
+	}
+
+	reset() {
+		if (!idBoxes.isEmpty()) {
+			for (This box: idBoxes) {
+				box.reset();
+			}
+		}
+
+		if (!textBoxes.isEmpty()) {
+			for (This box: textBoxes) {
+				box.reset();
+			}
+		}
+	}
+
+	getIdCount() {
+		return idNodes.size();
+	}
+
+	getIdNodes() {
+		return idNodes;
+	}
+
+	getTextCount() {
+		return textNodes.size();
+	}
+
+	getTextNodes() {
+		return textNodes;
+	}
+
+	getSimilarText() {
+		List texts = new ArrayList();
+		if (!textNodes.isEmpty()) texts.add("#" + textIndex + " Text (" + textNodes.size() + ")");
+		if (!idNodes.isEmpty()) texts.add("#"  + idIndex + " Id (" + idNodes.size() + ")");
+		if (!texts.isEmpty()) {
+			return String.join(" ", texts);
+		} else {
+			return null;
+		}
+	}
+
+	return this;
+}

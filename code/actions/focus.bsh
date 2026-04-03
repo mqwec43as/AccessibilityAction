@@ -1,0 +1,93 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+import java.util.HashMap;
+/*───────────────────────────────────────────────────────────────
+ * focus(String key, String value, int index)
+ * **Request Focus**
+ * Requests input focus for the target node.
+ * If index is omitted, it focuses the first match (index 0).
+ *
+ * Arguments:
+ * * - key → Selector type.
+ * * - value → Selector value.
+ * * - index → Node index (0 for first match).
+ *
+ * Example:
+ * focus("text", "Password Field");
+ * ───────────────────────────────────────────────────────────────*/
+ 
+ 
+focus(AccessibilityNodeInfo target) {
+	if (target == null) return;
+	target.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+	if (stepDelay > 0) wait(stepDelay);
+	target.refresh();
+	return target;
+}
+
+focus(ArrayList nodes) {
+	node = toNode(nodes);
+	if (node == null) return;
+	return focus(node);
+}
+
+focus(ArrayList nodes, int index) {
+	return focus(toNode(nodes, index));
+}
+
+
+focus(HashMap nodes) {
+	node = toNode(nodes);
+	if (node == null) return;
+	return focus(node);
+}
+
+focus(HashMap nodes, key) {
+	node = toNode(nodes);
+	if (node == null) return;
+	return focus(node);
+}
+
+focus(String key, String value, int index) {
+	root_before = getRoot();
+	n = getNode(key, value, index);
+	return focus(n);
+}
+
+focus(String key, String value) {
+	return focus(key, value, 0);
+}
+
+focus(String value) {
+	return focus("text", value, 0);
+}
+
+import android.view.accessibility.AccessibilityNodeInfo;
+
+/*───────────────────────────────────────────────────────────────
+focus(AccessibilityNodeInfo root, ...)
+**New Overloads with Root Entry Parameter**
+These methods allow requesting focus on nodes found relative to
+a specific AccessibilityNodeInfo root instead of the global root.
+───────────────────────────────────────────────────────────────*/
+
+focus(AccessibilityNodeInfo root, String key, String value, int index) {
+target = getNode(root, key, value, index);
+return focus(target);
+}
+
+focus(AccessibilityNodeInfo root, String key, String value) {
+return focus(root, key, value, 0);
+}
+
+focus(AccessibilityNodeInfo root, String value) {
+return focus(root, "text", value, 0);
+}
+
+focus(AccessibilityNodeInfo root, String value, int index) {
+return focus(root, "text", value, index);
+}

@@ -1,0 +1,20 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+/*───────────────────────────────────────────────────────────────
+ * getRoot()
+ * **Get Root Node**
+ * Gets a snapshot of the current active screen's root UI node.
+ *
+ * Arguments:
+ * * - (None)
+ *
+ * Example:
+ * AccessibilityNodeInfo root = getRoot();
+ * ───────────────────────────────────────────────────────────────*/
+AccessibilityNodeInfo getRoot() {
+	service = getService();
+	return service.getRootInActiveWindow();
+}

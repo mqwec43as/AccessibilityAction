@@ -1,0 +1,21 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.graphics.Rect;
+import android.graphics.Point;
+
+/*───────────────────────────────────────────────────────────────
+getCoordinates(AccessibilityNodeInfo node)
+**Helper to get center point of a node**
+───────────────────────────────────────────────────────────────*/
+getCoordinates(AccessibilityNodeInfo node) {
+    if (node == null) return null;
+    
+    Rect rect = new Rect();
+    node.getBoundsInScreen(rect);
+    
+    // Return a Point object containing the center X and Y
+    return new Point(rect.centerX(), rect.centerY());
+}

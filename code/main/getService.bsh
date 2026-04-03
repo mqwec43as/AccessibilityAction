@@ -1,0 +1,20 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.accessibilityservice.AccessibilityService;
+if (RUNNING_ENV == "TASKER") {
+	import com.joaomgcd.taskerm.action.java.JavaCodeException;
+}
+
+// === Get accessibility service ===
+AccessibilityService getService() {
+	if (RUNNING_ENV == "TASKER") {
+		AccessibilityService service = tasker.getAccessibilityService();
+		if (service == null) throw new JavaCodeException("Accessibility service not active!");
+		return service;
+	} else {
+		return;
+	}
+		
+}

@@ -1,0 +1,84 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.text.Spanned;
+import android.text.style.URLSpan;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.lang.CharSequence;
+import java.lang.Class;
+
+/**
+ * findSpannedNodes
+ * Fixed traversal to check both fields and properly extract Span metadata for matching.
+ */
+ArrayList findSpannedNodes(AccessibilityNodeInfo root, String classname, String pattern) {
+	if (root == null) return new ArrayList();
+	if (pattern == null) pattern = "/r/.";
+	if (classname == null) classname = "TextSpan";
+
+	ArrayList exactMatch = new ArrayList();
+	ArrayList partialMatch = new ArrayList();
+	ArrayList stack = new ArrayList();
+	stack.add(root);
+
+	boolean regexMode = pattern.startsWith("/r/");
+	java.util.regex.Pattern compiledPattern = null;
+	String lowerPattern = null;
+	if (regexMode) {
+		compiledPattern = java.util.regex.Pattern.compile(pattern.substring(3));
+	} else {
+		lowerPattern = pattern.toLowerCase();
+	}
+
+	while (!stack.isEmpty()) {
+		AccessibilityNodeInfo node = (AccessibilityNodeInfo) stack.remove(stack.size() - 1);
+		if (node == null) continue;
+
+		boolean matched = false;
+		// Check both Text and ContentDescription fields
+		String[] sources = new String[] { "text", "contentDescription" };
+
+		for (int i = 0; i < sources.length; i++) {
+			// Use our smart extractor to get the string (it handles mURL for URLSpan)
+			String targetText = getText(node, classname, sources[i]);
+
+			if (targetText != null && targetText.length() > 0) {
+				if (regexMode) {
+					java.util.regex.Matcher m = compiledPattern.matcher(targetText);
+					if (m.find()) {
+						exactMatch.add(node);
+						matched = true;
+						break;
+					}
+				} else {
+					if (targetText.equals(pattern)) {
+						exactMatch.add(node);
+						matched = true;
+						break;
+					} else if (targetText.toLowerCase().indexOf(lowerPattern) >= 0) {
+						partialMatch.add(node);
+						matched = true;
+						break;
+					}
+				}
+			}
+		}
+
+		// Always add children to the stack, even if the parent didn't match
+		int count = node.getChildCount();
+		for (int i = 0; i < count; i++) {
+			AccessibilityNodeInfo child = node.getChild(i);
+			if (child != null) stack.add(child);
+		}
+	}
+
+	ArrayList result = exactMatch.size() > 0 ? exactMatch : partialMatch;
+	tasker.log("Nodes found: ", LOG_FILE);
+	return result;
+}
+
+

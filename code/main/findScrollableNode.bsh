@@ -1,0 +1,32 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+
+/*───────────────────────────────────────────────────────────────
+ * findScrollableNode(AccessibilityNodeInfo node)
+ * **Find Scrollable Node**
+ * Searches downwards from the starting node to find the first scrollable container.
+ *
+ * Arguments:
+ * * - node → The starting node.
+ *
+ * Example:
+ * AccessibilityNodeInfo list = findScrollableNode(getRoot());
+ * ───────────────────────────────────────────────────────────────*/
+AccessibilityNodeInfo findScrollableNode(AccessibilityNodeInfo node) {
+	if (node == null) return null;
+
+	if (node.isScrollable()) return node;
+
+	int childCount = node.getChildCount();
+	for (int i = 0; i < childCount; i++) {
+		AccessibilityNodeInfo child = node.getChild(i);
+		AccessibilityNodeInfo found = findScrollableNode(child);
+		if (found != null) return found;
+	}
+
+	return null;
+}
+

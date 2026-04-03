@@ -1,0 +1,35 @@
+/*───────────────────────────────────────────────────────────────
+This code was generated using AI and refined with significant human oversight.
+─────────────────────────────────────────────────────────────── */
+
+import android.graphics.Paint;
+import android.graphics.PathEffect;
+import android.graphics.CornerPathEffect;
+import android.graphics.ComposePathEffect;
+
+
+/**
+ * **Create Paint **
+ * Create the visual style of the drawing Paint, including color, thickness, 
+ * and complex path effects like rounded corners and dashed lines.
+ *
+ * Arguments:
+ * - paint        → The Paint object to configure.
+ * - color        → The stroke color.
+ * - width        → The thickness of the line.
+ * - cornerRadius → The radius for rounding path corners.
+ * - dashInterval → A comma-separated string of dash/gap lengths (e.g., "10,20").
+ */
+public Paint createPaint(int color, float width, float cornerRadius) {
+	Paint paint = new Paint();
+	paint.setColor(color);
+	paint.setStyle(Paint.Style.STROKE);
+	paint.setStrokeWidth(width);
+	paint.setAntiAlias(true);
+	paint.setStrokeJoin(Paint.Join.ROUND);
+	paint.setStrokeCap(Paint.Cap.ROUND);
+	CornerPathEffect cornerEffect = new CornerPathEffect(cornerRadius);
+	PathEffect pathEffect = cornerEffect;
+	paint.setPathEffect(pathEffect);
+	return paint;
+}

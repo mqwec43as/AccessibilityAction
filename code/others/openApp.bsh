@@ -1,0 +1,246 @@
+/*─────────────────────────────────────────────────────────────── 
+This content was generated using AI and refined with significant human oversight.
+───────────────────────────────────────────────────────────────*/
+
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.ComponentName;
+import android.content.pm.ApplicationInfo;
+import android.app.ActivityOptions; // <-- New Import for background launch
+import android.os.Bundle; // <-- New Import for activity options bundle
+import java.util.List;
+import java.util.ArrayList;
+
+/*───────────────────────────────────────────────────────────────
+ * getLaunchIntent(pkg)
+ * Returns launch intent ONLY if package is enabled + launchable.
+ *──────────────────────────────────────────────────────────────*/
+getLaunchIntent(pkg) {
+    if (pkg == null) return null;
+
+    pm = context.getPackageManager();
+
+    try {
+        appInfo = pm.getApplicationInfo(pkg, 0);
+
+        /* Disabled app? ignore */
+        if (!appInfo.enabled) return null;
+
+        /* Stopped app? ignore */
+        if ((appInfo.flags & ApplicationInfo.FLAG_STOPPED) != 0) return null;
+
+        /* Suspended? ignore */
+        if ((appInfo.flags & ApplicationInfo.FLAG_SUSPENDED) != 0) return null;
+
+        /* Must have a launchable activity */
+        intent = pm.getLaunchIntentForPackage(pkg);
+        return intent;
+    } catch (Exception e) {
+        return null;
+    }
+}
+
+/*───────────────────────────────────────────────────────────────
+ * findFirstPackageByPreciseLabel(label)
+ * Finds the FIRST match by PRECISE label (case-insensitive)
+ * ONLY if enabled + not stopped + not suspended + launchable.
+ *──────────────────────────────────────────────────────────────*/
+findFirstPackageByPreciseLabel(label) {
+    if (label == null) return null;
+
+    String find = label.toLowerCase();
+
+    pm = context.getPackageManager();
+    apps = pm.getInstalledApplications(0);
+
+    for (i = 0; i < apps.size(); i++) {
+        app = apps.get(i);
+
+        /* Must be enabled */
+        if (!app.enabled) continue;
+
+        /* Skip stopped apps */
+        if ((app.flags & ApplicationInfo.FLAG_STOPPED) != 0) continue;
+
+        /* Skip suspended apps */
+        if ((app.flags & ApplicationInfo.FLAG_SUSPENDED) != 0) continue;
+
+        /* Read label */
+        appLabelObj = pm.getApplicationLabel(app);
+        if (appLabelObj == null) continue;
+
+        appLabelLower = appLabelObj.toString().toLowerCase();
+
+        /* MUST match precisely (case-insensitive) */
+        if (!appLabelLower.equals(find)) continue;
+
+        /* Ensure launchable */
+        launchIntent = pm.getLaunchIntentForPackage(app.packageName);
+        if (launchIntent == null) continue;
+
+        /* THIS is the FIRST VALID MATCH → return immediately */
+        return app.packageName;
+    }
+
+    return null;
+}
+
+/*───────────────────────────────────────────────────────────────
+ * resolvePackage(labelOrPackage)
+ * 1) Try exact package name (enabled + launchable)
+ * 2) Otherwise find first PRECISE case-insensitive label match
+ *──────────────────────────────────────────────────────────────*/
+resolvePackage(labelOrPackage) {
+    if (labelOrPackage == null) return null;
+
+    pm = context.getPackageManager();
+
+    /* Direct package check */
+    intent = getLaunchIntent(labelOrPackage);
+    if (intent != null) return labelOrPackage;
+
+    /* Try precise label */
+    pkg = findFirstPackageByPreciseLabel(labelOrPackage);
+    if (pkg != null) return pkg;
+
+    return null;
+}
+
+/*───────────────────────────────────────────────────────────────
+ * openApp(pkg, activity)
+ * Launch a specific activity.
+ *──────────────────────────────────────────────────────────────*/
+openApp(String pkg, String activity) {
+    if (pkg == null || activity == null) return;
+
+    intent = new Intent();
+    intent.setComponent(new ComponentName(pkg, activity));
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+    try {
+        context.startActivity(intent);
+    } catch (Exception e) {
+        /* Failed to launch component (e.g., activity not found) */
+        tasker.log("openApp(pkg, activity): Failed to launch component " + pkg + "/" + activity + ": ", LOG_FILE);
+    }
+}
+
+/*───────────────────────────────────────────────────────────────
+ * openApp(labelOrPackage)
+ * Opens app by exact package OR precise case-insensitive label,
+ * OR a fully qualified activity name (e.g., com.pkg.ActivityName)
+ *──────────────────────────────────────────────────────────────*/
+openApp(String labelOrPackage) {
+    if (labelOrPackage == null) return;
+
+    /* Check if the input is a fully qualified activity name (contains a dot). */
+    if (labelOrPackage.indexOf(".") > 0) {
+        
+        lastDot = labelOrPackage.lastIndexOf(".");
+        
+        /* If no dot, it can't be a full component name. */
+        if (lastDot > 0) {
+            pkgPart = labelOrPackage.substring(0, lastDot);
+            
+            try {
+                
+                intent = new Intent();
+                intent.setComponent(new ComponentName(pkgPart, labelOrPackage));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                
+                pm = context.getPackageManager();
+                // Check if the component can be resolved before starting the activity
+                resolveInfo = pm.resolveActivity(intent, 0);
+
+                if (resolveInfo != null) {
+                    tasker.log("openApp: Launching explicit activity → ", LOG_FILE);
+                    openApp(pkgPart, labelOrPackage);
+                    return;
+                }
+            } catch (Exception e) {
+                /* Ignore resolution failures and fall through to package lookup. */
+                tasker.log("openApp: Component check failed, falling back to package lookup. ", LOG_FILE);
+            }
+        }
+    }
+    
+    /* Fallback: treat as a package or label and find the main launch intent. */
+    pkg = resolvePackage(labelOrPackage);
+
+    if (pkg == null) {
+        tasker.log("openApp: App not found → ", LOG_FILE);
+        return;
+    }
+
+    intent = getLaunchIntent(pkg);
+
+    if (intent == null) {
+        tasker.log("openApp: No launchable activity → ", LOG_FILE);
+        return;
+    }
+
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    
+    try {
+        context.startActivity(intent);
+    } catch (Exception e) {
+        tasker.log("openApp: Failed to launch main intent for package " + pkg + ": ", LOG_FILE);
+    }
+}
+
+/*───────────────────────────────────────────────────────────────
+ * launchAppInBackground(labelOrPackage)
+ * Launches app behind the current task using ActivityOptions.
+ * Requires Android 5.0 (API 21) or higher.
+ *──────────────────────────────────────────────────────────────*/
+openApp(String labelOrPackage, boolean background) {
+    if (labelOrPackage == null) return;
+
+    /* Use existing logic to find the package name */
+    String pkg = resolvePackage(labelOrPackage);
+
+    if (pkg == null) {
+        tasker.log("launchAppInBackground: App not found → ", LOG_FILE);
+        return;
+    }
+
+    Intent intent = getLaunchIntent(pkg);
+
+    if (intent == null) {
+        tasker.log("launchAppInBackground: No launchable activity → ", LOG_FILE);
+        return;
+    }
+
+    /*
+     * 1. Add required Tasker flag for context-less launch.
+     * 2. Add FLAG_ACTIVITY_NEW_DOCUMENT as recommended by the API docs.
+     */
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT); 
+
+    try {
+        /* * This is the key: ActivityOptions.makeTaskLaunchBehind()
+         * NOTE: This requires Android 5.0 (API 21).
+         */
+        ActivityOptions options = ActivityOptions.makeTaskLaunchBehind();
+        Bundle optionsBundle = options.toBundle();
+        
+        tasker.log("launchAppInBackground: Launching " + pkg + " in background.", LOG_FILE);
+        
+        // Use the Context.startActivity(Intent, Bundle) overload
+        context.startActivity(intent, optionsBundle); 
+        
+    } catch (Throwable e) {
+        /* Catch Throwable for compatibility on older Android versions where ActivityOptions might not be fully supported. */
+        tasker.log("launchAppInBackground: Failed to launch app behind: ", LOG_FILE);
+        tasker.log("Note: makeTaskLaunchBehind requires Android 5.0 (API 21) or higher.", LOG_FILE);
+    }
+}
+
+/*───────────────────────────────────────────────────────────────
+ * Example:
+ * openApp("Vivaldi Browser"); // Foreground launch
+ * launchAppInBackground("Vivaldi Browser"); // Background launch (API 21+)
+ *──────────────────────────────────────────────────────────────*/
+ 

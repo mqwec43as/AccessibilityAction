@@ -1,0 +1,30 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was generated using AI.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+
+/*───────────────────────────────────────────────────────────────
+ * clearFocus()
+ * **Clear Focus**
+ * Removes input focus from any currently focused node (e.g., dismisses the keyboard).
+ *
+ * Arguments:
+ * * - (None)
+ *
+ * Example:
+ * clearFocus();
+ * ───────────────────────────────────────────────────────────────*/
+clearFocus() {
+	nodes = findRelevantNodesForClear("focus");
+	
+	for (i = 0; i < nodes.size(); i++) {
+		node = nodes.get(i);
+		node.performAction(AccessibilityNodeInfo.ACTION_CLEAR_FOCUS);
+		node.refresh();
+	}
+	
+	if (stepDelay > 0) wait(stepDelay);
+	return "clear";
+}

@@ -1,0 +1,189 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+
+/*───────────────────────────────────────────────────────────────
+  getNode(...) 
+  **Accessibility Node Discovery**
+  Provides a comprehensive set of overloads to find UI elements
+  based on text, ID, parent depth, and sibling relationship.
+  ───────────────────────────────────────────────────────────────*/
+
+/**
+ * CORE SEARCH METHOD
+ * All other overloads eventually point here.
+ */
+getNode(AccessibilityNodeInfo root, String key, String value, int index, long timeout, Object[][] argsConfigs) {
+	// We use findNodes (plural) to do the actual system search
+	nodes = findNodes(root, key, value, argsConfigs);
+
+	/* Check if we should wait for the nodes to appear if initially empty */
+	if (nodes.size() == 0 && (waitNodes == true)) {
+		nodes = waitNodes(key, value, argsConfigs, timeout);
+	}
+	return toNode(nodes, index);
+}
+
+/* Sibling Config Wrapper */
+getNode(AccessibilityNodeInfo root, String key, String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue) {
+	Object[][] config = new Object[][] {
+		{ parentLevel, siblingKey, siblingValue }
+	};
+	return getNode(root, key, value, index, timeout, config);
+}
+
+/*───────────────────────────────────────────────────────────────
+  STANDARD OVERLOADS (Using getRoot())
+  ───────────────────────────────────────────────────────────────*/
+
+getNode(String value) {
+	return getNode(getRoot(), "text", value, 0, waitNodesTimeout, null);
+}
+
+getNode(String value, int index) {
+	return getNode(getRoot(), "text", value, index, waitNodesTimeout, null);
+}
+
+getNode(String value, long timeout) {
+	return getNode(getRoot(), "text", value, 0, timeout, null);
+}
+
+getNode(String value, Object[][] argsConfigs) {
+	return getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs);
+}
+
+getNode(String value, int index, long timeout) {
+	return getNode(getRoot(), "text", value, index, timeout, null);
+}
+
+getNode(String value, int index, long timeout, Object[][] argsConfigs) {
+	return getNode(getRoot(), "text", value, index, timeout, argsConfigs);
+}
+
+getNode(String key, String value) {
+	return getNode(getRoot(), key, value, 0, waitNodesTimeout, null);
+}
+
+getNode(String key, String value, int index) {
+	return getNode(getRoot(), key, value, index, waitNodesTimeout, null);
+}
+
+getNode(String key, String value, int index, long timeout) {
+	return getNode(getRoot(), key, value, index, timeout, null);
+}
+
+getNode(String key, String value, int index, long timeout, Object[][] argsConfigs) {
+	return getNode(getRoot(), key, value, index, timeout, argsConfigs);
+}
+
+/* Standard Parent/Sibling Overloads */
+
+getNode(String value, String siblingValue) {
+	return getNode(getRoot(), "text", value, 0, waitNodesTimeout, 0, "text", siblingValue);
+}
+
+getNode(String value, int parentLevel, String siblingValue) {
+	return getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue);
+}
+
+getNode(String value, int index, long timeout, int parentLevel, String siblingValue) {
+	return getNode(getRoot(), "text", value, index, timeout, parentLevel, "text", siblingValue);
+}
+
+getNode(String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue) {
+	return getNode(getRoot(), "text", value, index, timeout, parentLevel, siblingKey, siblingValue);
+}
+
+getNode(String key, String value, int parentLevel, String siblingValue) {
+	return getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue);
+}
+
+getNode(String key, String value, int parentLevel, String siblingKey, String siblingValue) {
+	return getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue);
+}
+
+getNode(String key, String value, int index, long timeout, int parentLevel, String siblingValue) {
+	return getNode(getRoot(), key, value, index, timeout, parentLevel, "text", siblingValue);
+}
+
+getNode(String key, String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue) {
+	return getNode(getRoot(), key, value, index, timeout, parentLevel, siblingKey, siblingValue);
+}
+
+/*───────────────────────────────────────────────────────────────
+  EXPLICIT ROOT OVERLOADS
+  ───────────────────────────────────────────────────────────────*/
+
+getNode(AccessibilityNodeInfo root, String value) {
+	return getNode(root, "text", value, 0, waitNodesTimeout, null);
+}
+
+getNode(AccessibilityNodeInfo root, String value, int index) {
+	return getNode(root, "text", value, index, waitNodesTimeout, null);
+}
+
+getNode(AccessibilityNodeInfo root, String value, long timeout) {
+	return getNode(root, "text", value, 0, timeout, null);
+}
+
+getNode(AccessibilityNodeInfo root, String value, Object[][] argsConfigs) {
+	return getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs);
+}
+
+getNode(AccessibilityNodeInfo root, String value, int index, long timeout) {
+	return getNode(root, "text", value, index, timeout, null);
+}
+
+getNode(AccessibilityNodeInfo root, String value, int index, long timeout, Object[][] argsConfigs) {
+	return getNode(root, "text", value, index, timeout, argsConfigs);
+}
+
+getNode(AccessibilityNodeInfo root, String key, String value) {
+	return getNode(root, key, value, 0, waitNodesTimeout, null);
+}
+
+getNode(AccessibilityNodeInfo root, String key, String value, int index) {
+	return getNode(root, key, value, index, waitNodesTimeout, null);
+}
+
+getNode(AccessibilityNodeInfo root, String key, String value, int index, long timeout) {
+	return getNode(root, key, value, index, timeout, null);
+}
+
+
+// /* Root Parent/Sibling Overloads */
+
+// getNode(AccessibilityNodeInfo root, String value, String siblingValue) {
+// 	return getNode(root, "text", value, 0, waitNodesTimeout, 0, "text", siblingValue);
+// }
+
+// getNode(AccessibilityNodeInfo root, String value, int parentLevel, String siblingValue) {
+// 	return getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue);
+// }
+
+// getNode(AccessibilityNodeInfo root, String value, int index, long timeout, int parentLevel, String siblingValue) {
+// 	return getNode(root, "text", value, index, timeout, parentLevel, "text", siblingValue);
+// }
+
+// getNode(AccessibilityNodeInfo root, String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue) {
+// 	return getNode(root, "text", value, index, timeout, parentLevel, siblingKey, siblingValue);
+// }
+
+// getNode(AccessibilityNodeInfo root, String key, String value, int parentLevel, String siblingValue) {
+// 	return getNode(root, key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue);
+// }
+
+// getNode(AccessibilityNodeInfo root, String key, String value, int parentLevel, String siblingKey, String siblingValue) {
+// 	return getNode(root, key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue);
+// }
+
+// getNode(AccessibilityNodeInfo root, String key, String value, int index, long timeout, int parentLevel, String siblingValue) {
+// 	return getNode(root, key, value, index, timeout, parentLevel, "text", siblingValue);
+// }
+
+// getNode(AccessibilityNodeInfo root, String key, String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue) {
+// 	return getNode(root, key, value, index, timeout, parentLevel, siblingKey, siblingValue);
+// }

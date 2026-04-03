@@ -1,0 +1,148 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.text.Spanned;
+import android.text.style.URLSpan;
+import android.text.style.LocaleSpan;
+import java.lang.CharSequence;
+import java.lang.Class;
+import android.view.accessibility.AccessibilityNodeInfo.RangeInfo;
+
+/*───────────────────────────────────────────────────────────────
+  getNodeText(AccessibilityNodeInfo node)
+  **Smart Waterfall**
+  Checks: 
+  1. Raw Text 
+  2. Raw ContentDescription 
+  3. Metadata (URL/etc) in Text 
+  4. Metadata (URL/etc) in ContentDescription
+ ───────────────────────────────────────────────────────────────*/
+getNodeText(AccessibilityNodeInfo node) {
+
+	if (node == null || node == void) return;
+	className = node.getClassName();
+	
+	// 1. Try raw text
+	if (className.equals("android.widget.SeekBar")) {
+		return getNodeText(node, "seekbar", "seekbar");
+	}
+	String res = getNodeText(node, "text", "text");
+	if (res.length() > 0) return res;
+
+	// 2. Try raw contentDescription
+	res = getNodeText(node, "contentDescription", "contentDescription");
+	if (res.length() > 0) return res;
+
+	// 3. Try Spanned/Metadata in text
+	res = getNodeText(node, "TextSpan", "text");
+	if (res.length() > 0) return res;
+
+	// 4. Try Spanned/Metadata in contentDescription
+	return getNodeText(node, "TextSpan", "contentDescription");
+}
+
+getNodeText(ArrayList nodes) {
+	return getNodeText(toNode(nodes));
+}
+
+getNodeText(ArrayList nodes, int index) {
+	return getNodeText(toNode(nodes, index));
+}
+
+getNodeText(ArrayList nodes, int index, String type) {
+	return getNodeText(toNode(nodes, index), type);
+}
+
+getNodeText(HashMap nodes) {
+	return getNodeText(toNode(nodes));
+}
+
+getNodeText(HashMap nodes, String key) {
+	return getNodeText(toNode(nodes, key));
+}
+
+getNodeText(HashMap nodes, String key, String type) {
+	return getNodeText(toNode(nodes, key));
+}
+
+/*───────────────────────────────────────────────────────────────
+  getNodeText(AccessibilityNodeInfo node, String type)
+  Overload for targeted extraction.
+  Example: getNodeText(node, "URLSpan")
+ ───────────────────────────────────────────────────────────────*/
+getNodeText(AccessibilityNodeInfo node, String type) {
+	if (node == null || node == void) return;
+
+	// If user asks specifically for raw fields
+	if ("text".equals(type)) return getNodeText(node, "text", "text");
+	if ("contentDescription".equals(type)) return getNodeText(node, "contentDescription", "contentDescription");
+
+	// Otherwise, check for Spans in both fields automatically
+	String val = getNodeText(node, type, "text");
+	if (val.length() > 0) return val;
+	return getNodeText(node, type, "contentDescription");
+}
+
+/*───────────────────────────────────────────────────────────────
+  getNodeText(AccessibilityNodeInfo node, String type, String sourceField)
+  **Core Logic**
+  Handles raw extraction and dynamic Span metadata (mURL, etc.)
+ ───────────────────────────────────────────────────────────────*/
+getNodeText(AccessibilityNodeInfo node, String type, String sourceField) {
+	if (node == null || node == void) return "";
+	
+	if ("seekbar".equals(type)) {
+		RangeInfo rangeInfo = node.getRangeInfo();
+		float current = rangeInfo.getCurrent();
+		return current;
+	}
+	
+	CharSequence cs = "text".equals(sourceField) ? node.getText() : node.getContentDescription();
+	if (cs == null) return "";
+
+	// Handle RAW request (Immediate return of toString)
+	if ("text".equals(type) || "contentDescription".equals(type)) {
+		return cs.toString();
+	}
+
+	// Handle SPAN request (Targeting metadata like mURL)
+	if (type != null && type.endsWith("Span")) {
+		if (!(cs instanceof android.text.Spanned)) return "";
+
+		android.text.Spanned spanned = (android.text.Spanned) cs;
+		Class spanClass = null;
+		try {
+			if ("TextSpan".equals(type)) {
+				spanClass = Object.class; // Match any span
+			} else {
+				// Load class dynamically (e.g. android.text.style.URLSpan)
+				spanClass = java.lang.Class.forName("android.text.style." + type);
+			}
+
+			Object[] spans = spanned.getSpans(0, spanned.length(), spanClass);
+			if (spans != null && spans.length > 0) {
+				Object s = spans[0];
+
+				// EXTRACT METADATA: URLSpan (This gets the mURL field from your JSON)
+				if (s instanceof android.text.style.URLSpan) {
+					String u = ((android.text.style.URLSpan) s).getURL();
+					if (u != null && u.length() > 0) return u;
+				}
+
+				// EXTRACT METADATA: LocaleSpan
+				if (s instanceof android.text.style.LocaleSpan) {
+					return ((android.text.style.LocaleSpan) s).getLocales().toLanguageTags();
+				}
+
+				// Fallback to the visible text if no specific metadata extractor exists
+				return spanned.toString();
+			}
+		} catch (Exception e) {
+			// Log error or fallback
+		}
+	}
+
+	return "";
+}

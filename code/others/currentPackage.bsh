@@ -1,0 +1,3 @@
+currentPackage() {
+	return getUsageEvents().get("packageName");
+}

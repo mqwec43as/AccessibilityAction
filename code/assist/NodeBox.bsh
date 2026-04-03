@@ -1,0 +1,248 @@
+/*────────────────────────────────────────────────────────────────
+This code was primarily generated using AI with minimal human editing.
+──────────────────────────────────────────────────────────────── */
+
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.graphics.Rect;
+import android.graphics.drawable.GradientDrawable;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.FrameLayout;
+import android.os.Handler;
+import android.os.Looper;
+import com.joaomgcd.taskerm.action.java.ClassImplementation;
+import com.joaomgcd.taskerm.action.java.JavaCodeException;
+import java.util.concurrent.Callable;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import bsh.This;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
+
+/*────────────────────────────────────────────────────────────────
+	NodeBox(AccessibilityNodeInfo node, int overlayType, AccessibilityNodeInfo node)
+	Custom class to manage the node box overlay for given node.
+
+	Parameters:
+		node: AccessibilityNodeInfo
+		overlayType: int
+		node: AccessibilityNodeInfo
+
+	Returns:
+		bsh.This NodeBox
+	
+	Methods:
+		- showInfo() shows InfoToast for given node.
+		- removeInfo() removes InfoToast for given node.
+		- setColor(int strokeWidth, int strokeColor, int fillColor) sets color for box.
+		- showDialog() shows InfoDialog for given node.
+		- removeDialog() removes InfoDialog for given node.
+		- hide() hides the box
+		- unhide() unhides the box
+		- show() displays the box
+		- reset() resets color, remove InfoToast, remove DialogToast.
+		- updateParams() updates the box parameters
+		- addViewTo(FrameLayout rootLayout) adds the box view to rootLayout
+		- setGestureListener(This eventListener) sets the gesture listener for the box view.
+  ──────────────────────────────────────────────────────────────── */
+
+NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
+	final This TOP = this;
+	This a11Y = tasker.getJavaVariable("a11Y");
+	setAlpha(int color, int alpha) {
+		return (alpha << 24) | (color & 0x00ffffff);
+	}
+	boolean useA11y = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY == overlayType ? true : false;
+	Runnable displayOverlay;
+
+	int getStatusBarHeight() {
+		int result = 0;
+		int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+		if (resourceId > 0) result = context.getResources().getDimensionPixelSize(resourceId);
+		if (useA11y) {
+			if (a11Y.useA11yOffset) {
+				return result;
+			} else {
+				return 0;
+			}
+		} else {
+			if (a11Y.useOffset) {
+				return result;
+			} else {
+				return 0;
+			}
+		}
+	}
+	WindowManager WINDOW_MANAGER;
+	boolean isRemoved;
+	boolean isShown;
+	int DEFAULT_COLOR = Color.TRANSPARENT;
+	int DEFAULT_STROKE_COLOR = setAlpha(Color.GREEN, 100);
+	int DEFAULT_STROKE_WIDTH = 1;
+	This infoToast;
+	This infoDialog;
+	This simpleGesture;
+
+	if (this.caller.nodeBoxColor != void) DEFAULT_COLOR = this.caller.nodeBoxColor;
+	if (this.caller.nodeBoxStrokeColor != void) DEFAULT_STROKE_COLOR = this.caller.nodeBoxStrokeColor;
+	if (this.caller.nodeBoxStrokeWidth != void) DEFAULT_STROKE_WIDTH = this.caller.nodeBoxStrokeWidth;
+
+	View view = new View(nodeContext);
+	Rect bounds = new Rect();
+	WindowManager.LayoutParams params;
+	FrameLayout.LayoutParams frameParams;
+
+	updateParams() {
+		node.refresh();
+		node.getBoundsInScreen(bounds);
+		params = new WindowManager.LayoutParams(
+			bounds.width(),
+			bounds.height(),
+			overlayType,
+			WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+			PixelFormat.TRANSLUCENT
+		);
+		params.gravity = Gravity.TOP | Gravity.LEFT;
+		params.x = bounds.left;
+		params.y = bounds.top - getStatusBarHeight();
+
+		frameParams = new FrameLayout.LayoutParams(bounds.width(), bounds.height());
+		frameParams.leftMargin = bounds.left;
+		frameParams.topMargin = bounds.top - getStatusBarHeight();
+	}
+
+	updateParams();
+
+	setColor(int strokeWidth, int strokeColor, int fillColor) {
+		GradientDrawable activeFill = new GradientDrawable();
+		activeFill.setColor(fillColor);
+		activeFill.setStroke(strokeWidth, strokeColor);
+		view.setBackgroundDrawable(activeFill);
+		reset() {
+			TOP.reset();
+		}
+		return this;
+	}
+
+	isRemoved() {
+		return isRemoved;
+	}
+
+	isShown() {
+		return isShown;
+	}
+
+	setDefault() {
+		setColor(DEFAULT_STROKE_WIDTH, DEFAULT_STROKE_COLOR, DEFAULT_COLOR);
+	}
+
+
+
+	active() {
+		reset() {
+			setDefault();
+		}
+		return this;
+	}
+
+
+
+	showInfo() {
+		infoToast = InfoToast(node, nodeContext, overlayType);
+	}
+
+	removeInfo() {
+		if (infoToast != null) infoToast.remove();
+	}
+
+	showDialog() {
+		infoDialog = InfoDialog(node, nodeContext, overlayType);
+	}
+
+	removeDialog() {
+		if (infoDialog != null) infoDialog.remove();
+	}
+
+	hide() {
+		view.setVisibility(View.GONE);
+		removeInfo();
+	}
+
+	unhide() {
+		view.setVisibility(View.VISIBLE);
+	}
+
+	reset() {
+		unhide();
+		setDefault();
+		removeInfo();
+		removeDialog();
+	}
+
+	setGestureListener(This eventListener) {
+		simpleGesture = SimpleGesture(view, eventListener, new Object[] { this });
+		simpleGesture.listen();
+	}
+
+	view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+		public void onViewAttachedToWindow(View v) {
+			isRemoved = false;
+			isShown = true;
+			a11Y.addOverlay(TOP);
+		}
+
+		public void onViewDetachedFromWindow(View v) {
+			isRemoved = true;
+			isShown = false;
+			a11Y.removeOverlay(TOP);
+		}
+	});
+
+	getWindowManager() {
+		if (WINDOW_MANAGER == null) WINDOW_MANAGER = nodeContext.getSystemService(Context.WINDOW_SERVICE);
+		return WINDOW_MANAGER;
+	}
+
+	show() {
+		getWindowManager().addView(view, params);
+	}
+
+	addViewTo(FrameLayout frameLayout) {
+		frameLayout.addView(view, frameParams);
+	}
+
+	// Only with WindowManager
+	remove(WindowManager win) {
+		if (!isRemoved) {
+			win.removeView(view);
+		}
+		removeInfo();
+	}
+
+	remove() {
+		if (!isRemoved) {
+			getWindowManager().removeView(view);
+		}
+		removeInfo();
+		removeDialog();
+	}
+
+	setDefault();
+	return this;
+}
+
+NodeBox(AccessibilityNodeInfo node) {
+	Context nodeContext = tasker.getAccessibilityService();
+	int overlayType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
+	return NodeBox(nodeContext, overlayType, node);
+
+}

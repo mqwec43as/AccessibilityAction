@@ -1,0 +1,37 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+/*───────────────────────────────────────────────────────────────
+ * findRelevantNodesForClear(String type)
+ * **Find Nodes to Clear Focus/Selection**
+ * **Internal Helper:** Finds nodes that currently hold focus, selection, or accessibility focus.
+ *
+ * Arguments:
+ * * - type → State to find ("clearFocus", "clearSelection", or "clearA11yFocus").
+ *
+ * Example (Internal Use):
+ * findRelevantNodesForClear("clearFocus");
+ * ───────────────────────────────────────────────────────────────*/
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+ArrayList findRelevantNodesForClear(String type) {
+	ArrayList found = new ArrayList();
+	root = getRoot();
+	if (root == null) return found;
+
+	stack = new ArrayList();
+	stack.add(root);
+	while (!stack.isEmpty()) {
+		node = (AccessibilityNodeInfo) stack.remove(0);
+		if (node == null) continue;
+		for (int j = 0; j < node.getChildCount(); j++) {
+			c = node.getChild(j);
+			if (c != null) stack.add(c);
+		}
+		if ("clearFocus".equals(type) && node.isFocused()) found.add(node);
+		else if ("clearSelection".equals(type) && node.isSelected()) found.add(node);
+		else if ("clearA11yFocus".equals(type) && node.isAccessibilityFocused()) found.add(node);
+	}
+	return found;
+}

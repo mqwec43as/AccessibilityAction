@@ -1,0 +1,93 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.graphics.Rect;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+
+/*───────────────────────────────────────────────────────────────
+  findNodesNearby(ArrayList foundNodes, Object[][] argsConfigs)
+  Filters and sorts foundNodes based on their proximity to siblings.
+  The final returned list is ordered by the distance to the first 
+  successful nearby match found in the first config step.
+  ───────────────────────────────────────────────────────────────*/
+ArrayList findNodesNearby(ArrayList foundNodes, Object[][] argsConfigs) {
+	if (argsConfigs == null || foundNodes == null) return foundNodes;
+	
+	/* Use a temporary list to store nodes paired with their sorting distance */
+	matchedPairs = new ArrayList();
+
+	for (i = 0; i < foundNodes.size(); i++) {
+		node = (AccessibilityNodeInfo) foundNodes.get(i);
+		isMatch = true;
+		firstStepDistance = 99999.0;
+
+		for (j = 0; j < argsConfigs.length; j++) {
+			args = argsConfigs[j];
+			length = args.length;
+			stepResult = false;
+			last = args[length - 1]; 
+
+			nearbyList = new ArrayList();
+
+			if (last == false) {
+				/* Not Nearby Logic */
+				switch (length - 1) {
+					case 1: nearbyList = findNearbyNodes(node, 0, "text", args[0]); break;
+					case 2: nearbyList = findNearbyNodes(node, args[0], "text", args[1]); break;
+					case 3: nearbyList = findNearbyNodes(node, args[0], args[1], args[2]); break;
+				}
+				stepResult = nearbyList.isEmpty();
+			} else {
+				/* Nearby Logic */
+				switch (length) {
+					case 1: nearbyList = findNearbyNodes(node, 0, "text", args[0]); break;
+					case 2: nearbyList = findNearbyNodes(node, args[0], "text", args[1]); break;
+					case 3: nearbyList = findNearbyNodes(node, args[0], args[1], args[2]); break;
+				}
+				stepResult = !nearbyList.isEmpty();
+				
+				/* If this is the first positive check, capture the distance of the closest sibling for sorting */
+				if (stepResult && j == 0) {
+					closestSibling = (AccessibilityNodeInfo) nearbyList.get(0);
+					firstStepDistance = getDistance(node, closestSibling);
+				}
+			}
+
+			if (!stepResult) {
+				isMatch = false;
+				break;
+			}
+		}
+
+		if (isMatch) {
+			/* Store the node and its distance in a Map for the Comparator */
+			Map pair = new HashMap();
+			pair.put("node", node);
+			pair.put("dist", new Double(firstStepDistance));
+			matchedPairs.add(pair);
+		}
+	}
+
+	/* Sort the pairs: nearest to the reference sibling first */
+	Collections.sort(matchedPairs, new Comparator() {
+		compare(Object a, Object b) {
+			d1 = (Double) ((Map) a).get("dist");
+			d2 = (Double) ((Map) b).get("dist");
+			return d1.compareTo(d2);
+		}
+	});
+
+	/* Extract sorted nodes into the final result list */
+	resultNodes = new ArrayList();
+	for (k = 0; k < matchedPairs.size(); k++) {
+		resultNodes.add(((Map) matchedPairs.get(k)).get("node"));
+	}
+
+	return resultNodes;
+}

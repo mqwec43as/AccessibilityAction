@@ -1,0 +1,158 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.os.Bundle;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+/*───────────────────────────────────────────────────────────────
+setSeekbar(...)
+**Sets SeekBar/Range Progress**
+Finds a node using the provided criteria and sets its progress
+value (float) or percentage (int).
+
+Arguments:
+
+* target/nodes: The node or collection to modify.
+* value/progress: The numerical float value to set.
+* percentage: An integer (0-100) to set progress based on min/max.
+* key: The attribute to search by (default "text").
+* index: The instance index.
+* timeout: Max time to wait.
+───────────────────────────────────────────────────────────────*/
+
+/* Base SetSeekbar Logic (Float Value) */
+setSeekbar(AccessibilityNodeInfo node, value) {
+	if (node == null || node == void) return null;
+
+
+	arguments = new Bundle();
+	arguments.putFloat(AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE, (float) value);
+
+	/* Use the specific ID for SET_PROGRESS */
+	success = node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.getId(), arguments);
+
+	if (stepDelay > 0) wait(stepDelay);
+	node.refresh();
+	return (success ? node : null);
+
+
+
+}
+
+/* Base SetSeekbar Logic (Percentage) */
+setSeekbar(AccessibilityNodeInfo node, int percentage) {
+	if (node == null || node == void) return null;
+
+
+	rangeInfo = node.getRangeInfo();
+	if (rangeInfo == null) return null;
+
+	min = rangeInfo.getMin();
+	max = rangeInfo.getMax();
+
+	/* Calculate value: min + (percent * (max - min)) */
+	calculatedValue = min + ((float) percentage / 100.0 * (max - min));
+	return setSeekbar(node, calculatedValue);
+
+}
+
+/* Collection Overloads */
+setSeekbar(ArrayList nodes, value) {
+	return setSeekbar(toNode(nodes), value);
+}
+
+setSeekbar(ArrayList nodes, int percentage) {
+	return setSeekbar(toNode(nodes), percentage);
+}
+
+setSeekbar(ArrayList nodes, int index, value) {
+	return setSeekbar(toNode(nodes, index), value);
+}
+
+setSeekbar(HashMap nodes, value) {
+	return setSeekbar(toNode(nodes), value);
+}
+
+setSeekbar(HashMap nodes, String key, value) {
+	return setSeekbar(toNode(nodes, key), value);
+}
+
+/* Basic Search Overloads (Text-based) */
+setSeekbar(String value, progress) {
+	return setSeekbar(getNode(getRoot(), "text", value, 0), progress);
+}
+
+setSeekbar(String value, int percentage) {
+	return setSeekbar(getNode(getRoot(), "text", value, 0), percentage);
+}
+
+setSeekbar(String value, progress, int index) {
+	return setSeekbar(getNode(getRoot(), "text", value, index), progress);
+}
+
+setSeekbar(String value, progress, long timeout) {
+	return setSeekbar(getNode(getRoot(), "text", value, 0, timeout), progress);
+}
+
+/* Key-Value Search Overloads */
+setSeekbar(String key, String value, progress) {
+	return setSeekbar(getNode(getRoot(), key, value, 0), progress);
+}
+
+setSeekbar(String key, String value, int percentage) {
+	return setSeekbar(getNode(getRoot(), key, value, 0), percentage);
+}
+
+setSeekbar(String key, String value, progress, int index) {
+	return setSeekbar(getNode(getRoot(), key, value, index), progress);
+}
+
+setSeekbar(String key, String value, progress, int index, long timeout) {
+	return setSeekbar(getNode(getRoot(), key, value, index, timeout), progress);
+}
+
+/* Parent and Sibling Overloads */
+setSeekbar(String key, String value, progress, int parentLevel, String siblingValue) {
+	return setSeekbar(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), progress);
+}
+
+setSeekbar(String key, String value, progress, int parentLevel, String siblingKey, String siblingValue) {
+	return setSeekbar(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), progress);
+}
+
+/* Complex Search Overloads (Root and Configs) */
+setSeekbar(AccessibilityNodeInfo root, String value, progress) {
+	return setSeekbar(getNode(root, value), progress);
+}
+
+setSeekbar(String value, progress, Object[][] argsConfigs) {
+	return setSeekbar(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs), progress);
+}
+
+/* Root Specific Variants (Relative Search) */
+setSeekbar(AccessibilityNodeInfo root, String value, progress, int index) {
+	return setSeekbar(getNode(root, "text", value, index), progress);
+}
+
+setSeekbar(AccessibilityNodeInfo root, String key, String value, progress) {
+	return setSeekbar(getNode(root, key, value, 0), progress);
+}
+
+setSeekbar(AccessibilityNodeInfo root, String key, String value, progress, int index) {
+	return setSeekbar(getNode(root, key, value, index), progress);
+}
+
+setSeekbar(AccessibilityNodeInfo root, String key, String value, progress, int index, long timeout) {
+	return setSeekbar(getNode(root, key, value, index, timeout), progress);
+}
+
+setSeekbar(AccessibilityNodeInfo root, String value, progress, int parentLevel, String siblingValue) {
+	return setSeekbar(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), progress);
+}
+
+setSeekbar(AccessibilityNodeInfo root, String key, String value, progress, int parentLevel, String siblingKey, String siblingValue) {
+	return setSeekbar(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), progress);
+}

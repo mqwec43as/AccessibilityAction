@@ -1,0 +1,131 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import bsh.This;
+if (RUNNING_ENV == "TASKER") {
+	import io.reactivex.functions.Function;
+	import io.reactivex.functions.Predicate;
+	import io.reactivex.Observable;
+	import io.reactivex.Single;
+}
+/*───────────────────────────────────────────────────────────────
+waitNodes(Object[][] argsConfigs, long timeoutMs, boolean hasAll)
+**Reactive Node Waiter with ID Mapping**
+Waits for nodes and returns a Map of results indexed by your custom IDs.
+
+Arguments:
+
+* argsConfigs → {{"idName", "selector", "value"}, {"btn1", "text", "OK"}}
+* timeoutMs → Timeout in milliseconds.
+* allFound → Until all configurations are found or not.
+
+Returns: HashMap where keys are IDs and values are ArrayLists of nodes.
+───────────────────────────────────────────────────────────────*/
+waitNodes(Object[][] argsConfigs, long timeoutMs, boolean allFound) {
+	NO_RESULT = new HashMap();
+	root = getRoot();
+	nodes = findNodes(root, argsConfigs, allFound);
+	if (nodes.keySet().size() > 0) return nodes;
+	if (RUNNING_ENV == "TASKER") {
+		boolean oldDebug = debugMe;
+		if (oldDebug == true) debugMe = false;
+		nodes = tasker.getAccessibilityEvents()
+			.map(new io.reactivex.functions.Function() {
+				public Object apply(Object event) {
+					root = getRoot();
+					return findNodes(root, argsConfigs, allFound);
+				}
+			})
+			.filter(new io.reactivex.functions.Predicate() {
+				public boolean test(Object n) {
+					return n.keySet().size() > 0;
+				}
+			})
+			.timeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+			.firstOrError()
+			.blockingGet();
+		debugMe = oldDebug;
+		if (!nodes.isEmpty()) {
+			debugMe(nodes);
+		}
+		return nodes;
+	} else if (RUNNING_ENV == "MACRODROID") {
+		// Handle this later!
+		root = getRoot();
+		return findNodes(root, argsConfigs, allFound);
+	}
+}
+
+waitNodes(Object[][] argsConfigs, long timeoutMs) {
+	return waitNodes(argsConfigs, timeoutMs, true);
+}
+
+waitNodes(String key, String value, Object[][] argsConfigs, long timeoutMs) {
+	config = new Object[][] {
+		{ "default", key, value, argsConfigs }
+	};
+	nodes = waitNodes(config, timeoutMs, false);
+	if (nodes.keySet().size() > 0) {
+		return nodes.get("default");
+	} else {
+		nodes = new ArrayList();
+		return nodes;
+	}
+}
+
+waitNodes(String key, String value, Object[][] argsConfigs, long timeoutMs) {
+	config = new Object[][] {
+		{ "default", key, value, argsConfigs }
+	};
+	nodes = waitNodes(config, timeoutMs, false);
+	if (nodes.keySet().size() > 0) {
+		return nodes.get("default");
+	} else {
+		nodes = new ArrayList();
+		return nodes;
+	}
+}
+
+
+ArrayList waitNodes(String key, String value, long timeoutMs) {
+	return waitNodes(key, value, null, timeoutMs);
+}
+
+ArrayList waitNodes(String key, String value) {
+	return waitNodes(key, value, null, waitNodesTimeout);
+}
+
+ArrayList waitNodes(String value, long timeoutMs) {
+	return waitNodes("text", value, null, timeoutMs);
+}
+
+ArrayList waitNodes(String key, String value, long timeoutMs, int parentLevel, String key, String value) {
+	return waitNodes(key, value, null, timeoutMs);
+}
+
+ArrayList waitNodes(String key, String value, long timeoutMs, int parentLevel, String siblingKey, String siblingValue) {
+	config = new Object[][] {
+		{ parentLevel, siblingKey, siblingValue }
+	};
+	return waitNodes(key, value, config, timeoutMs);
+}
+
+ArrayList waitNodes(String value, long timeoutMs, int parentLevel, String siblingKey, String siblingValue) {
+	return waitNodes("text", value, timeoutMs, parentLevel, siblingKey, siblingValue);
+}
+
+ArrayList waitNodes(String key, String value, long timeoutMs, int parentLevel, String siblingValue) {
+	return waitNodes(key, value, timeoutMs, parentLevel, "text", siblingValue);
+}
+
+ArrayList waitNodes(String value, long timeoutMs, int parentLevel, String siblingValue) {
+	return waitNodes("text", value, timeoutMs, parentLevel, "text", siblingValue);
+}

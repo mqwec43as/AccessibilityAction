@@ -1,0 +1,12 @@
+/*────────────────────────────────────────────────────────────────
+	This code was generated using AI.
+  ──────────────────────────────────────────────────────────────── */
+
+import android.view.HapticFeedbackConstants;
+
+/* Helper for Haptic Feedback */
+public void vibrate(View v) {
+	if (v != null) {
+		v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+	}
+}

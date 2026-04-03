@@ -1,0 +1,92 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+
+/*───────────────────────────────────────────────────────────────
+ * toNode(ArrayList nodes, int index)
+ * **Get Node by Index with Bounds Safety**
+ * Retrieves a node at a specific index.
+ * * If index is -1: returns the last element.
+ * * If index > size: returns the last element.
+ * Arguments:
+ * * nodes → List of nodes.
+ * * index → Desired position (supports -1 for last).
+ * Returns:
+ * AccessibilityNodeInfo → The resolved node, or null if list is empty.
+ *───────────────────────────────────────────────────────────────*/
+AccessibilityNodeInfo toNode(ArrayList nodes, int index) {
+	if (nodes == null || nodes.size() == 0) {
+		return null;
+	}
+	size = nodes.size();
+	targetIndex = index;
+	/* Handle -1 or out of bounds (too high) by returning the last element */
+	if (targetIndex == -1 || targetIndex >= size) {
+		targetIndex = size - 1;
+	}
+	/* Ensure index isn't negative (if user passed -2 etc, default to 0) */
+	if (targetIndex < 0) {
+		targetIndex = 0;
+	}
+	node = nodes.get(targetIndex);
+	if (node instanceof AccessibilityNodeInfo) {
+		return (AccessibilityNodeInfo) node;
+	}
+	return null;
+}
+
+/*───────────────────────────────────────────────────────────────
+ * toNode(ArrayList nodes)
+ * **Get First Node**
+ * Overload that defaults to the first element (index 0).
+ * Returns:
+ * AccessibilityNodeInfo → The first node, or null if empty.
+ *───────────────────────────────────────────────────────────────*/
+AccessibilityNodeInfo toNode(ArrayList nodes) {
+	return toNode(nodes, 0);
+}
+
+/*───────────────────────────────────────────────────────────────
+ * toNode(HashMap nodes)
+ * **Extract First Node from Map**
+ * Safely retrieves the first available AccessibilityNodeInfo from a HashMap.
+ * Arguments:
+ * * nodes → The HashMap to extract from.
+ * Returns:
+ * AccessibilityNodeInfo → The first node found, or null if empty/invalid.
+ *───────────────────────────────────────────────────────────────*/
+AccessibilityNodeInfo toNode(HashMap nodes) {
+	if (nodes == null || nodes.isEmpty()) return null;
+	it = nodes.values().iterator();
+	if (!it.hasNext()) return null;
+	node = it.next();
+	return toNode(node);
+}
+
+/*───────────────────────────────────────────────────────────────
+ * toNode(HashMap nodes, String key)
+ * **Extract Specific Node from Map**
+ * Retrieves an AccessibilityNodeInfo from a Map using a specific key.
+ * Arguments:
+ * * nodes → The HashMap containing nodes.
+ * * key   → The string key to look up.
+ * Returns:
+ * AccessibilityNodeInfo → The requested node, or null if key missing/invalid.
+ *───────────────────────────────────────────────────────────────*/
+AccessibilityNodeInfo toNode(HashMap nodes, String key) {
+	if (nodes == null || !nodes.containsKey(key)) return null;
+	node = nodes.get(key);
+	return toNode(node);
+}
+
+
+AccessibilityNodeInfo toNode(HashMap nodes, String key, int index) {
+	if (nodes == null || !nodes.containsKey(key)) return null;
+	node = nodes.get(key);
+	return toNode(node, index);
+}
