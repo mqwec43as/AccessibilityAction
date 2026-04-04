@@ -23,7 +23,7 @@ getText(AccessibilityNodeInfo node) {
 
 	if (node == null || node == void) return;
 	className = node.getClassName();
-	
+
 	// 1. Try raw text
 	if (className.equals("android.widget.SeekBar")) {
 		return getText(node, "seekbar", "seekbar");
@@ -92,13 +92,16 @@ getText(AccessibilityNodeInfo node, String type) {
  ───────────────────────────────────────────────────────────────*/
 getText(AccessibilityNodeInfo node, String type, String sourceField) {
 	if (node == null || node == void) return "";
-	
+
 	if ("seekbar".equals(type)) {
 		RangeInfo rangeInfo = node.getRangeInfo();
-		float current = rangeInfo.getCurrent();
-		return current;
+		if (rangeInfo != null) {
+			current = rangeInfo.getCurrent();
+			return current;
+		}
+		return null;
 	}
-	
+
 	CharSequence cs = "text".equals(sourceField) ? node.getText() : node.getContentDescription();
 	if (cs == null) return "";
 

@@ -98,7 +98,7 @@ getNode(String value, int index, long timeout, int parentLevel, String siblingKe
 }
 
 getNode(String key, String value, int parentLevel, String siblingValue) {
-	return getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue);
+	return getNode(getRoot(), key, value,  0, waitNodesTimeout, parentLevel, "text", siblingValue);
 }
 
 getNode(String key, String value, int parentLevel, String siblingKey, String siblingValue) {

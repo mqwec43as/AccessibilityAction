@@ -128,6 +128,10 @@ click(String key, String value, int parentLevel, String siblingValue) {
 	return click(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue));
 }
 
+click(String key, String value, int parentLevel, String siblingKey, String siblingValue) {
+	return click(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue));
+}
+
 click(String key, String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue) {
 	return click(getNode(getRoot(), key, value, index, timeout, parentLevel, siblingKey, siblingValue));
 }
