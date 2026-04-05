@@ -49,10 +49,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           files: AccessibilityAction.zip
           # Ensure this path to your notes is correct relative to the root
           body_path: releases/${{ github.ref_name }}/release_notes.md
+          append_body: true
           generate_release_notes: true
 
       - name: Upload Artifacts (Manual Run)
