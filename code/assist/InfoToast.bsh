@@ -47,10 +47,11 @@ import java.util.HashMap;
   ─────────────────────────────────────────────────────────────── */
 InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	if (node == null) return null;
+	This TOP = this;
 	This a11Y = tasker.getJavaVariable("a11Y");
 	WindowManager windowManager = (WindowManager) overlayContext.getSystemService(Context.WINDOW_SERVICE);
 	final Handler mainHandler = new Handler(Looper.getMainLooper());
-	
+
 	boolean useA11y = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY == overlayType ? true : false;
 	int getStatusBarHeight() {
 		int result = 0;
@@ -72,8 +73,9 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 			}
 		}
 	}
-	
-	boolean removedState;
+
+	boolean isRemoved;
+	boolean isShown;
 
 	/* Row storage */
 	final Map rows = new HashMap();
@@ -183,7 +185,7 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	addRow("class", "Class", nodeClass, secondaryColor);
 	if (nodeStatus != null && nodeStatus.length() > 0) addRow("status", "Status", nodeStatus, onSurfaceColor);
 	if (nodeText != null && nodeText.length() > 0) addRow("text", "Text", nodeText, onSurfaceColor);
-	
+
 	/*──────────── MEASURE + POSITION ────────────*/
 	DisplayMetrics metrics = overlayContext.getResources().getDisplayMetrics();
 	final int screenWidth = metrics.widthPixels;
@@ -239,12 +241,20 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 
 
 	container.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-		onViewAttachedToWindow(View v) { removedState = false; }
-		onViewDetachedFromWindow(View v) { removedState = true; }
+		onViewAttachedToWindow(View v) {
+			isRemoved = false;
+			isShown = true;
+			a11Y.addOverlay(TOP);
+		}
+		onViewDetachedFromWindow(View v) {
+			isRemoved = true;
+			isShown = false;
+			a11Y.removeOverlay(TOP);
+		}
 	});
 
 	isRemoved() {
-		return removedState;
+		return isRemoved;
 	}
 
 	remove() {
