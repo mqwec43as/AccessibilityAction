@@ -96,6 +96,8 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	if (this.caller.nodeBoxStrokeColor != void) DEFAULT_STROKE_COLOR = this.caller.nodeBoxStrokeColor;
 	if (this.caller.nodeBoxStrokeWidth != void) DEFAULT_STROKE_WIDTH = this.caller.nodeBoxStrokeWidth;
 
+
+
 	View view = new View(nodeContext);
 	Rect bounds = new Rect();
 	WindowManager.LayoutParams params;
@@ -145,7 +147,12 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 		setColor(DEFAULT_STROKE_WIDTH, DEFAULT_STROKE_COLOR, DEFAULT_COLOR);
 	}
 
-
+	setDefaultColor(int strokeWidth, int strokeColor, int fillColor) {
+		DEFAULT_COLOR = fillColor;
+		DEFAULT_STROKE_COLOR = strokeColor;
+		DEFAULT_STROKE_WIDTH = strokeWidth;
+		setDefault();
+	}
 
 	active() {
 		reset() {
@@ -235,7 +242,24 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 		removeInfo();
 		removeDialog();
 	}
+	setTouchable(boolean toucable) {
+		// Retrieve the current params directly from the view
+		WindowManager.LayoutParams currentParams = (WindowManager.LayoutParams) view.getLayoutParams();
+		if (currentParams == null) {
+			currentParams = params;
+		}
 
+		if (toucable) {
+			currentParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+		} else {
+			currentParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+		}
+
+		params = currentParams;
+		if (isShown && !isRemoved) {
+			getWindowManager().updateViewLayout(view, params);
+		}
+	}
 	setDefault();
 	return this;
 }
