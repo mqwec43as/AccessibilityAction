@@ -27,57 +27,76 @@ line(This THIS) {
   ──────────────────────────────────────────────────────────────── */
 debugMe(List nodes) {
 	if (!debugMe || nodes == null || nodes.isEmpty()) return;
+	
 	Handler mainHandler = new Handler(Looper.getMainLooper());
+	
 	mainThread(Runnable run) {
 		mainHandler.post(run);
 	}
+	
 	This a11Y = tasker.getJavaVariable("a11Y");
 	This callerThis = this.caller;
 	String callerName = callerThis.namespace.getName();
 	String invocationText = line(this.caller.caller);
+	
 	if (callerName.equals("debugMe")) {
 		callerThis = this.caller.caller;
 		callerName = callerThis.namespace.getName();
 		invocationText = line(this.caller.caller.caller);
 	}
+	
 	long delay;
 	boolean isAction;
+	
 	if ("findNodes".equals(callerName) || "waitNodes".equals(callerName)) {
 		delay = findDelay;
 	} else {
 		delay = debugDelay;
 		isAction = true;
 	}
+	
 	if (!isAction) wait(stepDelay);
+	
 	Object color = debugColor(callerName);
 	CompletableSubject waitNodeBox = CompletableSubject.create();
 	if (isAction && debugSteps) a11Y.debugNext = waitNodeBox;
 	List nodeBoxes = new ArrayList();
+	This structure;
 	Runnable debug = new Runnable() {
 		run() {
+		
 			for (AccessibilityNodeInfo node: nodes) {
 				This nodeBox = NodeBox(node);
 				nodeBox.setColor(color[1], color[2], color[3]);
 				nodeBox.updateParams();
-				nodeBox.show();
+				nodeBox.setTouchable(false);
 				nodeBoxes.add(nodeBox);
-				if (isAction && nodes.size() == 1 && debugInfo) {
-					nodeBox.infocationText = invocationText;
-					nodeBox.showInfo();
-					nodeBox.infoToast.addRow("invocation", "Line", invocationText);
-				}
 			}
+			
+			structure = StructureOverlay(true);
+			structure.setTouchable(true);
+			structure.setNodeBoxTouchable(false);
+			structure.show(nodeBoxes);
+			
+			if (isAction && nodeBoxes.size() == 1 && debugInfo) {
+				This nodeBox = nodeBoxes.get(0);
+				nodeBox.infocationText = invocationText;
+				nodeBox.showInfo();
+				nodeBox.infoToast.addRow("invocation", "Line", invocationText);
+			}
+
 			if (!debugSteps) waitNodeBox.onComplete();
 		}
 	};
+	
 	mainThread(debug);
 	// Timeout in ms
 	waitNodeBox.blockingAwait(30000, TimeUnit.MILLISECONDS);
 	wait(delay);
+	
 	try {
-		for (This nodeBox: nodeBoxes) {
-			nodeBox.remove();
-		}
+		structure.remove();
+		a11Y.clean();
 	} catch (e) {
 		a11Y.clean();
 	}
@@ -93,8 +112,10 @@ public void debugMe(Map map) {
 	if (map == null || map == void) {
 		return;
 	}
+	
 	List nodes = new ArrayList();
 	Set keys = map.keySet();
+	
 	for (Object key: keys) {
 		List value = (List) map.get(key);
 		if (!value.isEmpty()) nodes.addAll(value);
