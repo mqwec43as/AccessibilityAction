@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import bsh.This;
-import android.view.View;
+import android.view.View.*;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
@@ -58,11 +58,28 @@ import android.view.ViewParent;
 StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 	This TOP = this;
 	This a11Y = tasker.getJavaVariable("a11Y");
+	boolean isRemoved;
+	boolean isShown;
+	boolean nodeBoxTouchable = true;
+	final ArrayList nodeList = new ArrayList();
+	boolean smallestFirst = true;
+	AccessibilityNodeInfo activeNode;
+	This activeBox;
+	This activeSimilar;
+	List searchHighlightNodes;
+	This listener;
+	Map nodeBoxMap = new HashMap();
+	List highlighted = new ArrayList();
+	List hiddenBoxes = new ArrayList();
+	List boxHistory = new ArrayList();
+	
+
+
 	final Object accessibilityService = tasker.getAccessibilityService();
 	if (accessibilityService == null) {
 		throw new JavaCodeException("Accessibility Service not running.");
 	}
-	boolean isRemoved;
+
 	Context overlayContext = useA11y ? accessibilityService : context.getApplicationContext();
 	final WindowManager windowManager = (WindowManager) overlayContext.getSystemService(Context.WINDOW_SERVICE);
 	Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -91,20 +108,8 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 		WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
 		PixelFormat.TRANSLUCENT
 	);
+	
 	rootParams.gravity = Gravity.TOP | Gravity.LEFT;
-
-
-	final ArrayList nodeList = new ArrayList();
-
-	boolean smallestFirst = true;
-	AccessibilityNodeInfo activeNode;
-	This infoOverlay;
-	This helperDialog;
-	This activeBox;
-	This activeSimilar;
-	List searchHighlightNodes;
-	Map nodeBoxMap = new HashMap();
-	List highlighted = new ArrayList();
 
 	removeView(View view) {
 		ViewParent parent = view.getParent();
@@ -122,6 +127,7 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 	rootLayout.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 		public void onViewAttachedToWindow(View view) {
 			isRemoved = false;
+			isShown = true;
 			if (tasker.getJavaVariable("structureOverlay") != null) structureOverlay.remove();
 			tasker.setJavaVariable("structureOverlay", TOP);
 			a11Y.addOverlay(this);
@@ -129,22 +135,22 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 
 		public void onViewDetachedFromWindow(View view) {
 			isRemoved = true;
+			isShown = false;
 			tasker.setJavaVariable("structureOverlay", null);
 			a11Y.removeOverlay(this);
 		}
 	});
 
+
+
 	isRemoved() {
 		return isRemoved;
 	}
 
-	mainThread(Runnable run) {
+	post(Runnable run) {
 		mainHandler.post(run);
 	}
 
-	List hiddenBoxes = new ArrayList();
-	List highlightedBoxes = new ArrayList();
-	List boxHistory = new ArrayList();
 
 	/* External API to highlight specific nodes via color. */
 	highlightNode(AccessibilityNodeInfo targetNode, int strokeColor, int fillColor) {
@@ -206,7 +212,7 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 		int strokeColor = tm.attr("colorPrimary");
 		nodeBox.setColor(5, strokeColor, fillColor);
 		nodeBox.showInfo();
-		
+
 		activeSimilar = SimilarNodes(rootNode, nodeBoxMap, nodeBox);
 		activeSimilar.highlightAll();
 		String similarText = activeSimilar.getSimilarText();
@@ -227,7 +233,7 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 		boxHistory.add(0, nodeBox);
 	}
 
-	listen() {
+	getDefaultListener() {
 		onSingleTapConfirmed(This nodeBox) {
 			addHistory(nodeBox);
 			if (activeBox != null && activeBox.node.equals(nodeBox.node)) {
@@ -268,9 +274,10 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 		return this;
 	}
 
-	This listener = listen();
+
 	createNodeList() {
 		ArrayList stack = new ArrayList();
+		if (listener == null) listener = getDefaultListener();
 		// Stack will be pair of node and their depth
 		stack.add(new Object[] { rootNode, 0 });
 		while (!stack.isEmpty()) {
@@ -287,6 +294,7 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 				int area = bounds.width() * bounds.height();
 				This nodeBox = NodeBox(overlayContext, overlayType, node);
 				nodeBox.setGestureListener(listener);
+				nodeBox.setTouchable(nodeBoxTouchable);
 				nodeList.add(new Object[] { depth, area, nodeBox });
 				nodeBoxMap.put(node, nodeBox);
 			}
@@ -328,7 +336,75 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 				}
 			}
 		};
-		mainThread(showRun);
+		post(showRun);
+	}
+
+	show(List nodes) {
+		if (nodes.isEmpty()) {
+			tasker.showToast("Not found");
+			return;
+		}
+		if (listener == null) listener = getDefaultListener();
+		Runnable showRun = new Runnable() {
+			run() {
+				windowManager.addView(rootLayout, rootParams);
+				int[] loc = new int[2];
+				rootLayout.getLocationOnScreen(loc);
+				for (Object nodeItem: nodes) {
+					if (nodeItem instanceof This) {
+						This nodeBox = nodeItem;
+						nodeBox.setGestureListener(listener);
+						nodeBox.setTouchable(nodeBoxTouchable);
+						nodeBox.addViewTo(rootLayout);
+						nodeBoxMap.put(nodeBox.node, nodeBox);
+					} else if (nodeItem instanceof AccessibilityNodeInfo) {
+						AccessibilityNodeInfo node = nodeItem;
+						This nodeBox = NodeBox(overlayContext, overlayType, node);
+						nodeBox.setGestureListener(listener);
+						nodeBox.setTouchable(nodeBoxTouchable);
+						nodeBox.addViewTo(rootLayout);
+						nodeBoxMap.put(node, nodeBox);
+					}
+
+				}
+			}
+		};
+		post(showRun);
+	}
+
+	show(String key, String value) {
+		List nodes = findNodes(key, value);
+		show(nodes);
+	}
+
+	showText() {
+		List nodes = findNodes("regex", ".");
+		show(nodes);
+	}
+
+	setListener(This newListener) {
+		listener = newListener;
+	}
+	setNodeBoxTouchable(boolean touchable) {
+		nodeBoxTouchable = touchable;
+	}
+	setTouchable(boolean touchable) {
+		WindowManager.LayoutParams currentParams = (WindowManager.LayoutParams) rootLayout.getLayoutParams();
+		if (currentParams == null) currentParams = rootParams;
+
+		int NOT_TOUCHABLE = WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+
+		if (touchable) {
+			currentParams.flags &= ~NOT_TOUCHABLE;
+		} else {
+			currentParams.flags |= NOT_TOUCHABLE;
+		}
+		
+		rootParams = currentParams;
+		if (isShown && !isRemoved) {
+			/* Use the instance windowManager and the updated params */
+			windowManager.updateViewLayout(rootLayout, rootParams);
+		}
 	}
 
 	return this;
