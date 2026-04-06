@@ -1,0 +1,31 @@
+import android.view.accessibility.AccessibilityNodeInfo;
+
+scrollTo(String key, String value, int scrollCount, double fromY, double toY) {
+	List nodes = new ArrayList();
+	for (int i = 0; i < scrollCount; i++) {
+		nodes = findNodes(key, value);
+		if (hasNode(nodes)) {
+			Object node = toNode(nodes);
+			if (node.isVisibleToUser()) break;
+		}
+		swipe(0.5, fromY, 0.5, toY, 100, true);
+	}
+	if (hasNode(nodes)) return toNode(nodes);
+	return null;
+}
+
+scrollTo(String value, int scrollCount, double fromY, double toY) {
+	return scrollTo("text", value, scrollCount, fromY, toY);
+}
+
+scrollTo(String key, String value, int scrollCount) {
+	return scrollTo(key, value, scrollCount, 0.8, 0.2);
+}
+
+scrollTo(String key, String value) {
+	return scrollTo(key, value, 20, 0.8, 0.2);
+}
+
+scrollTo(String value) {
+	return scrollTo("text", value, 20, 0.8, 0.2);
+}
