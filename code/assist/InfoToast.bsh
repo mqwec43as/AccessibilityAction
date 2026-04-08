@@ -116,22 +116,27 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	container.setBackgroundDrawable(bg);
 
 	/*──────────── ROW SYSTEM ────────────*/
-	addRow(String key, String label, String value, int color) {
+	addRow(String key, String label, String value, int maxLines, int color) {
 		mainHandler.post(new Runnable() {
 			run() {
-				TextView tv = (TextView) rows.get(key);
-
-				if (tv == null) {
-					tv = new TextView(overlayContext);
-					tv.setTextSize(11f);
-					tv.setMaxLines(1);
-					tv.setEllipsize(TextUtils.TruncateAt.MARQUEE);
-					container.addView(tv);
-					rows.put(key, tv);
+				TextView rowText = (TextView) rows.get(key);
+				// Add directly
+				boolean isFirst = (container.getChildCount() == 0);
+				int topMargin = isFirst ? 0 : dp(2);
+				LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+				params.setMargins(0, topMargin, 0, 0);				
+				if (rowText == null) {
+					rowText = new TextView(overlayContext);
+					rowText.setLayoutParams(params);
+					rowText.setTextSize(11.5f);
+					rowText.setMaxLines(maxLines);
+					rowText.setEllipsize(TextUtils.TruncateAt.MARQUEE);
+					container.addView(rowText);
+					rows.put(key, rowText);
 				}
 
-				tv.setText(label + ": " + value);
-				tv.setTextColor(color);
+				rowText.setText(label + ": " + value);
+				rowText.setTextColor(color);
 
 				refreshPosition();
 			}
@@ -139,18 +144,22 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	addRow(String key, String label, String value) {
-		addRow(key, label, value, secondaryColor);
+		addRow(key, label, value, 1, secondaryColor);
+	}
+	
+	addRow(String key, String label, String value, int maxLines) {
+		addRow(key, label, value, maxLines, secondaryColor);
 	}
 
 	updateRow(String key, String value) {
 		mainHandler.post(new Runnable() {
 			run() {
-				TextView tv = (TextView) rows.get(key);
-				if (tv != null) {
-					String text = tv.getText().toString();
+				TextView rowText = (TextView) rows.get(key);
+				if (rowText != null) {
+					String text = rowText.getText().toString();
 					int idx = text.indexOf(":");
 					String label = idx != -1 ? text.substring(0, idx) : key;
-					tv.setText(label + ": " + value);
+					rowText.setText(label + ": " + value);
 					refreshPosition();
 				}
 			}
@@ -160,9 +169,9 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	removeRow(String key) {
 		mainHandler.post(new Runnable() {
 			run() {
-				TextView tv = (TextView) rows.get(key);
-				if (tv != null) {
-					container.removeView(tv);
+				TextView rowText = (TextView) rows.get(key);
+				if (rowText != null) {
+					container.removeView(rowText);
 					rows.remove(key);
 					refreshPosition();
 				}
@@ -181,10 +190,10 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	/*──────────── INITIAL DATA ────────────*/
-	addRow("id", "ID", nodeId, primaryColor);
-	addRow("class", "Class", nodeClass, secondaryColor);
-	if (nodeStatus != null && nodeStatus.length() > 0) addRow("status", "Status", nodeStatus, onSurfaceColor);
-	if (nodeText != null && nodeText.length() > 0) addRow("text", "Text", nodeText, onSurfaceColor);
+	addRow("id", "ID", nodeId, 1, primaryColor);
+	addRow("class", "Class", nodeClass, 1, secondaryColor);
+	if (nodeStatus != null && nodeStatus.length() > 0) addRow("status", "Status", nodeStatus, 1, onSurfaceColor);
+	if (nodeText != null && nodeText.length() > 0) addRow("text", "Text", nodeText, 2, onSurfaceColor);
 
 	/*──────────── MEASURE + POSITION ────────────*/
 	DisplayMetrics metrics = overlayContext.getResources().getDisplayMetrics();
