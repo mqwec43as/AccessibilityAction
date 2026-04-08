@@ -1,0 +1,199 @@
+import java.util.function.Consumer;
+import android.app.Activity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.Gravity;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.FrameLayout;
+import android.widget.CompoundButton;
+import android.text.InputType;
+import android.text.TextWatcher;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.floatingtoolbar.FloatingToolbarLayout;
+
+import android.content.Context;
+import io.reactivex.subjects.SingleSubject;
+import bsh.This;
+
+/*───────────────────────────────────────────────────────────────
+  addSpacer(Context ctx, ViewGroup container)
+  **Adds vertical spacing**
+  Inserts an 8dp tall view into the container to separate elements.
+ 
+  Arguments:
+   - ctx → Android Context.
+   - container → The ViewGroup to add the spacer to.
+  ───────────────────────────────────────────────────────────────*/
+public void addSpacer(Context ctx, ViewGroup container) {
+	int spacerHeight = dp(8);
+	View spacer = new View(ctx);
+	LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, spacerHeight);
+	spacer.setLayoutParams(params);
+	container.addView(spacer);
+}
+
+/*───────────────────────────────────────────────────────────────
+  AssistSetting()
+  **Shows Accessibility & Debug Settings**
+  Displays a material-styled bottom sheet UI using a temporary Activity.
+  ───────────────────────────────────────────────────────────────*/
+AssistSetting() {
+	Consumer uiLogic = new Consumer() {
+		accept(Object activityObj) {
+			Activity activity = (Activity) activityObj;
+			float density = activity.getResources().getDisplayMetrics().density;
+
+			window = activity.getWindow();
+			window.requestFeature(Window.FEATURE_NO_TITLE);
+
+			window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+			window.setBackgroundDrawableResource(android.R.color.transparent);
+
+			/* Position the window at the bottom of the screen */
+			WindowManager.LayoutParams lp = window.getAttributes();
+			lp.gravity = Gravity.BOTTOM;
+			lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+			window.setAttributes(lp);
+
+			This tm = ThemeManager(activity);
+			tm.setThemeDark();
+
+			/* 1. ROOT (FLOATING TOOLBAR) */
+			root = new FloatingToolbarLayout(activity);
+			root.setBackgroundColor(Color.TRANSPARENT);
+
+			/* 2. CONTAINER (MAIN) SETUP */
+			final LinearLayout main = new LinearLayout(activity);
+			main.setOrientation(LinearLayout.VERTICAL);
+
+			/* Using MATCH_PARENT for width to fill the screen horizontally */
+			FrameLayout.LayoutParams mainParams = new FrameLayout.LayoutParams(
+				ViewGroup.LayoutParams.MATCH_PARENT,
+				ViewGroup.LayoutParams.WRAP_CONTENT
+			);
+			mainParams.gravity = Gravity.BOTTOM;
+			main.setLayoutParams(mainParams);
+
+			GradientDrawable shape = new GradientDrawable();
+			shape.setCornerRadius(28 * density);
+			shape.setColor((int) tm.attr("colorSurface"));
+			main.setBackground(shape);
+			main.setClipToOutline(true);
+
+			/* 3. TOOLBAR */
+			toolbar = new MaterialToolbar(activity);
+			toolbar.setTitle("Settings");
+			toolbar.setTitleCentered(true);
+			main.addView(toolbar);
+			/* 4. SCROLLABLE CONTENT */
+			ScrollView scroller = new ScrollView(activity);
+			scroller.setVerticalScrollBarEnabled(false);
+
+			LinearLayout content = new LinearLayout(activity);
+			content.setOrientation(LinearLayout.VERTICAL);
+			int p = (int)(20 * density);
+			content.setPadding(p, p, p, p);
+			scroller.addView(content);
+
+			main.addView(scroller, new LinearLayout.LayoutParams(-1, 0, 1.0f));
+
+			/* --- SWITCHES (BOOLEANS) --- */
+
+			createSwitch(String text, String variableName) {
+				MaterialSwitch itemSwitch = new MaterialSwitch(activity);
+				itemSwitch.setText(text);
+				boolean state = a11Y.namespace.getVariable(variableName);
+				itemSwitch.setChecked(state);
+				itemSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+					onCheckedChanged(CompoundButton b, boolean checked) {
+						a11Y.namespace.setVariable(variableName, checked, false);
+					}
+				});
+				content.addView(itemSwitch);
+				addSpacer(activity, content);
+				return itemSwitch;
+			}
+
+
+			createInput(String hintText, String variableName, Object defaultValue) {
+				TextInputLayout textLayout = new TextInputLayout(activity);
+				textLayout.setHint(hintText);
+				textLayout.setBoxBackgroundMode(2);
+				Object value = a11Y.namespace.getVariable(variableName);
+				TextInputEditText editText = new TextInputEditText(textLayout.getContext());
+				editText.setText(String.valueOf(value));
+				editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+
+				editText.addTextChangedListener(new TextWatcher() {
+					beforeTextChanged(CharSequence charSequence, int start, int count, int after) {}
+					onTextChanged(CharSequence charSequence, int start, int before, int count) {
+						try {
+							if (charSequence.length() > 0) {
+								textLayout.setError(null);
+								int value = Integer.parseInt(charSequence.toString());
+								a11Y.namespace.setVariable(variableName, value, false);
+							} else {
+								textLayout.setError("Cannot be empty.");
+								a11Y.namespace.setVariable(variableName, defaultValue, false);
+							}
+						} catch (Exception e) {}
+					}
+					
+					afterTextChanged(android.text.Editable charSequence) {
+					}
+				});
+
+				textLayout.addView(editText);
+				content.addView(textLayout);
+				addSpacer(activity, content);
+				return textLayout;
+			}
+
+
+			MaterialSwitch debugSwitch = createSwitch("Enable debug mode", "debugMe");
+			MaterialSwitch debugStepsSwitch = createSwitch("Control debug steps", "debugSteps");
+			debugStepsSwitch.setEnabled(false);
+			MaterialSwitch debugInfoSwitch = createSwitch("Show debugging information on a toast", "debugInfo");
+			MaterialSwitch useOffsetSwitch = createSwitch("Use offset for normal overlay", "useOffset");
+			MaterialSwitch useA11yOffsetSwitch = createSwitch("Use offset for Accessibility", "useA11yOffset");
+			MaterialSwitch waitNodesSwitch = createSwitch("Waiting nodes will timeout if not found", "waitNodes");
+			MaterialSwitch useA11yStructureSwitch = createSwitch("Use accessibility for structure overlay", "useA11yStructure");
+
+			/* --- INPUT FIELDS (INTEGERS) --- */
+			TextInputLayout findDelayInput = createInput("Find hint duration (ms)", "findDelay", 100);
+			TextInputLayout debugDelayInput = createInput("Debug highlight duration (ms)", "debugDelay", 1000);
+
+			// Save Button
+			MaterialButton saveBtn = new MaterialButton(activity);
+			saveBtn.setText("CLOSE");
+			saveBtn.setOnClickListener(new View.OnClickListener() {
+				onClick(View v) {
+					activity.finish();
+				}
+			});
+			content.addView(saveBtn);
+
+			root.addView(main);
+			activity.setContentView(root);
+
+			activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+				onViewAttachedToWindow(View v) {}
+				onViewDetachedFromWindow(View v) {
+					activity.finish();
+				}
+			});
+		}
+	};
+
+	tasker.doWithActivity(uiLogic);
+}
