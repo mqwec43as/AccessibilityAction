@@ -61,10 +61,10 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 		}
 	}
 
-	highlight(AccessibilityNodeInfo targetNode, int strokeColor, int fillColor) {
+	highlight(AccessibilityNodeInfo targetNode, int strokeWidth, int strokeColor, int fillColor) {
 		This nodeBox = nodeBoxesMap.get(targetNode);
 		if (nodeBox == null) return null;
-		nodeBox.setColor(4, strokeColor, fillColor);
+		nodeBox.setColor(strokeWidth, strokeColor, fillColor);
 		return nodeBox;
 	}
 
@@ -73,8 +73,8 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 			textBoxes.clear();
 			for (int i = 0; i < textNodes.size(); i++) {
 				AccessibilityNodeInfo targetNode = (AccessibilityNodeInfo) textNodes.get(i);
-				if (targetNode == node) continue;
-				This targetBox = highlight(targetNode, Color.MAGENTA, Color.TRANSPARENT);
+				Object[] color = debugColor("similarText");
+				This targetBox = highlight(targetNode, color[1], color[2], color[3]);
 				if (targetBox != null) textBoxes.add(targetBox);
 			}
 		}
@@ -87,7 +87,8 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 			for (int i = 0; i < idNodes.size(); i++) {
 				AccessibilityNodeInfo targetNode = (AccessibilityNodeInfo) idNodes.get(i);
 				if (targetNode == node) continue;
-				This targetBox = highlight(targetNode, Color.CYAN, Color.TRANSPARENT);
+				Object[] color = debugColor("similarId");
+				This targetBox = highlight(targetNode, color[1], color[2], color[3]);
 				if (targetBox != null) idBoxes.add(targetBox);
 			}
 		}
@@ -131,7 +132,7 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	getSimilarText() {
 		List texts = new ArrayList();
 		if (!textNodes.isEmpty()) texts.add("#" + textIndex + " Text (" + textNodes.size() + ")");
-		if (!idNodes.isEmpty()) texts.add("#"  + idIndex + " Id (" + idNodes.size() + ")");
+		if (!idNodes.isEmpty()) texts.add("#" + idIndex + " Id (" + idNodes.size() + ")");
 		if (!texts.isEmpty()) {
 			return String.join(" ", texts);
 		} else {
