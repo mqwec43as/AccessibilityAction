@@ -11,7 +11,14 @@ a11Y() {
 	This assistButton;
 	boolean useOffset = true;
 	boolean useA11yOffset = true;
+	boolean waitNodes = true;
+	boolean useA11yStructure = false;
 	This TOP;
+	
+	debug() {
+		debugMe = true;
+	}
+
 	set(This THIS) {
 		THIS.namespace.setVariable("debugMe", debugMe, false);
 		THIS.namespace.setVariable("debugSteps", debugSteps, false);
@@ -20,6 +27,8 @@ a11Y() {
 		THIS.namespace.setVariable("debugDelay", debugDelay, false);
 		THIS.namespace.setVariable("useOffset", useOffset, false);
 		THIS.namespace.setVariable("useA11yOffset", useA11yOffset, false);
+		THIS.namespace.setVariable("waitNodes", waitNodes, false);
+		THIS.namespace.setVariable("useA11yStructure", useA11yStructure, false);
 		if (ENV == null) {
 			String superImport = tasker.getVariable("ImportJava");
 			try {
