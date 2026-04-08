@@ -1,6 +1,6 @@
+
+a11Y.set();
 long startTime = System.currentTimeMillis();
-MAIN_DIRECTORY = new File(getSourceFileInfo()).getParentFile().getAbsolutePath();
-source(MAIN_DIRECTORY + "/import.java");
 click("id", "net.dinglisch.android.taskerm:id/button_add_action");
 setText("text", "Filter", "Flash");
 click("Flash");

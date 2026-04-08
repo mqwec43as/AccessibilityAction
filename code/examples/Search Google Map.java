@@ -1,6 +1,4 @@
-long startTime = System.currentTimeMillis();
-MAIN_DIRECTORY = new File(getSourceFileInfo()).getParentFile().getAbsolutePath();
-source(MAIN_DIRECTORY + "/import.java");
+a11Y.set();
 waitNodesTimeout = 10000;
 searchKeyword = "Seaway";
 blockKeyword = "Saved in";

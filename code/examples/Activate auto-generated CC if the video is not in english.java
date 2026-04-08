@@ -1,6 +1,4 @@
-long startTime = System.currentTimeMillis();
-MAIN_DIRECTORY = new File(getSourceFileInfo()).getParentFile().getAbsolutePath();
-source(MAIN_DIRECTORY + "/import.java");
+a11Y.set();
 app = currentPackage();
 if (!app.contains("youtube")) return "not in youtube!";
 click("id", app + ":id/player_view");
