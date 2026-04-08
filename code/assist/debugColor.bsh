@@ -2,7 +2,11 @@
 This code was primarily generated using AI with minimal human editing.
 ──────────────────────────────────────────────────────────────── */
 
-import android.graphics.Color; 
+import android.graphics.Color;
+
+setAlpha(int color, int alpha) {
+	return (alpha << 24) | (color & 0x00ffffff);
+}
 
 // Debug colors
 DEBUG_COLOR = new Object[][] {
@@ -35,6 +39,30 @@ DEBUG_COLOR = new Object[][] {
 		5,
 		Color.RED,
 		Color.TRANSPARENT
+	},
+	{
+		"similarText",
+		4,
+		Color.MAGENTA,
+		setAlpha(Color.MAGENTA, 20)
+	},
+	{
+		"similarId",
+		4,
+		Color.CYAN,
+		setAlpha(Color.CYAN, 20)
+	},
+	{
+		"similarClass",
+		4,
+		Color.CYAN,
+		Color.TRANSPARENT
+	},
+	{
+		"similarParent",
+		4,
+		Color.CYAN,
+		Color.TRANSPARENT
 	}
 };
 
@@ -47,27 +75,26 @@ debugColor() {
 	Get color for given method name
   ──────────────────────────────────────────────────────────────── */
 public Object[] debugColor(String methodName) {
-    Object[] result = null;
-    Object[] defaultResult = null;
+	Object[] result = null;
+	Object[] defaultResult = null;
 
-    for (int i = 0; i < DEBUG_COLOR.length; i++) {
-        Object[] entry = (Object[]) DEBUG_COLOR[i];
-        String name = (String) entry[0];
+	for (int i = 0; i < DEBUG_COLOR.length; i++) {
+		Object[] entry = (Object[]) DEBUG_COLOR[i];
+		String name = (String) entry[0];
 
-        if (name.equals("default")) {
-            defaultResult = entry;
-        }
+		if (name.equals("default")) {
+			defaultResult = entry;
+		}
 
-        if (name.equals(methodName)) {
-            result = entry;
-            break;
-        }
-    }
+		if (name.equals(methodName)) {
+			result = entry;
+			break;
+		}
+	}
 
-    if (result == null) {
-        return defaultResult;
-    }
+	if (result == null) {
+		return defaultResult;
+	}
 
-    return result;
+	return result;
 }
-

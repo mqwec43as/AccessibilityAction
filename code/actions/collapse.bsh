@@ -42,8 +42,9 @@ collapse(AccessibilityNodeInfo node, int index, boolean checkparent) {
 		candidate = findExpandableChild(candidate);
 	}
 
-	if (candidate == null) return false;
-	candidate.performAction(AccessibilityNodeInfo.ACTION_COLLAPSE
+	if (candidate == null) return null;
+	showOnScreen(candidate);
+	candidate.performAction(AccessibilityNodeInfo.ACTION_COLLAPSE);
 	candidate.refresh();
 	if (stepDelay > 0) wait(stepDelay);
 	return candidate;
@@ -56,19 +57,19 @@ collapse(String key, String value, int index, boolean checkparent) {
 }
 
 collapse(ArrayList nodes, int index, boolean checkparent) {
-	node = toNode(nodes);
+	AccessibilityNodeInfo node = toNode(nodes);
 	if (node == null) return;
 	return collapse(node, index, checkparent);
 }
 
-collapse(HashMap nodes, int index, boolean checkparent) {
-	node = toNode(nodes);
+collapse(HashMap nodesMap, int index, boolean checkparent) {
+	AccessibilityNodeInfo node = toNode(nodesMap);
 	if (node == null) return;
 	return collapse(node, index, checkparent);
 }
 
-collapse(HashMap nodes, String key, int index, boolean checkparent) {
-	node = toNode(nodes, key);
+collapse(HashMap nodesMap, String mapKey, int index, boolean checkparent) {
+	AccessibilityNodeInfo node = toNode(nodesMap, mapKey);
 	if (node == null) return;
 	return collapse(node, index, checkparent);
 }

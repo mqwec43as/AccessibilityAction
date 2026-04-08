@@ -1,0 +1,6 @@
+import android.view.accessibility.AccessibilityNodeInfo;
+
+showOnScreen(AccessibilityNodeInfo node) {
+	node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.getId());
+	node.refresh();
+}

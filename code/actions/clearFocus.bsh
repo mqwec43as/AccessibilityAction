@@ -17,10 +17,9 @@ import java.util.ArrayList;
  * clearFocus();
  * ───────────────────────────────────────────────────────────────*/
 clearFocus() {
-	nodes = findRelevantNodesForClear("focus");
-	
+	List nodes = findRelevantNodesForClear("focus");
 	for (i = 0; i < nodes.size(); i++) {
-		node = nodes.get(i);
+		AccessibilityNodeInfo node = nodes.get(i);
 		node.performAction(AccessibilityNodeInfo.ACTION_CLEAR_FOCUS);
 		node.refresh();
 	}

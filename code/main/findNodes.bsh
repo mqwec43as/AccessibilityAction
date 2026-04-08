@@ -1,13 +1,14 @@
-/*─────────────────────────────────────────────────────────────── 
-This code was primarily generated using AI with minimal human editing.
-───────────────────────────────────────────────────────────────*/
-
 import android.view.accessibility.AccessibilityNodeInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.lang.CharSequence;
+
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
 /*───────────────────────────────────────────────────────────────
  * findNodes(AccessibilityNodeInfo root, String key, String value)
  * **Find Multiple Nodes**
@@ -108,8 +109,8 @@ ArrayList findNodes(String key, String value) {
 	return findNodes(getRoot(), key, value);
 }
 
-ArrayList findNodes(String value) {
-	return findNodes(getRoot(), "text", value);
+ArrayList findNodes(String text) {
+	return findNodes(getRoot(), "text", text);
 }
 
 /*───────────────────────────────────────────────────────────────
@@ -130,9 +131,9 @@ Returns:
 ───────────────────────────────────────────────────────────────*/
 findNodes(AccessibilityNodeInfo root, Object[][] argsConfigs, boolean allFound) {
 	if (root == null) root = getRoot();
-	resultsMap = new HashMap();
-	totalMap = argsConfigs.length;
-	foundAny = false;
+	Map nodesMap = new HashMap();
+	int totalMap = argsConfigs.length;
+	boolean foundAny = false;
 	for (int i = 0; i < argsConfigs.length; i++) {
 		config = argsConfigs[i];
 		String resultId = (String) config[0]; // First element is the ID
@@ -151,19 +152,19 @@ findNodes(AccessibilityNodeInfo root, Object[][] argsConfigs, boolean allFound) 
 			nodes = findNodes(root, (String) searchArgs[0], (String) searchArgs[1], (Object[][]) searchArgs[2]);
 		}
 		if (nodes != null && !nodes.isEmpty()) {
-			resultsMap.put(resultId, nodes);
+			nodesMap.put(resultId, nodes);
 			if (!allFound) {
 				foundAny = true;
-				return resultsMap;
+				return nodesMap;
 			}
 
 		}
 	}
-	if (allFound && resultsMap.keySet().size() == totalMap) {
-		return resultsMap;
+	if (allFound && nodesMap.keySet().size() == totalMap) {
+		return nodesMap;
 	} else {
-		resultsMap = new HashMap();
-		return resultsMap;
+		nodesMap = new HashMap();
+		return nodesMap;
 	}
 }
 
@@ -205,31 +206,30 @@ ArrayList findNodes(AccessibilityNodeInfo root, String key, String value, int pa
 	return findNodes(root, key, value, config);
 }
 
-ArrayList findNodes(AccessibilityNodeInfo root, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return findNodes(root, "text", value, parentLevel, nearbyKey, nearbyValue);
+ArrayList findNodes(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyKey, String nearbyValue) {
+	return findNodes(root, "text", text, parentLevel, nearbyKey, nearbyValue);
 }
 
-ArrayList findNodes(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyValue) {
-	return findNodes(root, key, value, parentLevel, "text", nearbyValue);
+ArrayList findNodes(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyText) {
+	return findNodes(root, key, value, parentLevel, "text", nearbyText);
 }
 
-ArrayList findNodes(AccessibilityNodeInfo root, String value, int parentLevel, String nearbyValue) {
-	return findNodes(root, "text", value, parentLevel, "text", nearbyValue);
+ArrayList findNodes(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyText) {
+	return findNodes(root, "text", text, parentLevel, "text", nearbyText);
 }
-
 
 ArrayList findNodes(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
 	return findNodes(getRoot(), key, value, parentLevel, nearbyKey, nearbyValue);
 }
 
-ArrayList findNodes(String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return findNodes("text", value, parentLevel, nearbyKey, nearbyValue);
+ArrayList findNodes(String text, int parentLevel, String nearbyKey, String nearbyValue) {
+	return findNodes("text", text, parentLevel, nearbyKey, nearbyValue);
 }
 
-ArrayList findNodes(String key, String value, int parentLevel, String nearbyValue) {
-	return findNodes(key, value, parentLevel, "text", nearbyValue);
+ArrayList findNodes(String key, String value, int parentLevel, String nearbyText) {
+	return findNodes(key, value, parentLevel, "text", nearbyText);
 }
 
-ArrayList findNodes(String value, int parentLevel, String nearbyValue) {
-	return findNodes("text", value, parentLevel, "text", nearbyValue);
+ArrayList findNodes(String text, int parentLevel, String nearbyText) {
+	return findNodes("text", text, parentLevel, "text", nearbyText);
 }

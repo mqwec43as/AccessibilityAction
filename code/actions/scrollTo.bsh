@@ -1,12 +1,35 @@
 import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+import java.util.List;
 
+/*──────────────────────────────────────────────────────────────
+  This code was generated and commented with the assistance of AI
+  ────────────────────────────────────────────────────────────── */
+
+/*───────────────────────────────────────────────────────────────
+    scrollTo(String key, String value, int scrollCount, double fromY, double toY)
+    Scroll until a node is found.
+
+    Parameters:
+        - key → Target node selector type.
+        - value → Target node identifier.
+        - scrollCount → Number of times to scroll.
+        - fromY → Starting scroll position (0.0 = top, 1.0 = bottom).
+        - toY → Target scroll position (0.0 = top, 1.0 = bottom).
+
+    Example:
+        scrollTo("text", "Details", 20, 0.8, 0.2);
+        scrollTo("text", "Details", 20);
+        scrollTo("text", "Details");
+  ───────────────────────────────────────────────────────────────*/
 scrollTo(String key, String value, int scrollCount, double fromY, double toY) {
 	List nodes = new ArrayList();
 	for (int i = 0; i < scrollCount; i++) {
 		nodes = findNodes(key, value);
 		if (hasNode(nodes)) {
 			Object node = toNode(nodes);
-			if (node.isVisibleToUser()) break;
+			showOnScreen(node);
+			break;
 		}
 		swipe(0.5, fromY, 0.5, toY, 100, true);
 	}
@@ -14,8 +37,8 @@ scrollTo(String key, String value, int scrollCount, double fromY, double toY) {
 	return null;
 }
 
-scrollTo(String value, int scrollCount, double fromY, double toY) {
-	return scrollTo("text", value, scrollCount, fromY, toY);
+scrollTo(String text, int scrollCount, double fromY, double toY) {
+	return scrollTo("text", text, scrollCount, fromY, toY);
 }
 
 scrollTo(String key, String value, int scrollCount) {
@@ -26,6 +49,6 @@ scrollTo(String key, String value) {
 	return scrollTo(key, value, 20, 0.8, 0.2);
 }
 
-scrollTo(String value) {
-	return scrollTo("text", value, 20, 0.8, 0.2);
+scrollTo(String text) {
+	return scrollTo("text", text, 20, 0.8, 0.2);
 }

@@ -1,10 +1,10 @@
-/*─────────────────────────────────────────────────────────────── 
-This code was primarily generated using AI with minimal human editing.
-───────────────────────────────────────────────────────────────*/
-
 import android.view.accessibility.AccessibilityNodeInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
 
 /*───────────────────────────────────────────────────────────────
 paste(...)
@@ -14,7 +14,7 @@ paste action, inserting the current clipboard content.
 
 Arguments:
 
-* target/nodes → The specific node or collection to paste into.
+* node → The specific node or collection to paste into.
 * value → The text/ID value to search for the field.
 * key → The attribute to search by (default is "text").
 * index → The instance index if multiple matches exist.
@@ -27,17 +27,18 @@ Returns:
 ───────────────────────────────────────────────────────────────*/
 
 /* Base Paste Logic */
-paste(AccessibilityNodeInfo target) {
-	if (target == null) return null;
+paste(AccessibilityNodeInfo node) {
+	if (node == null) return null;
+	showOnScreen(node);
+	if (!node.isFocusable()) return;
+	focus(node);
+	debugMe(node);
+	node.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+	node.refresh();
 
-
-	target.performAction(AccessibilityNodeInfo.ACTION_PASTE);
-	target.refresh();
 	if (stepDelay > 0) wait(stepDelay);
-	return target;
 
-
-
+	return node;
 }
 
 /* Collection Overloads */
@@ -49,30 +50,33 @@ paste(ArrayList nodes, int index) {
 	return paste(toNode(nodes, index));
 }
 
-
-paste(HashMap nodes) {
-	return paste(toNode(nodes));
+paste(HashMap nodesMap) {
+	return paste(toNode(nodesMap));
 }
 
-paste(HashMap nodes, String key) {
-	return paste(toNode(nodes, key));
+paste(HashMap nodesMap, String key) {
+	return paste(toNode(nodesMap, key));
 }
 
 /* Basic Search Overloads (Text-based) */
-paste(String value) {
-	return paste("text", value, 0);
+paste(String text) {
+	AccessibilityNodeInfo node = getNode("text", text);
+	return paste(node);
 }
 
-paste(String value, int index) {
-	return paste("text", value, index);
+paste(String text, int index) {
+	AccessibilityNodeInfo node = getNode("text", text, 0);
+	return paste(node);
 }
 
-paste(String value, long timeout) {
-	return paste(getNode(getRoot(), "text", value, 0, timeout));
+paste(String text, long timeout) {
+	AccessibilityNodeInfo node = getNode("text", text, 0, timeout);
+	return paste(node);
 }
 
-paste(String value, int index, long timeout) {
-	return paste(getNode(getRoot(), "text", value, index, timeout));
+paste(String text, int index, long timeout) {
+	AccessibilityNodeInfo node = getNode(getRoot(), "text", text, index, timeout);
+	return paste(node);
 }
 
 /* Key-Value Search Overloads */
@@ -81,11 +85,13 @@ paste(String key, String value) {
 }
 
 paste(String key, String value, int index) {
-	return paste(getNode(getRoot(), key, value, index));
+	AccessibilityNodeInfo node = getNode(getRoot(), key, value, index);
+	return paste(node);
 }
 
 paste(String key, String value, int index, long timeout) {
-	return paste(getNode(getRoot(), key, value, index, timeout));
+	AccessibilityNodeInfo node = getNode(getRoot(), key, value, index, timeout);
+	return paste(node);
 }
 
 /* Focus and Shortcut Overloads */
@@ -96,69 +102,73 @@ paste() {
 
 /* Complex Search Overloads (Root and Configs) */
 paste(AccessibilityNodeInfo root, String value) {
-	return paste(getNode(root, value));
+	AccessibilityNodeInfo node = getNode(root, value);
+	return paste(node);
 }
 
-paste(String value, Object[][] argsConfigs) {
-	return paste(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs));
+paste(String text, Object[][] argsConfigs) {
+	AccessibilityNodeInfo node = getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs);
+	return paste(node);
 }
 
 /* Parent and Sibling Overloads */
-// paste(String value, String siblingValue) {
-// 	return paste(getNode(getRoot(), "text", value, 0, waitNodesTimeout, 0, "text", siblingValue));
-// }
-
-paste(String value, int parentLevel, String siblingValue) {
-	return paste(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue));
+paste(String text, int parentLevel, String nearbyText) {
+	AccessibilityNodeInfo node = getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	return paste(node);
 }
 
-paste(String key, String value, int parentLevel, String siblingKey, String siblingValue) {
-	return paste(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue));
+paste(String key, String value, int parentLevel, String nearbyKey, String nearbyText) {
+	AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyText);
+	return paste(node);
 }
 
 /* AccessibilityNodeInfo Root specific variants */
 paste(AccessibilityNodeInfo root, String key, String value, int index, long timeout) {
-	return paste(getNode(root, key, value, index, timeout));
+	AccessibilityNodeInfo node = getNode(root, key, value, index, timeout);
+	return paste(node);
 }
-
-import android.view.accessibility.AccessibilityNodeInfo;
 
 /*───────────────────────────────────────────────────────────────
-paste(AccessibilityNodeInfo root, ...)
-**New Overloads with Root Entry Parameter**
-These methods allow performing a paste action on nodes found
-relative to a specific AccessibilityNodeInfo root instead of
-the global root.
-───────────────────────────────────────────────────────────────*/
+  paste(AccessibilityNodeInfo root, ...)
+  **Root-relative Overloads**
+  Methods to perform paste on nodes relative to a specific root.
+  ───────────────────────────────────────────────────────────────*/
 
-paste(AccessibilityNodeInfo root, String value, int index) {
-return paste(getNode(root, "text", value, index));
+paste(AccessibilityNodeInfo root, String text, int index) {
+	AccessibilityNodeInfo node = getNode(root, "text", text, index);
+	return paste(node);
 }
 
-paste(AccessibilityNodeInfo root, String value, long timeout) {
-return paste(getNode(root, "text", value, 0, timeout));
+paste(AccessibilityNodeInfo root, String text, long timeout) {
+	AccessibilityNodeInfo node = getNode(root, "text", text, 0, timeout);
+	return paste(node);
 }
 
-paste(AccessibilityNodeInfo root, String value, int index, long timeout) {
-return paste(getNode(root, "text", value, index, timeout));
+paste(AccessibilityNodeInfo root, String text, int index, long timeout) {
+	AccessibilityNodeInfo node = getNode(root, "text", text, index, timeout);
+	return paste(node);
 }
 
 paste(AccessibilityNodeInfo root, String key, String value) {
-return paste(root, key, value, 0);
+	return paste(root, key, value, 0);
 }
 
 paste(AccessibilityNodeInfo root, String key, String value, int index) {
-return paste(getNode(root, key, value, index));
+	AccessibilityNodeInfo node = getNode(root, key, value, index);
+	return paste(node);
 }
 
-paste(AccessibilityNodeInfo root, String value, Object[][] argsConfigs) {
-return paste(getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs));
+paste(AccessibilityNodeInfo root, String text, Object[][] argsConfigs) {
+	AccessibilityNodeInfo node = getNode(root, "text", text, 0, waitNodesTimeout, argsConfigs);
+	return paste(node);
 }
 
-paste(AccessibilityNodeInfo root, String value, int parentLevel, String siblingValue) {
-return paste(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue));
+paste(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyText) {
+	AccessibilityNodeInfo node = getNode(root, "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	return paste(node);
 }
 
-paste(AccessibilityNodeInfo root, String key, String value, int parentLevel, String siblingKey, String siblingValue) {
-return paste(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue));
+paste(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyKey, String nearbyText) {
+	AccessibilityNodeInfo node = getNode(root, key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyText);
+	return paste(node);
 }

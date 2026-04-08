@@ -23,8 +23,8 @@ AccessibilityNodeInfo toNode(ArrayList nodes, int index) {
 	if (nodes == null || nodes.size() == 0) {
 		return null;
 	}
-	size = nodes.size();
-	targetIndex = index;
+	int size = nodes.size();
+	int targetIndex = index;
 	/* Handle -1 or out of bounds (too high) by returning the last element */
 	if (targetIndex == -1 || targetIndex >= size) {
 		targetIndex = size - 1;
@@ -33,7 +33,7 @@ AccessibilityNodeInfo toNode(ArrayList nodes, int index) {
 	if (targetIndex < 0) {
 		targetIndex = 0;
 	}
-	node = nodes.get(targetIndex);
+	AccessibilityNodeInfo node = nodes.get(targetIndex);
 	if (node instanceof AccessibilityNodeInfo) {
 		return (AccessibilityNodeInfo) node;
 	}
@@ -60,9 +60,9 @@ AccessibilityNodeInfo toNode(ArrayList nodes) {
  * Returns:
  * AccessibilityNodeInfo → The first node found, or null if empty/invalid.
  *───────────────────────────────────────────────────────────────*/
-AccessibilityNodeInfo toNode(HashMap nodes) {
-	if (nodes == null || nodes.isEmpty()) return null;
-	it = nodes.values().iterator();
+AccessibilityNodeInfo toNode(HashMap nodesMap) {
+	if (nodesMap == null || nodesMap.isEmpty()) return null;
+	it = nodesMap.values().iterator();
 	if (!it.hasNext()) return null;
 	node = it.next();
 	return toNode(node);
@@ -78,15 +78,15 @@ AccessibilityNodeInfo toNode(HashMap nodes) {
  * Returns:
  * AccessibilityNodeInfo → The requested node, or null if key missing/invalid.
  *───────────────────────────────────────────────────────────────*/
-AccessibilityNodeInfo toNode(HashMap nodes, String key) {
-	if (nodes == null || !nodes.containsKey(key)) return null;
-	node = nodes.get(key);
+AccessibilityNodeInfo toNode(HashMap nodesMap, String key) {
+	if (nodesMap == null || !nodesMap.containsKey(key)) return null;
+	node = nodesMap.get(key);
 	return toNode(node);
 }
 
 
-AccessibilityNodeInfo toNode(HashMap nodes, String key, int index) {
-	if (nodes == null || !nodes.containsKey(key)) return null;
-	node = nodes.get(key);
+AccessibilityNodeInfo toNode(HashMap nodesMap, String key, int index) {
+	if (nodesMap == null || !nodesMap.containsKey(key)) return null;
+	node = nodesMap.get(key);
 	return toNode(node, index);
 }

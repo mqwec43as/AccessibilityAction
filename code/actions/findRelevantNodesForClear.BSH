@@ -17,17 +17,17 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import java.util.ArrayList;
 ArrayList findRelevantNodesForClear(String type) {
 	ArrayList found = new ArrayList();
-	root = getRoot();
+	AccessibilityNodeInfo root = getRoot();
 	if (root == null) return found;
 
-	stack = new ArrayList();
+	List stack = new ArrayList();
 	stack.add(root);
 	while (!stack.isEmpty()) {
-		node = (AccessibilityNodeInfo) stack.remove(0);
+		AccessibilityNodeInfonode = (AccessibilityNodeInfo) stack.remove(0);
 		if (node == null) continue;
 		for (int j = 0; j < node.getChildCount(); j++) {
-			c = node.getChild(j);
-			if (c != null) stack.add(c);
+			AccessibilityNodeInfo child = node.getChild(j);
+			if (c != null) stack.add(child);
 		}
 		if ("clearFocus".equals(type) && node.isFocused()) found.add(node);
 		else if ("clearSelection".equals(type) && node.isSelected()) found.add(node);

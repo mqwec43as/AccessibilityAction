@@ -61,12 +61,12 @@ ArrayList getAllNodes(ArrayList nodes, int index) {
 	return getAllNodes(toNode(nodes, index));
 }
 
-ArrayList getAllNodes(HashMap nodes) {
-	return getAllNodes(toNode(nodes));
+ArrayList getAllNodes(HashMap nodesMap) {
+	return getAllNodes(toNode(nodesMap));
 }
 
-ArrayList getAllNodes(HashMap nodes, String key) {
-	return getAllNodes(toNode(nodes, key));
+ArrayList getAllNodes(HashMap nodesMap, String key) {
+	return getAllNodes(toNode(nodesMap, key));
 }
 
 

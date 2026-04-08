@@ -3,6 +3,7 @@ This code was primarily generated using AI with minimal human editing.
 ───────────────────────────────────────────────────────────────*/
 
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.content.Context;
 /*───────────────────────────────────────────────────────────────
  * getRoot()
  * **Get Root Node**
@@ -15,6 +16,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
  * AccessibilityNodeInfo root = getRoot();
  * ───────────────────────────────────────────────────────────────*/
 AccessibilityNodeInfo getRoot() {
-	service = getService();
+	Context service = getService();
 	return service.getRootInActiveWindow();
 }

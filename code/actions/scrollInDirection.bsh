@@ -73,19 +73,19 @@ scrollNode.refresh();
 }
 
 scrollInDirection(ArrayList nodes, String direction) {
-	node = toNode(nodes);
+	AccessibilityNodeInfo node = toNode(nodes);
 	if (node == null) return;
 	return scrollInDirection(node);
 }
 
 scrollInDirection(HashMap nodes, String direction) {
-	node = toNode(nodes);
+	AccessibilityNodeInfo node = toNode(nodes);
 	if (node == null) return;
 	return scrollInDirection(node);
 }
 
 scrollInDirection(HashMap nodes, String key, String direction) {
-	node = toNode(nodes, key);
+	AccessibilityNodeInfo node = toNode(nodes, key);
 	if (node == null) return;
 	return scrollInDirection(node);
 }

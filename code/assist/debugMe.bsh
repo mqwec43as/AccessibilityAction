@@ -64,7 +64,10 @@ debugMe(List nodes) {
 	This structure;
 	Runnable debug = new Runnable() {
 		run() {
-
+			if (!isAction && nodes.size() == 1) {
+				AccessibilityNodeInfo node = nodes.get(0);
+				showOnScreen(node);
+			}
 			for (AccessibilityNodeInfo node: nodes) {
 				This nodeBox = NodeBox(node);
 				nodeBox.setColor(color[1], color[2], color[3]);
@@ -83,7 +86,7 @@ debugMe(List nodes) {
 				if (debugInfo) {
 					nodeBox.infocationText = invocationText;
 					nodeBox.showInfo();
-					nodeBox.infoToast.addRow("invocation", "Line", invocationText);
+					nodeBox.infoToast.addRow("invocation", "Line", "\n" + invocationText, 3);
 				}
 			}
 
@@ -131,4 +134,66 @@ public void debugMe(Map map) {
 	}
 
 	debugMe(nodes);
+}
+
+import android.accessibilityservice.AccessibilityService;
+import android.graphics.PixelFormat;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
+import android.os.Handler;
+import android.os.Looper;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.content.Context;
+
+public void debugMe(double x, double y) {
+	if (debugMe == void || !debugMe) return;
+	Context accessibilityService = tasker.getAccessibilityService();
+	if (accessibilityService == null || accessibilityService == void) {
+		tasker.log("debugMe: Accessibility Service not running.");
+		return;
+	}
+	WindowManager wm = (WindowManager) accessibilityService.getSystemService(accessibilityService.WINDOW_SERVICE);
+	WindowManager.LayoutParams params = new WindowManager.LayoutParams();
+	int width = 60;
+	params.width = width;
+	params.height = width;
+	params.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
+	params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+		WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+		WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+	params.format = PixelFormat.TRANSLUCENT;
+	params.gravity = Gravity.TOP | Gravity.LEFT;
+	params.x = (int) x - width / 2;
+	params.y = (int) y - width / 2;
+
+	GradientDrawable shape = new GradientDrawable();
+	shape.setShape(GradientDrawable.OVAL);
+	shape.setColor(Color.CYAN);
+
+	View dot = new View(accessibilityService);
+	dot.setBackgroundDrawable(shape);
+	CompletableSubject waitTap = CompletableSubject.create();
+	Handler mainHandler = new Handler(Looper.getMainLooper());
+	Runnable uiRunnable = new Runnable() {
+		run() {
+			try {
+				wm.addView(dot, params);
+				new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+					run() {
+						try {
+							wm.removeView(dot);
+							waitTap.onComplete();
+						} catch (Exception e) {
+						}
+					}
+				}, debugDelay);
+			} catch (Exception e) {
+				tasker.log("debugMe Main Thread Error: " + e.getMessage());
+			}
+		}
+	};
+	mainHandler.post(uiRunnable);
+	waitTap.blockingAwait(debugDelay + 200, TimeUnit.MILLISECONDS);
 }

@@ -29,14 +29,14 @@ boolean isNotNearby(AccessibilityNodeInfo sourceNode, int parentLevel, String ke
 	return isNearby;
 }
 
-boolean isNotNearby(AccessibilityNodeInfo sourceNode, int parentLevel, String value) {
-	return isNotNearby(sourceNode, parentLevel, "text", value);
+boolean isNotNearby(AccessibilityNodeInfo sourceNode, int parentLevel, String text) {
+	return isNotNearby(sourceNode, parentLevel, "text", text);
 }
 
 boolean isNotNearby(AccessibilityNodeInfo sourceNode, String key, String value) {
 	return isNotNearby(sourceNode, 0, key, value);
 }
 
-boolean isNotNearby(AccessibilityNodeInfo sourceNode, String textString) {
-	return isNotNearby(sourceNode, 0, "text", textString);
+boolean isNotNearby(AccessibilityNodeInfo sourceNode, String text) {
+	return isNotNearby(sourceNode, 0, "text", text);
 }

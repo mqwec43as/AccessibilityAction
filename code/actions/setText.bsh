@@ -15,7 +15,7 @@ text content using ACTION_SET_TEXT.
 
 Arguments:
 
-* target/nodes → The specific node or collection to modify.
+* node → The specific node or collection to modify.
 * text → The string content to input.
 * value → The text/ID value to search for the field.
 * key → The attribute to search by (default is "text").
@@ -28,15 +28,16 @@ Returns:
 ───────────────────────────────────────────────────────────────*/
 
 /* Base SetText Logic */
-setText(AccessibilityNodeInfo target, String text) {
-	if (target == null) return null;
-	args = new Bundle();
+setText(AccessibilityNodeInfo node, String text) {
+	if (node == null) return null;
+	Bundle args = new Bundle();
 	args.putCharSequence("ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE", text);
-	debugMe(target);
-	target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args);
-	target.refresh();
+	showOnScreen(node);
+	debugMe(node);
+	node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args);
+	node.refresh();
 	if (stepDelay > 0) wait(stepDelay);
-	return target;
+	return node;
 
 }
 
@@ -60,70 +61,83 @@ setText(HashMap nodes, String key, String text) {
 
 /* Basic Search Overloads (Text-based) */
 setText(String value, String text) {
-	return setText("text", value, text, 0);
+	AccessibilityNodeInfo node = getNode("text", value);
+	return setText(node, text);
 }
 
 setText(String value, String text, int index) {
-	return setText("text", value, text, index);
+	AccessibilityNodeInfo node = getNode("text", value, index);
+	return setText(node, text);
 }
 
 setText(String value, String text, long timeout) {
-	return setText(getNode(getRoot(), "text", value, 0, timeout), text);
+	AccessibilityNodeInfo node = getNode("text", value, 0, timeout);
+	return setText(node, text);
 }
 
 setText(String value, String text, int index, long timeout) {
-	return setText(getNode(getRoot(), "text", value, index, timeout), text);
+	AccessibilityNodeInfo node = getNode("text", value, index, timeout);
+	return setText(node, text);
 }
 
 /* Key-Value Search Overloads */
 setText(String key, String value, String text) {
-	return setText(key, value, text, 0);
+	AccessibilityNodeInfo node = getNode(key, value);
+	return setText(node, text);
 }
 
 setText(String key, String value, String text, int index) {
-	node = getNode(getRoot(), key, value, index);
+	AccessibilityNodeInfo node = getNode(key, value, index);
 	return setText(node, text);
 }
 
 setText(String key, String value, String text, int index, long timeout) {
-	return setText(getNode(getRoot(), key, value, index, timeout), text);
+	AccessibilityNodeInfo node = getNode(key, value, index, timeout);
+	return setText(node, text);
 }
 
-setText(String key, String value, String text, int parentLevel, String siblingValue) {
-	return setText(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), text);
+setText(String key, String value, String text, int parentLevel, String nearbyValue) {
+	AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
+	return setText(node, text);
 }
 
 /* Focus and Special Overloads */
 setText(String text) {
 	/* Targets the currently focused input field */
-	return setText("focus", null, text, 0);
+	AccessibilityNodeInfo node = getNode("focus", null);
+    return setText(node, text);
 }
 
 /* Complex Search Overloads (Root and Configs) */
 setText(AccessibilityNodeInfo root, String value, String text) {
-	return setText(getNode(root, value), text);
+	AccessibilityNodeInfo node = getNode(root, value);
+	return setText(node, text);
 }
 
 setText(String value, String text, Object[][] argsConfigs) {
-	return setText(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs), text);
+	AccessibilityNodeInfo node = getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs);
+	return setText(node, text);
 }
 
 /* Parent and Sibling Overloads */
-// setText(String value, String text, String siblingValue) {
-// 	return setText(getNode(getRoot(), "text", value, 0, waitNodesTimeout, 0, "text", siblingValue), text);
+// setText(String value, String text, String nearbyValue) {
+//  return setText(getNode(getRoot(), "text", value, 0, waitNodesTimeout, 0, "text", nearbyValue), text);
 // }
 
-setText(String value, String text, int parentLevel, String siblingValue) {
-	return setText(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), text);
+setText(String value, String text, int parentLevel, String nearbyValue) {
+	AccessibilityNodeInfo node = getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
+	return setText(node, text);
 }
 
-setText(String key, String value, String text, int parentLevel, String siblingKey, String siblingValue) {
-	return setText(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), text);
+setText(String key, String value, String text, int parentLevel, String nearbyKey, String nearbyValue) {
+	AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	return setText(node, text);
 }
 
 /* AccessibilityNodeInfo Root specific variants */
 setText(AccessibilityNodeInfo root, String key, String value, String text, int index, long timeout) {
-	return setText(getNode(root, key, value, index, timeout), text);
+	AccessibilityNodeInfo node = getNode(root, key, value, index, timeout);
+	return setText(node, text);
 }
 
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -136,15 +150,18 @@ a specific AccessibilityNodeInfo root instead of the global root.
 ───────────────────────────────────────────────────────────────*/
 
 setText(AccessibilityNodeInfo root, String value, String text, int index) {
-	return setText(getNode(root, "text", value, index), text);
+	AccessibilityNodeInfo node = getNode(root, "text", value, index);
+	return setText(node, text);
 }
 
 setText(AccessibilityNodeInfo root, String value, String text, long timeout) {
-	return setText(getNode(root, "text", value, 0, timeout), text);
+	AccessibilityNodeInfo node = getNode(root, "text", value, 0, timeout);
+	return setText(node, text);
 }
 
 setText(AccessibilityNodeInfo root, String value, String text, int index, long timeout) {
-	return setText(getNode(root, "text", value, index, timeout), text);
+	AccessibilityNodeInfo node = getNode(root, "text", value, index, timeout);
+	return setText(node, text);
 }
 
 setText(AccessibilityNodeInfo root, String key, String value, String text) {
@@ -152,31 +169,35 @@ setText(AccessibilityNodeInfo root, String key, String value, String text) {
 }
 
 setText(AccessibilityNodeInfo root, String key, String value, String text, int index) {
-	node = getNode(root, key, value, index);
+	AccessibilityNodeInfo node = getNode(root, key, value, index);
 	return setText(node, text);
 }
 
 setText(AccessibilityNodeInfo root, String value, String text, Object[][] argsConfigs) {
-	return setText(getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs), text);
+	AccessibilityNodeInfo node = getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs);
+	return setText(node, text);
 }
 
-// setText(AccessibilityNodeInfo root, String value, String text, String siblingValue) {
-// 	return setText(getNode(root, "text", value, 0, waitNodesTimeout, 0, "text", siblingValue), text);
+// setText(AccessibilityNodeInfo root, String value, String text, String nearbyValue) {
+//  return setText(getNode(root, "text", value, 0, waitNodesTimeout, 0, "text", nearbyValue), text);
 // }
 
-setText(AccessibilityNodeInfo root, String value, String text, int parentLevel, String siblingValue) {
-	return setText(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), text);
+setText(AccessibilityNodeInfo root, String value, String text, int parentLevel, String nearbyValue) {
+	AccessibilityNodeInfo node = getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
+	return setText(node, text);
 }
 
-setText(AccessibilityNodeInfo root, String key, String value, String text, int parentLevel, String siblingValue) {
-	return setText(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), text);
+setText(AccessibilityNodeInfo root, String key, String value, String text, int parentLevel, String nearbyValue) {
+	AccessibilityNodeInfo node = getNode(root, key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
+	return setText(node, text);
 }
 
-setText(AccessibilityNodeInfo root, String key, String value, String text, int parentLevel, String siblingKey, String siblingValue) {
-	return setText(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), text);
+setText(AccessibilityNodeInfo root, String key, String value, String text, int parentLevel, String nearbyKey, String nearbyValue) {
+	AccessibilityNodeInfo node = getNode(root, key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	return setText(node, text);
 }
 
-setText(AccessibilityNodeInfo root, String key, String value, String text, int index, int parentLevel, String siblingKey, String siblingValue) {
-	return setText(getNode(root, key, value, index, waitNodesTimeout, parentLevel, siblingKey, siblingValue), text);
+setText(AccessibilityNodeInfo root, String key, String value, String text, int index, int parentLevel, String nearbyKey, String nearbyValue) {
+	AccessibilityNodeInfo node = getNode(root, key, value, index, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	return setText(node, text);
 }
-

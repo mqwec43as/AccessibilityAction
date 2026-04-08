@@ -21,12 +21,14 @@ import java.util.HashMap;
  * ───────────────────────────────────────────────────────────────*/
  
  
-focus(AccessibilityNodeInfo target) {
-	if (target == null) return;
-	target.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+focus(AccessibilityNodeInfo node) {
+	if (node == null) return;
+	showOnScreen(node);
+	debugMe(node);
+	node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
 	if (stepDelay > 0) wait(stepDelay);
-	target.refresh();
-	return target;
+	node.refresh();
+	return node;
 }
 
 focus(ArrayList nodes) {
@@ -76,18 +78,21 @@ a specific AccessibilityNodeInfo root instead of the global root.
 ───────────────────────────────────────────────────────────────*/
 
 focus(AccessibilityNodeInfo root, String key, String value, int index) {
-target = getNode(root, key, value, index);
-return focus(target);
+AccessibilityNodeInfo node = getNode(root, key, value, index);
+return focus(node);
 }
 
 focus(AccessibilityNodeInfo root, String key, String value) {
-return focus(root, key, value, 0);
+	AccessibilityNodeInfo node = getNode(root, key, value, 0);
+return focus(node);
 }
 
-focus(AccessibilityNodeInfo root, String value) {
-return focus(root, "text", value, 0);
+focus(AccessibilityNodeInfo root, String text) {
+	AccessibilityNodeInfo node = getNode(root, "text", text, 0);
+return focus(node);
 }
 
 focus(AccessibilityNodeInfo root, String value, int index) {
-return focus(root, "text", value, index);
+	AccessibilityNodeInfo node = getNode(root, "text", value, index);
+return focus(node);
 }

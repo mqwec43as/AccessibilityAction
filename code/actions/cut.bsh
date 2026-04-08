@@ -14,7 +14,7 @@ cut action (copies selected text to clipboard and removes it).
 
 Arguments:
 
-* target/nodes → The specific node or collection to cut from.
+* node/nodes → The specific node or collection to cut from.
 * value → The text/ID value to search for the field.
 * key → The attribute to search by (default is "text").
 * index → The instance index if multiple matches exist.
@@ -27,17 +27,16 @@ Returns:
 ───────────────────────────────────────────────────────────────*/
 
 /* Base Cut Logic */
-cut(AccessibilityNodeInfo target) {
-	if (target == null) return null;
+cut(AccessibilityNodeInfo node) {
+	if (node == null) return null;
 
-
-	target.performAction(AccessibilityNodeInfo.ACTION_CUT);
+	showOnScreen(node);
+	debugMe(node);
+	node.performAction(AccessibilityNodeInfo.ACTION_CUT);
 
 	if (stepDelay > 0) wait(stepDelay);
-	target.refresh();
-	return target;
-
-
+	node.refresh();
+	return node;
 
 }
 
@@ -51,29 +50,29 @@ cut(ArrayList nodes, int index) {
 }
 
 
-cut(HashMap nodes) {
-	return cut(toNode(nodes));
+cut(HashMap nodesMap) {
+	return cut(toNode(nodesMap));
 }
 
-cut(HashMap nodes, String key) {
-	return cut(toNode(nodes, key));
+cut(HashMap nodesMap, String key) {
+	return cut(toNode(nodesMap, key));
 }
 
 /* Basic Search Overloads (Text-based) */
-cut(String value) {
-	return cut("text", value, 0);
+cut(String text) {
+	return cut("text", text, 0);
 }
 
-cut(String value, int index) {
-	return cut("text", value, index);
+cut(String text, int index) {
+	return cut("text", text, index);
 }
 
-cut(String value, long timeout) {
-	return cut(getNode(getRoot(), "text", value, 0, timeout));
+cut(String text, long timeout) {
+	return cut(getNode(getRoot(), "text", text, 0, timeout));
 }
 
-cut(String value, int index, long timeout) {
-	return cut(getNode(getRoot(), "text", value, index, timeout));
+cut(String text, int index, long timeout) {
+	return cut(getNode(getRoot(), "text", text, index, timeout));
 }
 
 /* Key-Value Search Overloads */
@@ -100,21 +99,21 @@ cut(AccessibilityNodeInfo root, String value) {
 	return cut(getNode(root, value));
 }
 
-cut(String value, Object[][] argsConfigs) {
-	return cut(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs));
+cut(String text, Object[][] argsConfigs) {
+	return cut(getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs));
 }
 
 /* Parent and Sibling Overloads */
-// cut(String value, String siblingValue) {
-// 	return cut(getNode(getRoot(), "text", value, 0, waitNodesTimeout, 0, "text", siblingValue));
+// cut(String text, String nearbyText) {
+// 	return cut(getNode(getRoot(), "text", text, 0, waitNodesTimeout, 0, "text", nearbyText));
 // }
 
-cut(String value, int parentLevel, String siblingValue) {
-	return cut(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue));
+cut(String text, int parentLevel, String nearbyText) {
+	return cut(getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
-cut(String key, String value, int parentLevel, String siblingKey, String siblingValue) {
-	return cut(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue));
+cut(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
+	return cut(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }
 
 /* AccessibilityNodeInfo Root specific variants */
@@ -132,16 +131,16 @@ relative to a specific AccessibilityNodeInfo root instead of
 the global root.
 ───────────────────────────────────────────────────────────────*/
 
-copy(AccessibilityNodeInfo root, String value, int index) {
-	return copy(getNode(root, "text", value, index));
+copy(AccessibilityNodeInfo root, String text, int index) {
+	return copy(getNode(root, "text", text, index));
 }
 
-copy(AccessibilityNodeInfo root, String value, long timeout) {
-	return copy(getNode(root, "text", value, 0, timeout));
+copy(AccessibilityNodeInfo root, String text, long timeout) {
+	return copy(getNode(root, "text", text, 0, timeout));
 }
 
-copy(AccessibilityNodeInfo root, String value, int index, long timeout) {
-	return copy(getNode(root, "text", value, index, timeout));
+copy(AccessibilityNodeInfo root, String text, int index, long timeout) {
+	return copy(getNode(root, "text", text, index, timeout));
 }
 
 copy(AccessibilityNodeInfo root, String key, String value) {
@@ -152,14 +151,14 @@ copy(AccessibilityNodeInfo root, String key, String value, int index) {
 	return copy(getNode(root, key, value, index));
 }
 
-copy(AccessibilityNodeInfo root, String value, Object[][] argsConfigs) {
-	return copy(getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs));
+copy(AccessibilityNodeInfo root, String text, Object[][] argsConfigs) {
+	return copy(getNode(root, "text", text, 0, waitNodesTimeout, argsConfigs));
 }
 
-copy(AccessibilityNodeInfo root, String value, int parentLevel, String siblingValue) {
-	return copy(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue));
+copy(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyText) {
+	return copy(getNode(root, "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
-copy(AccessibilityNodeInfo root, String key, String value, int parentLevel, String siblingKey, String siblingValue) {
-	return copy(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue));
+copy(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
+	return copy(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }

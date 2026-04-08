@@ -15,10 +15,10 @@ import java.lang.Class;
  * findSpannedNodes
  * Fixed traversal to check both fields and properly extract Span metadata for matching.
  */
-ArrayList findSpannedNodes(AccessibilityNodeInfo root, String classname, String pattern) {
+ArrayList findSpannedNodes(AccessibilityNodeInfo root, String className, String pattern) {
 	if (root == null) return new ArrayList();
 	if (pattern == null) pattern = "/r/.";
-	if (classname == null) classname = "TextSpan";
+	if (className == null) className = "TextSpan";
 
 	ArrayList exactMatch = new ArrayList();
 	ArrayList partialMatch = new ArrayList();
@@ -44,7 +44,7 @@ ArrayList findSpannedNodes(AccessibilityNodeInfo root, String classname, String 
 
 		for (int i = 0; i < sources.length; i++) {
 			// Use our smart extractor to get the string (it handles mURL for URLSpan)
-			String targetText = getText(node, classname, sources[i]);
+			String targetText = getText(node, className, sources[i]);
 
 			if (targetText != null && targetText.length() > 0) {
 				if (regexMode) {

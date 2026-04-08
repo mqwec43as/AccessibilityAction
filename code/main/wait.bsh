@@ -7,25 +7,25 @@ if (RUNNING_ENV == "TASKER") {
 	import io.reactivex.Completable;
 }
 /*───────────────────────────────────────────────────────────────
- * wait(long ms)
+ * wait(long milliseconds)
  * **Waits for Delay**
  * Suspends execution for a specified duration in milliseconds.
  *
  * Arguments:
- * * - ms → Duration to wait in milliseconds.
+ * * - milliseconds → Duration to wait in milliseconds.
  *
  * Example:
  * // Wait for half a second
  * wait(500);
  * ───────────────────────────────────────────────────────────────*/
-void wait(long ms) {
+void wait(long milliseconds) {
 	if (RUNNING_ENV == "TASKER") {
 		try {
-			Completable.timer(ms, TimeUnit.MILLISECONDS).blockingAwait();
+			Completable.timer(milliseconds, TimeUnit.MILLISECONDS).blockingAwait();
 		} catch (Exception e) {
 			tasker.log("wait interrupted: ", LOG_FILE);
 		}
 	} else if (RUNNING_ENV = "MACRODROID") {
-		Thread.sleep(ms);
+		Thread.sleep(milliseconds);
 	}
 }

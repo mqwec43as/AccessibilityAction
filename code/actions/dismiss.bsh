@@ -1,10 +1,10 @@
-/*─────────────────────────────────────────────────────────────── 
-This code was primarily generated using AI with minimal human editing.
-───────────────────────────────────────────────────────────────*/
-
 import android.view.accessibility.AccessibilityNodeInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
 
 /*───────────────────────────────────────────────────────────────
  * dismiss(String key, String value, int index)
@@ -12,19 +12,18 @@ import java.util.HashMap;
  * Attempts to dismiss a dismissible UI element (dialog, notification).
  *
  * Arguments:
- * * - key → Selector type.
- * * - value → Selector value.
- * * - index → Node index (0 for first match).
+ * - key → Selector type.
+ * - value → Selector value.
+ * - index → Node index (0 for first match).
  *
  * Example:
  * dismiss("text", "New Update Available");
  * ───────────────────────────────────────────────────────────────*/
-dismiss(AccessibilityNodeInfo target) {
-	target.performAction(AccessibilityNodeInfo.ACTION_DISMISS);
+dismiss(AccessibilityNodeInfo node) {
+	node.performAction(AccessibilityNodeInfo.ACTION_DISMISS);
 	if (stepDelay > 0) wait(stepDelay);
-	target.refresh();
-	return target;
-
+	node.refresh();
+	return node;
 }
 
 dismiss(ArrayList nodes) {
@@ -37,52 +36,49 @@ dismiss(ArrayList nodes, int index) {
 	return dismiss(toNode(nodes, index));
 }
 
-
-dismiss(HashMap nodes) {
-	node = toNode(nodes);
+dismiss(HashMap nodesMap) {
+	AccessibilityNodeInfo node = toNode(nodesMap);
 	if (node == null) return;
 	return dismiss(node);
 }
 
-dismiss(HashMap nodes, String key) {
-	node = toNode(nodes, key);
+dismiss(HashMap nodesMap, String key) {
+	AccessibilityNodeInfo node = toNode(nodesMap, key);
 	if (node == null) return;
 	return dismiss(node);
 }
 
 dismiss(String key, String value, int index) {
-	root_before = getRoot();
-	target = getNode(root_before, key, value, index);
-	return dismiss(target);
+	AccessibilityNodeInfo root_before = getRoot();
+	AccessibilityNodeInfo node = getNode(root_before, key, value, index);
+	return dismiss(node);
 }
 
 dismiss(String key, String value) {
 	return dismiss(key, value, 0);
 }
 
-import android.view.accessibility.AccessibilityNodeInfo;
-
 /*───────────────────────────────────────────────────────────────
-dismiss(AccessibilityNodeInfo root, ...)
-**New Overloads with Root Entry Parameter**
-These methods allow performing a dismiss action on nodes found
-relative to a specific AccessibilityNodeInfo root instead of
-the global root.
-───────────────────────────────────────────────────────────────*/
+  dismiss(AccessibilityNodeInfo root, ...)
+  **New Overloads with Root Entry Parameter**
+  These methods allow performing a dismiss action on nodes found
+  relative to a specific AccessibilityNodeInfo root instead of
+  the global root.
+  ───────────────────────────────────────────────────────────────*/
 
 dismiss(AccessibilityNodeInfo root, String key, String value) {
-return dismiss(root, key, value, 0);
+	return dismiss(root, key, value, 0);
 }
 
 dismiss(AccessibilityNodeInfo root, String key, String value, int index) {
-target = getNode(root, key, value, index);
-return dismiss(target);
+	AccessibilityNodeInfo node = getNode(root, key, value, index);
+	return dismiss(node);
 }
 
-dismiss(AccessibilityNodeInfo root, String value) {
-return dismiss(root, "text", value, 0);
+dismiss(AccessibilityNodeInfo root, String text) {
+	return dismiss(root, "text", text, 0);
 }
 
-dismiss(AccessibilityNodeInfo root, String value, int index) {
-return dismiss(root, "text", value, index);
+dismiss(AccessibilityNodeInfo root, String text, int index) {
+	return dismiss(root, "text", text, index);
 }

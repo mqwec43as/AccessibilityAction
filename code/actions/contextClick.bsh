@@ -14,7 +14,7 @@ click (secondary action) on it.
 
 Arguments:
 
-* target/nodes → The specific node or collection to context-click.
+* node → The specific node or collection to context-click.
 * value → The text value to search for.
 * key → The attribute to search by (default is "text").
 * index → The instance index if multiple matches exist.
@@ -27,15 +27,15 @@ Returns:
 ───────────────────────────────────────────────────────────────*/
 
 /* Base Context Click Logic */
-contextClick(AccessibilityNodeInfo target) {
-	if (target == null) return null;
+contextClick(AccessibilityNodeInfo node) {
+	if (node == null) return null;
 
-
-	target.performAction(AccessibilityNodeInfo.ACTION_CONTEXT_CLICK);
+	showOnScreen(node);
+	node.performAction(AccessibilityNodeInfo.ACTION_CONTEXT_CLICK);
 
 	if (stepDelay > 0) wait(stepDelay);
-	target.refresh();
-	return target;
+	node.refresh();
+	return node;
 
 }
 
@@ -49,25 +49,25 @@ contextClick(ArrayList nodes, int index) {
 }
 
 
-contextClick(HashMap nodes) {
-	return contextClick(toNode(nodes));
+contextClick(HashMap nodesMap) {
+	return contextClick(toNode(nodesMap));
 }
 
-contextClick(HashMap nodes, String key) {
-	return contextClick(toNode(nodes, key));
+contextClick(HashMap nodesMap, String key) {
+	return contextClick(toNode(nodesMap, key));
 }
 
 /* Basic Search Overloads (Text-based) */
-contextClick(String value) {
-	return contextClick("text", value, 0);
+contextClick(String text) {
+	return contextClick("text", text, 0);
 }
 
-contextClick(String value, int index) {
-	return contextClick("text", value, index);
+contextClick(String text, int index) {
+	return contextClick("text", text, index);
 }
 
-contextClick(String value, long timeout) {
-	return contextClick(getNode(getRoot(), "text", value, 0, timeout));
+contextClick(String text, long timeout) {
+	return contextClick(getNode(getRoot(), "text", text, 0, timeout));
 }
 
 contextClick(String value, int index, long timeout) {
@@ -92,17 +92,17 @@ contextClick(AccessibilityNodeInfo root, String value) {
 	return contextClick(getNode(root, value));
 }
 
-contextClick(String value, Object[][] argsConfigs) {
-	return contextClick(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs));
+contextClick(String text, Object[][] argsConfigs) {
+	return contextClick(getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs));
 }
 
 
-contextClick(String value, int parentLevel, String siblingValue) {
-	return contextClick(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue));
+contextClick(String text, int parentLevel, String nearbyText) {
+	return contextClick(getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
-contextClick(String key, String value, int parentLevel, String siblingKey, String siblingValue) {
-	return contextClick(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue));
+contextClick(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
+	return contextClick(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }
 
 /* AccessibilityNodeInfo Root specific variants */
@@ -117,12 +117,12 @@ These methods allow performing a context click on nodes found
 relative to a specific AccessibilityNodeInfo root.
 ───────────────────────────────────────────────────────────────*/
 
-contextClick(AccessibilityNodeInfo root, String value, long timeout) {
-	return contextClick(getNode(root, "text", value, 0, timeout));
+contextClick(AccessibilityNodeInfo root, String text, long timeout) {
+	return contextClick(getNode(root, "text", text, 0, timeout));
 }
 
-contextClick(AccessibilityNodeInfo root, String value, int index, long timeout) {
-	return contextClick(getNode(root, "text", value, index, timeout));
+contextClick(AccessibilityNodeInfo root, String text, int index, long timeout) {
+	return contextClick(getNode(root, "text", text, index, timeout));
 }
 
 contextClick(AccessibilityNodeInfo root, String key, String value) {
@@ -133,14 +133,14 @@ contextClick(AccessibilityNodeInfo root, String key, String value, int index) {
 	return contextClick(getNode(root, key, value, index));
 }
 
-contextClick(AccessibilityNodeInfo root, String value, Object[][] argsConfigs) {
-	return contextClick(getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs));
+contextClick(AccessibilityNodeInfo root, String text, Object[][] argsConfigs) {
+	return contextClick(getNode(root, "text", text, 0, waitNodesTimeout, argsConfigs));
 }
 
-contextClick(AccessibilityNodeInfo root, String value, int parentLevel, String siblingValue) {
-	return contextClick(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue));
+contextClick(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyText) {
+	return contextClick(getNode(root, "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
-contextClick(AccessibilityNodeInfo root, String key, String value, int parentLevel, String siblingKey, String siblingValue) {
-	return contextClick(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue));
+contextClick(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
+	return contextClick(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }

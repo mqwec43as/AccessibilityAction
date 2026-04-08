@@ -3,6 +3,7 @@ This code was primarily generated using AI with minimal human editing.
 ───────────────────────────────────────────────────────────────*/
 
 import android.view.accessibility.AccessibilityNodeInfo;
+
 /*───────────────────────────────────────────────────────────────
  * scrollBackward(String key, String value, int index)
  * **Scroll Backward**
@@ -17,33 +18,32 @@ import android.view.accessibility.AccessibilityNodeInfo;
  * Example (Screen-wide):
  * scrollBackward();
  * ───────────────────────────────────────────────────────────────*/
-scrollBackward(AccessibilityNodeInfo target, int index) {
-	target = getNode(key, value, index);
-	while (!target.isScrollable() && target.getParent() != null)
-		target = target.getParent();
-	target.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
-	target.refresh();
-	if (stepDelay > 0) wait(stepDelay);
-	return target;
+scrollBackward(AccessibilityNodeInfo node) {
+	if (node == null) return null;
+    while (!node.isScrollable() && node.getParent() != null) node = node.getParent();
+    node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+    node.refresh();
+    if (stepDelay > 0) wait(stepDelay);
+    return node;
 }
 
 scrollBackward(String key, String value, int index) {
-	target = getNode(key, value, index);
-	return scrollBackward(target, index);
+    AccessibilityNodeInfo node = getNode(key, value, index);
+    return scrollBackward(node);
 }
 
 scrollBackward() {
-	AccessibilityNodeInfo root = getRoot();
-	if (root == null) {
-		tasker.log("No active root window found.", LOG_FILE);
-		return false;
-	}
+    AccessibilityNodeInfo root = getRoot();
+    if (root == null) {
+        tasker.log("No active root window found.", LOG_FILE);
+        return false;
+    }
 
-	AccessibilityNodeInfo scrollNode = findScrollableNode(root);
-	if (scrollNode == null) {
-		tasker.log("No scrollable node found on screen.", LOG_FILE);
-		return false;
-	}
+    AccessibilityNodeInfo scrollNode = findScrollableNode(root);
+    if (scrollNode == null) {
+        tasker.log("No scrollable node found on screen.", LOG_FILE);
+        return false;
+    }
 
-	return scollBackward(scrollNode, 0);
+    return scollBackward(scrollNode);
 }

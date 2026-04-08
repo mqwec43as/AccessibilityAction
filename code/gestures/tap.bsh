@@ -21,7 +21,6 @@ import com.joaomgcd.taskerm.action.java.ClassImplementation;
 public boolean tap(double x, double y, long duration) {
 	Object accessibilityService = tasker.getAccessibilityService();
 	if (accessibilityService == null) return false;
-
 	AccessibilityService service = (AccessibilityService) accessibilityService;
 
 	try {
@@ -36,7 +35,7 @@ public boolean tap(double x, double y, long duration) {
 		// Normalize if between -1 and 1
 		if (Math.abs(x) <= 1.0f) x *= screenWidth;
 		if (Math.abs(y) <= 1.0f) y *= screenHeight;
-
+		debugMe(x, y);
 		// Tap path
 		Path path = new Path();
 		path.moveTo((float) x,(float) y);
@@ -186,20 +185,20 @@ boolean tap(String value, Object[][] argsConfigs, long duration) {
 	return tap(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs), duration);
 }
 
-boolean tap(String value, int parentLevel, String siblingValue, long duration) {
-	return tap(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), duration);
+boolean tap(String value, int parentLevel, String nearbyValue, long duration) {
+	return tap(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue), duration);
 }
 
-boolean tap(String key, String value, int parentLevel, String siblingValue, long duration) {
-	return tap(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), duration);
+boolean tap(String key, String value, int parentLevel, String nearbyValue, long duration) {
+	return tap(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue), duration);
 }
 
-boolean tap(String key, String value, int parentLevel, String siblingKey, String siblingValue, long duration) {
-	return tap(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, siblingKey, siblingValue), duration);
+boolean tap(String key, String value, int parentLevel, String nearbyKey, String nearbyValue, long duration) {
+	return tap(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue), duration);
 }
 
-boolean tap(String key, String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue, long duration) {
-	return tap(getNode(getRoot(), key, value, index, timeout, parentLevel, siblingKey, siblingValue), duration);
+boolean tap(String key, String value, int index, long timeout, int parentLevel, String nearbyKey, String nearbyValue, long duration) {
+	return tap(getNode(getRoot(), key, value, index, timeout, parentLevel, nearbyKey, nearbyValue), duration);
 }
 
 /* AccessibilityNodeInfo Root specific variants */
@@ -235,14 +234,14 @@ boolean tap(AccessibilityNodeInfo root, String value, Object[][] argsConfigs, lo
 	return tap(getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs), duration);
 }
 
-boolean tap(AccessibilityNodeInfo root, String value, int parentLevel, String siblingValue, long duration) {
-	return tap(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), duration);
+boolean tap(AccessibilityNodeInfo root, String value, int parentLevel, String nearbyValue, long duration) {
+	return tap(getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue), duration);
 }
 
-boolean tap(AccessibilityNodeInfo root, String key, String value, int parentLevel, String siblingValue, long duration) {
-	return tap(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, "text", siblingValue), duration);
+boolean tap(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyValue, long duration) {
+	return tap(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue), duration);
 }
 
-boolean tap(AccessibilityNodeInfo root, String key, String value, int index, long timeout, int parentLevel, String siblingKey, String siblingValue, long duration) {
-	return tap(getNode(root, key, value, index, timeout, parentLevel, siblingKey, siblingValue), duration);
+boolean tap(AccessibilityNodeInfo root, String key, String value, int index, long timeout, int parentLevel, String nearbyKey, String nearbyValue, long duration) {
+	return tap(getNode(root, key, value, index, timeout, parentLevel, nearbyKey, nearbyValue), duration);
 }

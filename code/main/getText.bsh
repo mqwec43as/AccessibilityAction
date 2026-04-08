@@ -51,49 +51,49 @@ getText(ArrayList nodes, int index) {
 	return getText(toNode(nodes, index));
 }
 
-getText(ArrayList nodes, int index, String type) {
-	return getText(toNode(nodes, index), type);
+getText(ArrayList nodes, int index, String key) {
+	return getText(toNode(nodes, index), key);
 }
 
-getText(HashMap nodes) {
-	return getText(toNode(nodes));
+getText(HashMap nodesMap) {
+	return getText(toNode(nodesMap));
 }
 
-getText(HashMap nodes, String key) {
-	return getText(toNode(nodes, key));
+getText(HashMap nodesMap, String mapKey) {
+	return getText(toNode(nodesMap, mapKey));
 }
 
-getText(HashMap nodes, String key, String type) {
-	return getText(toNode(nodes, key));
+getText(HashMap nodesMap, String mapKey, String key) {
+	return getText(toNode(nodesMap, mapKey));
 }
 
 /*───────────────────────────────────────────────────────────────
-  getText(AccessibilityNodeInfo node, String type)
+  getText(AccessibilityNodeInfo node, String key)
   Overload for targeted extraction.
   Example: getText(node, "URLSpan")
  ───────────────────────────────────────────────────────────────*/
-getText(AccessibilityNodeInfo node, String type) {
+getText(AccessibilityNodeInfo node, String key) {
 	if (node == null || node == void) return;
 
 	// If user asks specifically for raw fields
-	if ("text".equals(type)) return getText(node, "text", "text");
-	if ("contentDescription".equals(type)) return getText(node, "contentDescription", "contentDescription");
+	if ("text".equals(key)) return getText(node, "text", "text");
+	if ("contentDescription".equals(key)) return getText(node, "contentDescription", "contentDescription");
 
 	// Otherwise, check for Spans in both fields automatically
-	String val = getText(node, type, "text");
+	String val = getText(node, key, "text");
 	if (val.length() > 0) return val;
-	return getText(node, type, "contentDescription");
+	return getText(node, key, "contentDescription");
 }
 
 /*───────────────────────────────────────────────────────────────
-  getText(AccessibilityNodeInfo node, String type, String sourceField)
+  getText(AccessibilityNodeInfo node, String key, String sourceField)
   **Core Logic**
   Handles raw extraction and dynamic Span metadata (mURL, etc.)
  ───────────────────────────────────────────────────────────────*/
-getText(AccessibilityNodeInfo node, String type, String sourceField) {
+getText(AccessibilityNodeInfo node, String key, String sourceField) {
 	if (node == null || node == void) return "";
 
-	if ("seekbar".equals(type)) {
+	if ("seekbar".equals(key)) {
 		RangeInfo rangeInfo = node.getRangeInfo();
 		if (rangeInfo != null) {
 			current = rangeInfo.getCurrent();
@@ -106,22 +106,22 @@ getText(AccessibilityNodeInfo node, String type, String sourceField) {
 	if (cs == null) return "";
 
 	// Handle RAW request (Immediate return of toString)
-	if ("text".equals(type) || "contentDescription".equals(type)) {
+	if ("text".equals(key) || "contentDescription".equals(key)) {
 		return cs.toString();
 	}
 
 	// Handle SPAN request (Targeting metadata like mURL)
-	if (type != null && type.endsWith("Span")) {
+	if (key != null && key.endsWith("Span")) {
 		if (!(cs instanceof android.text.Spanned)) return "";
 
 		android.text.Spanned spanned = (android.text.Spanned) cs;
 		Class spanClass = null;
 		try {
-			if ("TextSpan".equals(type)) {
+			if ("TextSpan".equals(key)) {
 				spanClass = Object.class; // Match any span
 			} else {
 				// Load class dynamically (e.g. android.text.style.URLSpan)
-				spanClass = java.lang.Class.forName("android.text.style." + type);
+				spanClass = java.lang.Class.forName("android.text.style." + key);
 			}
 
 			Object[] spans = spanned.getSpans(0, spanned.length(), spanClass);

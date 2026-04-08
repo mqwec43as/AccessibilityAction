@@ -17,18 +17,17 @@ import android.view.accessibility.AccessibilityNodeInfo;
  * Example (Screen-wide):
  * scrollForward();
  * ───────────────────────────────────────────────────────────────*/
-scrollForward(AccessibilityNodeInfo target, int index) {
-	while (!target.isScrollable() && target.getParent() != null)
-		target = target.getParent();
-	target.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
-	target.refresh();
+scrollForward(AccessibilityNodeInfo node) {
+	while (!node.isScrollable() && node.getParent() != null) node = node.getParent();
+	node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+	node.refresh();
 	if (stepDelay > 0) wait(stepDelay);
-	return target;
+	return node;
 }
 
 scrollForward(String key, String value, int index) {
-	target = getNode(key, value, index);
-	return scrollForward(target, index);
+	AccessibilityNodeInfo node = getNode(key, value);
+	return scrollForward(node);
 }
 
 scrollForward() {
@@ -44,5 +43,5 @@ scrollForward() {
 		return false;
 	}
 
-	return scrollForward(scrollNode, 0);
+	return scrollForward(scrollNode);
 }
