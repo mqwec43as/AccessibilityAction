@@ -10,15 +10,13 @@ import java.util.Map;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import bsh.This;
-
 if (RUNNING_ENV == "TASKER") {
-    import io.reactivex.functions.Function;
-    import io.reactivex.functions.Predicate;
-    import io.reactivex.Observable;
-    import io.reactivex.Single;
-    import com.joaomgcd.taskerm.action.java.JavaCodeException;
+	import io.reactivex.functions.Function;
+	import io.reactivex.functions.Predicate;
+	import io.reactivex.Observable;
+	import io.reactivex.Single;
+	import com.joaomgcd.taskerm.action.java.JavaCodeException;
 }
-
 /*───────────────────────────────────────────────────────────────
 waitNodes(Object[][] argsConfigs, long timeoutMs, boolean hasAll)
 **Reactive Node Waiter with ID Mapping**
@@ -33,97 +31,97 @@ Arguments:
 Returns: HashMap where keys are IDs and values are ArrayLists of nodes.
 ───────────────────────────────────────────────────────────────*/
 waitNodes(Object[][] argsConfigs, long timeoutMs, boolean allFound) {
-    Map NO_RESULT = new HashMap();
-    AccessibilityNodeInfo root = getRoot();
-    Map nodesMap = findNodes(root, argsConfigs, allFound);
+	Map NO_RESULT = new HashMap();
+	AccessibilityNodeInfo root = getRoot();
+	Map nodesMap = findNodes(root, argsConfigs, allFound);
 
-    if (nodesMap.keySet().size() > 0) return nodesMap;
+	if (nodesMap.keySet().size() > 0) return nodesMap;
 
-    if (RUNNING_ENV == "TASKER") {
-        boolean oldDebug = debugMe;
-        if (oldDebug == true) debugMe = false;
-        
-        try {
-            nodesMap = tasker.getAccessibilityEvents()
-                .map(new io.reactivex.functions.Function() {
-                    apply(Object event) {
-                        root = getRoot();
-                        return findNodes(root, argsConfigs, allFound);
-                    }
-                })
-                .filter(new io.reactivex.functions.Predicate() {
-                    test(Object resultMap) {
-                        return resultMap.keySet().size() > 0;
-                    }
-                })
-                .timeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
-                .firstOrError()
-                .blockingGet();
-        } catch (Exception e) {
-            debugMe = oldDebug;
-            
-            if (waitNodes == void || waitNodes != void && waitNodes == true) {
-                throw new JavaCodeException("Timeout reached while waiting for nodesMap: " + e.getMessage());
-            }
-            
-            return NO_RESULT;
-        }
-        
-        debugMe = oldDebug;
-        if (!nodesMap.isEmpty()) {
-            debugMe(nodesMap);
-        }
-        
-        return nodesMap;
-    } else if (RUNNING_ENV == "MACRODROID") {
-        root = getRoot();
-        return findNodes(root, argsConfigs, allFound);
-    }
+	if (RUNNING_ENV == "TASKER") {
+		boolean oldDebug = debugMe;
+		if (oldDebug == true) debugMe = false;
+		
+		try {
+			nodesMap = tasker.getAccessibilityEvents()
+				.map(new io.reactivex.functions.Function() {
+					apply(Object event) {
+						root = getRoot();
+						return findNodes(root, argsConfigs, allFound);
+					}
+				})
+				.filter(new io.reactivex.functions.Predicate() {
+					test(Object resultMap) {
+						return resultMap.keySet().size() > 0;
+					}
+				})
+				.timeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+				.firstOrError()
+				.blockingGet();
+		} catch (Exception e) {
+			debugMe = oldDebug;
+			
+			if (waitNodes == void || waitNodes != void && waitNodes == true) {
+				throw new JavaCodeException("Timeout reached while waiting for nodesMap: " + e.getMessage());
+			}
+			
+			return NO_RESULT;
+		}
+		
+		debugMe = oldDebug;
+		if (!nodesMap.isEmpty()) {
+			debugMe(nodesMap);
+		}
+		
+		return nodesMap;
+	} else if (RUNNING_ENV == "MACRODROID") {
+		root = getRoot();
+		return findNodes(root, argsConfigs, allFound);
+	}
 }
 
-waitNodes(Object[][] argsConfigs, long timeoutMs) {
-    return waitNodes(argsConfigs, timeoutMs, true);
+Map waitNodes(Object[][] argsConfigs, long timeoutMs) {
+	return waitNodes(argsConfigs, timeoutMs, true);
 }
 
-waitNodes(String key, String value, Object[][] argsConfigs, long timeoutMs) {
-    Object[][] config = new Object[][] {
-        { "default", key, value, argsConfigs }
-    };
-    Map nodesMap = waitNodes(config, timeoutMs, false);
-    if (nodesMap.keySet().size() > 0) {
-        return nodesMap.get("default");
-    } else {
-        return new ArrayList();
-    }
+List waitNodes(String key, String value, Object[][] argsConfigs, long timeoutMs) {
+	Object[][] config = new Object[][] {
+		{ "default", key, value, argsConfigs }
+	};
+	Map nodesMap = waitNodes(config, timeoutMs, false);
+	if (nodesMap.keySet().size() > 0) {
+		return nodesMap.get("default");
+	} else {
+		return new ArrayList();
+	}
 }
 
 ArrayList waitNodes(String key, String value, long timeoutMs) {
-    return waitNodes(key, value, null, timeoutMs);
+	return waitNodes(key, value, null, timeoutMs);
 }
 
 ArrayList waitNodes(String key, String value) {
-    return waitNodes(key, value, null, waitNodesTimeout);
+	return waitNodes(key, value, null, waitNodesTimeout);
 }
 
 ArrayList waitNodes(String text, long timeoutMs) {
-    return waitNodes("text", text, null, timeoutMs);
+	return waitNodes("text", text, null, timeoutMs);
 }
 
 ArrayList waitNodes(String key, String value, long timeoutMs, int parentLevel, String nearbyKey, String nearbyValue) {
-    config = new Object[][] {
-        { parentLevel, nearbyKey, nearbyValue }
-    };
-    return waitNodes(key, value, config, timeoutMs);
+	config = new Object[][] {
+		{ parentLevel, nearbyKey, nearbyValue }
+	};
+	return waitNodes(key, value, config, timeoutMs);
 }
 
 ArrayList waitNodes(String text, long timeoutMs, int parentLevel, String nearbyKey, String nearbyValue) {
-    return waitNodes("text", text, timeoutMs, parentLevel, nearbyKey, nearbyValue);
+	return waitNodes("text", text, timeoutMs, parentLevel, nearbyKey, nearbyValue);
 }
 
 ArrayList waitNodes(String key, String value, long timeoutMs, int parentLevel, String nearbyText) {
-    return waitNodes(key, value, timeoutMs, parentLevel, "text", nearbyText);
+	return waitNodes(key, value, timeoutMs, parentLevel, "text", nearbyText);
 }
 
 ArrayList waitNodes(String text, long timeoutMs, int parentLevel, String nearbyText) {
-    return waitNodes("text", text, timeoutMs, parentLevel, "text", nearbyText);
+	return waitNodes("text", text, timeoutMs, parentLevel, "text", nearbyText);
 }
