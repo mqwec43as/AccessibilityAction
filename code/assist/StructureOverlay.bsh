@@ -385,9 +385,15 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 	setListener(This newListener) {
 		listener = newListener;
 	}
+	
+	setDefaultListener() {
+		listener = getDefaultListener();
+	}
+	
 	setNodeBoxTouchable(boolean touchable) {
 		nodeBoxTouchable = touchable;
 	}
+	
 	setTouchable(boolean touchable) {
 		WindowManager.LayoutParams currentParams = (WindowManager.LayoutParams) rootLayout.getLayoutParams();
 		if (currentParams == null) currentParams = rootParams;
