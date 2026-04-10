@@ -27,6 +27,8 @@ import bsh.This;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.os.Handler;
+import android.os.Looper;
 
 /*────────────────────────────────────────────────────────────────
 	NodeBox(AccessibilityNodeInfo node, int overlayType, AccessibilityNodeInfo node)
@@ -261,6 +263,12 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 		}
 	}
 	setDefault();
+
+	post(Runnable postRun) {
+		Handler mainHandler = new Handler(Looper.getMainLooper());
+		mainHandler.post(postRun);
+	}
+	
 	return this;
 }
 
