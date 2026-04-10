@@ -86,7 +86,8 @@ public void addSpacer(Context ctx, ViewGroup container) {
 ScriptEditor() {
 	Activity activity;
 	TextInputEditText editText;
-	boolean isRemoved = true;
+	boolean isRemoved;
+	boolean hasShown;
 	boolean isActionEdit;
 	String codeText;
 
@@ -283,24 +284,26 @@ ScriptEditor() {
 		activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {
 				isRemoved = false;
+				hasShown = true;
 			}
 			onViewDetachedFromWindow(View v) {
 				isRemoved = true;
+				hasShown = false;
 				activity = null;
 			}
 		});
 
-// 		Runnable showKeyboard = new Runnable() {
-// 			run() {
-// 				InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-// 				if (imm != null) {
-// 					imm.showSoftInput(editText, InputMethodManager.SHOW_FORCED);
-// 				}
+		// 		Runnable showKeyboard = new Runnable() {
+		// 			run() {
+		// 				InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+		// 				if (imm != null) {
+		// 					imm.showSoftInput(editText, InputMethodManager.SHOW_FORCED);
+		// 				}
 
-// 			}
-// 		};
-// 		editText.postDelayed(showKeyboard, 200);
-// 		editText.requestFocus();
+		// 			}
+		// 		};
+		// 		editText.postDelayed(showKeyboard, 200);
+		// 		editText.requestFocus();
 	}
 
 	Consumer uiLogic = new Consumer() {
@@ -321,13 +324,15 @@ ScriptEditor() {
 				codeText = getText(edits);
 			}
 		}
-		if (isRemoved) {
+		if (!hasShown) {
+			isRemoved = false;
+			hasShown = true;
 			tasker.doWithActivity(uiLogic);
 		}
 	}
 
 	toggle() {
-		if (isRemoved) {
+		if (!hasShown) {
 			show();
 		} else {
 			remove();

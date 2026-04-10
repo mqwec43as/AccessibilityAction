@@ -194,6 +194,7 @@ AssistSetting() {
 			}
 			onViewDetachedFromWindow(View v) {
 				isRemoved = true;
+				hasShown = false;
 				activity = null;
 			}
 		});
@@ -206,7 +207,7 @@ AssistSetting() {
 	};
 
 	show() {
-		if (isRemoved) {
+		if (!hasShown) {
 			isRemoved = false;
 			hasShown = true;
 			tasker.doWithActivity(uiLogic);
@@ -214,7 +215,7 @@ AssistSetting() {
 	}
 
 	toggle() {
-		if (isRemoved) {
+		if (!hasShown) {
 			show();
 		} else {
 			remove();
