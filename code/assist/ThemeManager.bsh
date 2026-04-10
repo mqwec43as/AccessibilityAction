@@ -158,10 +158,10 @@ ThemeManager(Context ctx) {
 		if (attrId == 0) {
 			attrId = res.getIdentifier(attrName, "attr", "com.google.android.material");
 		}
-		
+
 		if (attrId == 0) {
 			String pkg = useCtx.getPackageName();
-			Context taskerContext =  useCtx.createPackageContext(pkg, Context.CONTEXT_IGNORE_SECURITY);
+			Context taskerContext = useCtx.createPackageContext(pkg, Context.CONTEXT_IGNORE_SECURITY);
 			int resId = taskerContext.getResources().getIdentifier(attrName, "drawable", pkg);
 			if (resId == 0) {
 				tasker.log("Resource not found: " + attrName);
@@ -169,7 +169,7 @@ ThemeManager(Context ctx) {
 			}
 			return taskerContext.getResources().getDrawable(resId);
 		}
-		
+
 		TypedValue tv = new TypedValue();
 		boolean found = useCtx.getTheme().resolveAttribute(attrId, tv, true);
 		if (!found) return null;
@@ -177,7 +177,7 @@ ThemeManager(Context ctx) {
 		if (tv.isColorType()) {
 			return tv.data;
 		}
-	
+
 		if (tv.resourceId != 0) {
 			try {
 				Drawable d = useCtx.getDrawable(tv.resourceId);
@@ -207,6 +207,10 @@ ThemeManager(Context ctx) {
 		int resId = res.getIdentifier(id, "color", "android");
 		int colorInt = res.getColor(resId);
 		return colorInt;
+	}
+
+	setAlpha(int color, int alpha) {
+		return (alpha << 24) | (color & 0x00ffffff);
 	}
 
 	return this;
