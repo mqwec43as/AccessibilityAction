@@ -1,4 +1,5 @@
 import bsh.This;
+import java.io.File;
 
 a11Y() {
 	boolean debugSteps = false;
@@ -14,7 +15,7 @@ a11Y() {
 	boolean waitNodes = true;
 	boolean useA11yStructure = false;
 	This TOP;
-	
+
 	debug() {
 		debugMe = true;
 	}
@@ -64,9 +65,13 @@ a11Y() {
 		debugInfo = true;
 		findDelay = 100;
 		debugDelay = 1000;
+		useOffset = true;
+		useA11yOffset = true;
+		waitNodes = true;
+		useA11yStructure = false;
 	}
-	
-	
+
+
 	addOverlay(This overlay) {
 		assistOverlays.add(overlay);
 	};
@@ -85,6 +90,7 @@ a11Y() {
 
 	return this;
 };
-
+String ENV = new File(getSourceFileInfo()).getParentFile().getAbsolutePath();
 This a11Y = a11Y();
+a11Y.setEnv(ENV);
 tasker.setJavaVariable("a11Y", a11Y);
