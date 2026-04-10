@@ -38,27 +38,6 @@ public int dp(int value) {
 
 /*───────────────────────────────────────────────────────────────
 	AssistButton(int initialX, int initialY)
-	Display overlay that control StructureOverlay to inspect accessibility tree
-
-	Args:
-		- initialX: x position of the overlay, support values between 0 and 1 for percentages of the screen
-		- initialY: y position of the overlay, support values between 0 and 1 for percentages of the screen
-
-	Returns:
-		- bsh.This AssistButton	
-
-	Methods:
-		- boolean isRemoved():
-			- Returns true if the overlay is removed
-		- MaterialButton IconButton(Drawable drawable):
-			- Adds a button to the overlay
-		- View addView(View view):
-			- Adds a view to the overlay
-		- void remove():
-			- Removes the overlay
-		- void show():
-			- Displays the overlay
-		- void hide():
   ───────────────────────────────────────────────────────────────*/
 public This AssistButton(int initialX, int initialY) {
 	This a11Y = tasker.getJavaVariable("a11Y");
@@ -66,9 +45,11 @@ public This AssistButton(int initialX, int initialY) {
 	if (accessibilityService == null) {
 		throw new JavaCodeException("Accessibility Service not running.");
 	}
-	
+
 	boolean useA11y = true;
 	This activeStructure;
+	This scriptEditor = ScriptEditor();
+	This assistSetting = AssistSetting();
 	boolean isRemoved;
 	boolean useA11yStructure;
 	boolean isAttached;
@@ -112,7 +93,6 @@ public This AssistButton(int initialX, int initialY) {
 	container.setBackground(bg);
 	container.setPadding(padding, padding, padding, padding);
 
-	/* Container needs to wrap content in HORIZONTAL mode */
 	FrameLayout.LayoutParams containerParams = new FrameLayout.LayoutParams(-2, -2);
 	container.setLayoutParams(containerParams);
 	assistButton.addView(container);
@@ -121,13 +101,12 @@ public This AssistButton(int initialX, int initialY) {
 	Handler mainHandler = new Handler(Looper.getMainLooper());
 	GestureDetector detector;
 
-	/* WINDOW PARAMS - width and height set to WRAP_CONTENT initially */
 	WindowManager.LayoutParams assistParams = new WindowManager.LayoutParams(
-		-2, -2,
+		WindowManager.LayoutParams.WRAP_CONTENT,
+		WindowManager.LayoutParams.WRAP_CONTENT,
 		assistOverlayType,
 		WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
 		WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
-		WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
 		WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR,
 		PixelFormat.TRANSLUCENT
 	);
@@ -140,14 +119,11 @@ public This AssistButton(int initialX, int initialY) {
 	────────────────────────────*/
 
 	removeStructure() {
-		mainHandler.post(new Runnable() {
-			run() {
-				if (activeStructure != null && !activeStructure.isRemoved()) {
-					activeStructure.remove();
-				}
-			}
-		});
+		if (activeStructure != null && !activeStructure.isRemoved()) {
+			activeStructure.remove();
+		}
 	}
+
 	ensureLayout(View v) {
 		if (v.getLayoutParams() == null) {
 			v.setLayoutParams(new LinearLayout.LayoutParams(-2, -1));
@@ -156,16 +132,13 @@ public This AssistButton(int initialX, int initialY) {
 
 	refreshSize() {
 		int oldWidth = assistParams.width;
-
 		container.measure(
 			View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
 			View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
 		);
-
 		int measuredHeight = container.getMeasuredHeight();
 		int measuredWidth = container.getMeasuredWidth();
 
-		/* Shift X position leftwards by the amount of added width so the right side stays anchored naturally */
 		if (oldWidth > 0 && measuredWidth != oldWidth) {
 			assistParams.x = assistParams.x - (measuredWidth - oldWidth);
 		}
@@ -195,18 +168,14 @@ public This AssistButton(int initialX, int initialY) {
 		button.setIconGravity(2);
 		setButtonColorState(button, isActive);
 
-		/* LayoutParams for HORIZONTAL orientation */
 		int margin = padding;
 		boolean isFirst = (container.getChildCount() == 0);
-
 		int rightMargin = isFirst ? 0 : margin;
 		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(40), -1);
 		lp.setMargins(0, 0, rightMargin, 0);
 		button.setLayoutParams(lp);
 
-		/* ADD AT INDEX 0 TO GROW TO THE LEFT */
 		container.addView(button, 0);
-
 		buttons.add(button);
 		refreshSize();
 		return button;
@@ -218,23 +187,26 @@ public This AssistButton(int initialX, int initialY) {
 	MaterialButton handle = IconButton(tm.attr("mw_image_filter_center_focus"), true);
 
 	/*────────────────────────────
-	  Edit Button
+	  Edit Button - Adjusted Toggle
 	────────────────────────────*/
-	MaterialButton editBtn = IconButton(tm.attr("mw_action_code"), false);
-	editBtn.setOnClickListener(new View.OnClickListener() {
+	MaterialButton scriptBtn = IconButton(tm.attr("mw_action_code"), false);
+	scriptBtn.setOnClickListener(new View.OnClickListener() {
 		onClick(View view) {
-			tasker.showToast("Edit");
+			assistSetting.remove();
+			removeStructure();
+			scriptEditor.toggle();
 		}
 	});
 
 	/*────────────────────────────
-	  Settings Button
+	  Settings Button - Adjusted Dismissal
 	────────────────────────────*/
 	MaterialButton settingBtn = IconButton(tm.attr("mw_action_settings"), false);
 	settingBtn.setOnClickListener(new View.OnClickListener() {
 		onClick(View view) {
+			scriptEditor.remove();
 			removeStructure();
-			AssistSetting();
+			assistSetting.toggle();
 		}
 	});
 
@@ -244,10 +216,11 @@ public This AssistButton(int initialX, int initialY) {
 	MaterialButton closeBtn = IconButton(tm.attr("mw_navigation_close"), false);
 	closeBtn.setOnClickListener(new View.OnClickListener() {
 		onClick(View view) {
+			scriptEditor.remove();
+			removeStructure();
 			remove();
 		}
 	});
-
 
 	/*────────────────────────────
 	  DRAG & REMOVE LOGIC
@@ -270,16 +243,9 @@ public This AssistButton(int initialX, int initialY) {
 	}
 
 	remove() {
-		mainHandler.post(new Runnable() {
-			run() {
-				try {
-					windowManager.removeView(assistButton);
-				} catch (e) {}
-			}
-		});
+		windowManager.removeView(assistButton);
 		a11Y.clean();
 	}
-
 
 	show() {
 		Runnable displayOverlay = new Runnable() {
@@ -287,7 +253,6 @@ public This AssistButton(int initialX, int initialY) {
 				if (detector == null) {
 					detector = handleGesture.getDetector();
 				}
-
 				windowManager.addView(assistButton, assistParams);
 			}
 		};
@@ -304,10 +269,11 @@ public This AssistButton(int initialX, int initialY) {
 			tasker.showToast(e.getMessage());
 		}
 	}
-	
+
 	displayStructureWithA11y() {
 		try {
 			remove();
+			scriptEditor.remove();
 			activeStructure = StructureOverlay(true);
 			activeStructure.show();
 			show();
@@ -315,12 +281,13 @@ public This AssistButton(int initialX, int initialY) {
 			tasker.showToast(e.getMessage());
 		}
 	}
-	
+
 	toggleStructure() {
 		try {
 			if (activeStructure != null && !activeStructure.isRemoved()) {
 				activeStructure.remove();
 			} else {
+				scriptEditor.remove();
 				displayStructure();
 			}
 		} catch (e) {
@@ -336,38 +303,28 @@ public This AssistButton(int initialX, int initialY) {
 			vibrate(assistButton);
 			displayStructureWithA11y();
 		}
-		
 		onSingleTapConfirmed() {
 			toggleStructure();
 		}
-		
 		onDoubleTap() {
 			if (activeStructure != null) activeStructure.unhideBoxes();
 			return true;
 		}
-
-		onShowPress() {
-		}
+		onShowPress() {}
 		return this;
 	}
 
 	This handleGesture = SimpleGesture(handle, handleListener());
 
 	move(View view, MotionEvent event) {
-		Object handleParams = handle.getLayoutParams();
 		switch (event.getAction()) {
 			case 0: // ACTION_DOWN
-				/* Get absolute actual screen coordinates to fix 'stuck on edge' margin issues */
 				int[] loc = new int[2];
 				assistButton.getLocationOnScreen(loc);
-
 				initialWinX = loc[0];
 				initialWinY = loc[1];
-
-				/* Sync the params exactly to where the window manager physically forced it */
 				assistParams.x = initialWinX;
 				assistParams.y = initialWinY;
-
 				initialTouchX = event.getRawX();
 				initialTouchY = event.getRawY();
 				return false;
