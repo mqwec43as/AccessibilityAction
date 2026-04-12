@@ -7,22 +7,22 @@ import java.util.List;
   ────────────────────────────────────────────────────────────── */
 
 /*───────────────────────────────────────────────────────────────
-    scrollTo(String key, String value, int scrollCount, double fromY, double toY)
+    scrollTo(String key, String value, int scrollCount, double startY, double endY)
     Scroll until a node is found.
 
     Parameters:
         - key → Target node selector type.
         - value → Target node identifier.
         - scrollCount → Number of times to scroll.
-        - fromY → Starting scroll position (0.0 = top, 1.0 = bottom).
-        - toY → Target scroll position (0.0 = top, 1.0 = bottom).
+        - startY → Starting scroll position (0.0 = top, 1.0 = bottom).
+        - endY → Target scroll position (0.0 = top, 1.0 = bottom).
 
     Example:
         scrollTo("text", "Details", 20, 0.8, 0.2);
         scrollTo("text", "Details", 20);
         scrollTo("text", "Details");
   ───────────────────────────────────────────────────────────────*/
-scrollTo(String key, String value, int scrollCount, double fromY, double toY) {
+scrollTo(String key, String value, int scrollCount, double startY, double endY) {
 	List nodes = new ArrayList();
 	for (int i = 0; i < scrollCount; i++) {
 		nodes = findNodes(key, value);
@@ -31,14 +31,14 @@ scrollTo(String key, String value, int scrollCount, double fromY, double toY) {
 			showOnScreen(node);
 			break;
 		}
-		swipe(0.5, fromY, 0.5, toY, 100, true);
+		swipe(0.5, startY, 0.5, endY, 100, true);
 	}
 	if (hasNode(nodes)) return toNode(nodes);
 	return null;
 }
 
-scrollTo(String text, int scrollCount, double fromY, double toY) {
-	return scrollTo("text", text, scrollCount, fromY, toY);
+scrollTo(String text, int scrollCount, double startY, double endY) {
+	return scrollTo("text", text, scrollCount, startY, endY);
 }
 
 scrollTo(String key, String value, int scrollCount) {

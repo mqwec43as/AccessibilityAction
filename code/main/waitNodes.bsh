@@ -18,19 +18,19 @@ if (RUNNING_ENV == "TASKER") {
 	import com.joaomgcd.taskerm.action.java.JavaCodeException;
 }
 /*───────────────────────────────────────────────────────────────
-waitNodes(Object[][] argsConfigs, long timeoutMs, boolean hasAll)
+waitNodes(Object[][] argsConfigs, long timeout, boolean hasAll)
 **Reactive Node Waiter with ID Mapping**
 Waits for nodes and returns a Map of results indexed by your custom IDs.
 
 Arguments:
 
 * argsConfigs → {{"idName", "selector", "value"}, {"btn1", "text", "OK"}}
-* timeoutMs → Timeout in milliseconds.
+* timeout → Timeout in milliseconds.
 * allFound → Until all configurations are found or not.
 
 Returns: HashMap where keys are IDs and values are ArrayLists of nodes.
 ───────────────────────────────────────────────────────────────*/
-waitNodes(Object[][] argsConfigs, long timeoutMs, boolean allFound) {
+waitNodes(Object[][] argsConfigs, long timeout, boolean allFound) {
 	Map NO_RESULT = new HashMap();
 	AccessibilityNodeInfo root = getRoot();
 	Map nodesMap = findNodes(root, argsConfigs, allFound);
@@ -54,7 +54,7 @@ waitNodes(Object[][] argsConfigs, long timeoutMs, boolean allFound) {
 						return resultMap.keySet().size() > 0;
 					}
 				})
-				.timeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+				.timeout(timeout, java.util.concurrent.TimeUnit.MILLISECONDS)
 				.firstOrError()
 				.blockingGet();
 		} catch (Exception e) {
@@ -79,15 +79,15 @@ waitNodes(Object[][] argsConfigs, long timeoutMs, boolean allFound) {
 	}
 }
 
-Map waitNodes(Object[][] argsConfigs, long timeoutMs) {
-	return waitNodes(argsConfigs, timeoutMs, true);
+Map waitNodes(Object[][] argsConfigs, long timeout) {
+	return waitNodes(argsConfigs, timeout, true);
 }
 
-List waitNodes(String key, String value, Object[][] argsConfigs, long timeoutMs) {
+List waitNodes(String key, String value, Object[][] argsConfigs, long timeout) {
 	Object[][] config = new Object[][] {
 		{ "default", key, value, argsConfigs }
 	};
-	Map nodesMap = waitNodes(config, timeoutMs, false);
+	Map nodesMap = waitNodes(config, timeout, false);
 	if (nodesMap.keySet().size() > 0) {
 		return nodesMap.get("default");
 	} else {
@@ -95,33 +95,33 @@ List waitNodes(String key, String value, Object[][] argsConfigs, long timeoutMs)
 	}
 }
 
-ArrayList waitNodes(String key, String value, long timeoutMs) {
-	return waitNodes(key, value, null, timeoutMs);
+ArrayList waitNodes(String key, String value, long timeout) {
+	return waitNodes(key, value, null, timeout);
 }
 
 ArrayList waitNodes(String key, String value) {
 	return waitNodes(key, value, null, waitNodesTimeout);
 }
 
-ArrayList waitNodes(String text, long timeoutMs) {
-	return waitNodes("text", text, null, timeoutMs);
+ArrayList waitNodes(String text, long timeout) {
+	return waitNodes("text", text, null, timeout);
 }
 
-ArrayList waitNodes(String key, String value, long timeoutMs, int parentLevel, String nearbyKey, String nearbyValue) {
+ArrayList waitNodes(String key, String value, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
 	config = new Object[][] {
 		{ parentLevel, nearbyKey, nearbyValue }
 	};
-	return waitNodes(key, value, config, timeoutMs);
+	return waitNodes(key, value, config, timeout);
 }
 
-ArrayList waitNodes(String text, long timeoutMs, int parentLevel, String nearbyKey, String nearbyValue) {
-	return waitNodes("text", text, timeoutMs, parentLevel, nearbyKey, nearbyValue);
+ArrayList waitNodes(String text, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
+	return waitNodes("text", text, timeout, parentLevel, nearbyKey, nearbyValue);
 }
 
-ArrayList waitNodes(String key, String value, long timeoutMs, int parentLevel, String nearbyText) {
-	return waitNodes(key, value, timeoutMs, parentLevel, "text", nearbyText);
+ArrayList waitNodes(String key, String value, long timeout, int parentLevel, String nearbyText) {
+	return waitNodes(key, value, timeout, parentLevel, "text", nearbyText);
 }
 
-ArrayList waitNodes(String text, long timeoutMs, int parentLevel, String nearbyText) {
-	return waitNodes("text", text, timeoutMs, parentLevel, "text", nearbyText);
+ArrayList waitNodes(String text, long timeout, int parentLevel, String nearbyText) {
+	return waitNodes("text", text, timeout, parentLevel, "text", nearbyText);
 }

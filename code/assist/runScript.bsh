@@ -1,0 +1,15 @@
+/*───────────────────────────────────────────────────────────────
+  runScript(String script, long delayMs)
+  **Executes Script**
+  Runs the provided BeanShell script on a background thread.
+ ───────────────────────────────────────────────────────────────*/
+public void runScript(String script, long delayMs) {
+	wait(delayMs);
+	String header = "set();\n";
+	This a11Y = tasker.getJavaVariable("a11Y");
+	a11Y.executor.submit(new Runnable() {
+		run() {
+			this.interpreter.eval(header + script, a11Y.namespace);
+		}
+	});
+}
