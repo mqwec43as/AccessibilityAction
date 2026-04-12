@@ -195,7 +195,7 @@ ScriptEditor() {
 		LinearLayout content = new LinearLayout(activity);
 		content.setOrientation(LinearLayout.VERTICAL);
 		int p = (int)(20 * density);
-// 		content.setPadding(p, p, p, p);
+		// 		content.setPadding(p, p, p, p);
 		scroller.addView(content);
 
 		main.addView(scroller, new LinearLayout.LayoutParams(-1, 0, 1.0f));
@@ -321,6 +321,8 @@ ScriptEditor() {
 	show() {
 		codeText = null;
 		isActionEdit = isActionEdit();
+		boolean oldDebugMe = debugMe;
+		debugMe = false;
 		List actionNodes = findNodes("id", "android:id/action_bar");
 		if (hasNode(actionNodes)) {
 			List isJava;
@@ -330,6 +332,7 @@ ScriptEditor() {
 				codeText = getText(edits);
 			}
 		}
+		debugMe = oldDebugMe;
 		if (!hasShown) {
 			isRemoved = false;
 			hasShown = true;
