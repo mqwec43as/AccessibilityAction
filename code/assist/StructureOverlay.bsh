@@ -277,7 +277,7 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 						tasker.getJavaVariable("a11Y").set();
 						Map result = ActionPicker(nodeData);
 						if (result != null) {
-							tasker.setJavaVariable("reS", result);
+							a11Y.selectedAction = result;
 						}
 					}
 				});

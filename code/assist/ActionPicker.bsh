@@ -65,7 +65,7 @@ ActionPicker(This nodeData) {
 					if (key.equals("text") || key.equals("regex")) {
 						if (nodeData.text != void && nodeData.text != null && nodeData.text.length() > 0) {
 							if (key.equals("text")) {
-								keysubtitle = nodeData.getText(50);
+								subtitle = nodeData.getText(50);
 								replacement = nodeData.text;
 							}
 						} else continue;
@@ -183,9 +183,11 @@ ActionPicker(This nodeData) {
 					return text.substring(0, maxLength) + "...";
 				}
 				List notReplacedParams = new ArrayList();
+				List shortReplacedParams = new ArrayList();
 				List replacedParams = new ArrayList();
 				for (int i = 0; i < selectedParams.size(); i++) {
 					String replaced;
+					String shortReplaced;
 					String param = params.get(i);
 					if (selectedParams.get(i) != null) {
 						Object selected = selectedParams.get(i);
@@ -193,7 +195,8 @@ ActionPicker(This nodeData) {
 							String type = selected.getClass().getSimpleName();
 							switch (type) {
 								case "String":
-									replaced = tasker.toJson(getText(selected, 75));
+									shortReplaced = tasker.toJson(getText(selected, 75));
+									replaced = tasker.toJson(selected);
 									break;
 								default:
 									replaced = selected.toString();
@@ -208,15 +211,19 @@ ActionPicker(This nodeData) {
 						replaced = "null";
 					}
 					if (replaced == null || replaced.equals("null")) replaced = param;
+					shortReplacedParams.add(shortReplaced != null ? shortReplaced : replaced);
 					replacedParams.add(replaced);
 				}
+				String shortUsage = method { "name" } + "(" + String.join(", ", shortReplacedParams) + ");";
 				String usage = method { "name" } + "(" + String.join(", ", replacedParams) + ");";
+				method.put("shortUsage", shortUsage);
 				method.put("usage", usage);
 				method.put("selectedParams", selectedParams);
+				method.put("shortReplacedParams", shortReplacedParams);
 				method.put("replacedParams", replacedParams);
 				method.put("notReplacedParams", notReplacedParams);
 				method.put("selectedKey", selectedKey);
-				item.put("title", usage);
+				item.put("title", shortUsage);
 				item.put("subtitle", method { "declarationSimple" });
 				item.put("method", method);
 				itemList.add(item);
@@ -238,7 +245,7 @@ ActionPicker(This nodeData) {
 	}
 	if (overload != void) {
 		if (a11Y.scriptEditor.length() > 0 ) a11Y.scriptEditor += "\n\n";
-		a11Y.scriptEditor += overload.get("usage");
+		  a11Y.scriptEditor += overload.get("usage");
 		String text = "Open to editor to test.";
 		List notReplaced = overload.get("notReplacedParams");
 		if (!notReplaced.isEmpty()) text += "\n" + notReplaced.toString() + " are not set yet.";
