@@ -72,7 +72,7 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 	List highlighted = new ArrayList();
 	List hiddenBoxes = new ArrayList();
 	List boxHistory = new ArrayList();
-	
+
 
 
 	final Object accessibilityService = tasker.getAccessibilityService();
@@ -108,7 +108,7 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 		WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
 		PixelFormat.TRANSLUCENT
 	);
-	
+
 	rootParams.gravity = Gravity.TOP | Gravity.LEFT;
 
 	removeView(View view) {
@@ -268,8 +268,24 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 		onLongPress(This nodeBox) {
 			vibrate(nodeBox.view);
 			addHistory(nodeBox);
-			activeHighlight(nodeBox);
-			nodeBox.showDialog();
+			if (tasker.getJavaVariable("a11Y").quickAddMode) {
+				remove();
+				This nodeData = SimilarNodes(rootNode, nodeBoxMap, nodeBox);
+				tasker.setJavaVariable("nodeData", nodeData);
+				a11Y.executor.submit(new Runnable() {
+					run() {
+						tasker.getJavaVariable("a11Y").set();
+						Map result = ActionPicker(nodeData);
+						if (result != null) {
+							tasker.setJavaVariable("reS", result);
+						}
+					}
+				});
+			} else {
+				activeHighlight(nodeBox);
+				nodeBox.showDialog();
+			}
+
 		}
 		return this;
 	}
@@ -385,15 +401,15 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 	setListener(This newListener) {
 		listener = newListener;
 	}
-	
+
 	setDefaultListener() {
 		listener = getDefaultListener();
 	}
-	
+
 	setNodeBoxTouchable(boolean touchable) {
 		nodeBoxTouchable = touchable;
 	}
-	
+
 	setTouchable(boolean touchable) {
 		WindowManager.LayoutParams currentParams = (WindowManager.LayoutParams) rootLayout.getLayoutParams();
 		if (currentParams == null) currentParams = rootParams;
@@ -405,7 +421,7 @@ StructureOverlay(AccessibilityNodeInfo rootNode, boolean useA11y) {
 		} else {
 			currentParams.flags |= NOT_TOUCHABLE;
 		}
-		
+
 		rootParams = currentParams;
 		if (isShown && !isRemoved) {
 			/* Use the instance windowManager and the updated params */
