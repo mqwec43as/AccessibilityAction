@@ -163,6 +163,15 @@ ScriptEditor() {
 		This tm = ThemeManager(activity);
 		tm.setThemeDark();
 
+		baseRoot = new FrameLayout(activity);
+
+		/* Apply requested shape to baseRoot */
+		GradientDrawable shape = new GradientDrawable();
+		shape.setCornerRadius(28 * density);
+		shape.setColor((int) tm.attr("colorSurface"));
+		baseRoot.setBackground(shape);
+		baseRoot.setClipToOutline(true);
+
 		root = new FloatingToolbarLayout(activity);
 		root.setBackgroundColor(Color.TRANSPARENT);
 
@@ -173,11 +182,7 @@ ScriptEditor() {
 		mainParams.gravity = Gravity.BOTTOM;
 		main.setLayoutParams(mainParams);
 
-		GradientDrawable shape = new GradientDrawable();
-		shape.setCornerRadius(28 * density);
-		shape.setColor((int) tm.attr("colorSurface"));
-		main.setBackground(shape);
-		main.setClipToOutline(true);
+		/* Background already set on baseRoot per request */
 
 		toolbar = new MaterialToolbar(activity);
 		toolbar.setTitle("Script Editor");
@@ -190,7 +195,7 @@ ScriptEditor() {
 		LinearLayout content = new LinearLayout(activity);
 		content.setOrientation(LinearLayout.VERTICAL);
 		int p = (int)(20 * density);
-		content.setPadding(p, p, p, p);
+// 		content.setPadding(p, p, p, p);
 		scroller.addView(content);
 
 		main.addView(scroller, new LinearLayout.LayoutParams(-1, 0, 1.0f));
@@ -279,7 +284,8 @@ ScriptEditor() {
 		content.addView(runAllBtn);
 
 		root.addView(main);
-		activity.setContentView(root);
+		baseRoot.addView(root);
+		activity.setContentView(baseRoot);
 
 		activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {

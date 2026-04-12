@@ -67,15 +67,24 @@ AssistSetting() {
 		lp.gravity = Gravity.BOTTOM;
 		lp.width = WindowManager.LayoutParams.MATCH_PARENT;
 		window.setAttributes(lp);
-
 		This tm = ThemeManager(activity);
 		tm.setThemeDark();
+		baseRoot = new FrameLayout(activity);
+
+		/* Applying requested shape to baseRoot */
+		GradientDrawable shape = new GradientDrawable();
+		shape.setCornerRadius(28 * density);
+		shape.setColor((int) tm.attr("colorSurface"));
+		baseRoot.setBackground(shape);
+		baseRoot.setClipToOutline(true);
 
 		root = new FloatingToolbarLayout(activity);
 		root.setBackgroundColor(Color.TRANSPARENT);
 
 		final LinearLayout main = new LinearLayout(activity);
 		main.setOrientation(LinearLayout.VERTICAL);
+		// 		int p = dp(16);
+		// 		main.setPadding(p, 0, p, 0);
 
 		FrameLayout.LayoutParams mainParams = new FrameLayout.LayoutParams(
 			ViewGroup.LayoutParams.MATCH_PARENT,
@@ -83,12 +92,6 @@ AssistSetting() {
 		);
 		mainParams.gravity = Gravity.BOTTOM;
 		main.setLayoutParams(mainParams);
-
-		GradientDrawable shape = new GradientDrawable();
-		shape.setCornerRadius(28 * density);
-		shape.setColor((int) tm.attr("colorSurface"));
-		main.setBackground(shape);
-		main.setClipToOutline(true);
 
 		toolbar = new MaterialToolbar(activity);
 		toolbar.setTitle("Settings");
@@ -100,10 +103,7 @@ AssistSetting() {
 
 		LinearLayout content = new LinearLayout(activity);
 		content.setOrientation(LinearLayout.VERTICAL);
-		int p = (int)(20 * density);
-		content.setPadding(p, p, p, p);
 		scroller.addView(content);
-
 		main.addView(scroller, new LinearLayout.LayoutParams(-1, 0, 1.0f));
 
 		createSwitch(String text, String variableName) {
@@ -128,11 +128,19 @@ AssistSetting() {
 			Object value = a11Y.namespace.getVariable(variableName);
 			TextInputEditText editText = new TextInputEditText(textLayout.getContext());
 			editText.setText(String.valueOf(value));
-			
+
 			String inputClass = value.getClass().getSimpleName();
-			if (!inputClass.equals("String")) {
-				editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+			switch (inputClass) {
+				case "Float":
+				case "Double":
+					editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+					break;
+				case "Integer":
+				case "Long":
+					editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+					break;
 			}
+
 
 			editText.addTextChangedListener(new TextWatcher() {
 				beforeTextChanged(CharSequence charSequence, int start, int count, int after) {}
@@ -140,11 +148,23 @@ AssistSetting() {
 					try {
 						if (charSequence.length() > 0) {
 							textLayout.setError(null);
-							if (!inputClass.equals("String")) {
-								int val = Integer.parseInt(charSequence.toString());
-								a11Y.namespace.setVariable(variableName, val, false);
-							} else {
-								a11Y.namespace.setVariable(variableName, charSequence.toString(), false);
+							String newValue = charSequence.toString();
+							switch (inputClass) {
+								case "Integer":
+									a11Y.namespace.setVariable(variableName, Integer.parseInt(newValue), false);
+									break;
+								case "Long":
+									a11Y.namespace.setVariable(variableName, Long.parseLong(newValue), false);
+									break;
+								case "Double":
+									a11Y.namespace.setVariable(variableName, Double.parseDouble(newValue), false);
+									break;
+								case "Float":
+									a11Y.namespace.setVariable(variableName, Float.parseFloat(newValue), false);
+									break;
+								default:
+									a11Y.namespace.setVariable(variableName, newValue, false);
+									break;
 							}
 						} else {
 							textLayout.setError("Cannot be empty.");
@@ -169,7 +189,8 @@ AssistSetting() {
 		createSwitch("Use offset for Accessibility", "useA11yOffset");
 		createSwitch("Waiting nodes will timeout if not found", "waitNodes");
 		createSwitch("Use accessibility for structure overlay", "useA11yStructure");
-
+		createSwitch("Long press a box enter quick mode instead of opening copy dialog", "quickAddMode");
+		createSwitch("Include all methods for quick mode", "includeAllMethods");
 		createInput("Find hint duration (ms)", "findDelay", 100);
 		createInput("Debug highlight duration (ms)", "debugDelay", 1000);
 		TextInputLayout envInput = createInput("Project Path", "ENV", a11Y.ENV);
@@ -185,7 +206,6 @@ AssistSetting() {
 		content.addView(saveBtn);
 
 		root.addView(main);
-		activity.setContentView(root);
 
 		activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {
@@ -198,6 +218,10 @@ AssistSetting() {
 				activity = null;
 			}
 		});
+		baseRoot.addView(root);
+		activity.setContentView(baseRoot);
+
+
 	}
 
 	Consumer uiLogic = new Consumer() {

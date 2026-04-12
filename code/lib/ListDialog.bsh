@@ -1,0 +1,447 @@
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.CheckBox;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import com.joaomgcd.taskerm.action.java.ClassImplementation;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.floatingtoolbar.FloatingToolbarLayout;
+import java.util.function.Consumer;
+import android.view.WindowManager;
+import bsh.This;
+import io.reactivex.subjects.CompletableSubject;
+import java.util.concurrent.TimeUnit;
+
+a11Y.set();
+
+
+/*───────────────────────────────────────────────────────────────
+  ListDialog Component
+  ───────────────────────────────────────────────────────────────*/
+ListDialog(This config) {
+
+	Activity activity;
+	boolean isRemoved = true;
+	boolean hasShown = false;
+	This a11Y = tasker.getJavaVariable("a11Y");
+	ArrayList selectedItems = new ArrayList();
+
+	String title = config.title == void ? null : config.title;
+	boolean showFilter = config.showFilter == void ? false : config.showFilter;
+	boolean isMulti = config.multiSelect == void ? false : config.multiSelect;
+	List preSelect = config.preSelect == void ? null : config.preSelect;
+	long timeout = config.timeout == void ? 0 : config.timeout;
+	/* Height Logic Setup */
+	Object rawMaxH = config.maxHeight == void ? 0.5 : config.maxHeight;
+	Object rawMaxL = config.maxHeightList == void ? 0.5 : config.maxHeightList;
+
+	final Map iconCache = new HashMap();
+	FloatingToolbarLayout root;
+
+	List originalList = config.itemList;
+	if (originalList == null) originalList = new ArrayList();
+
+	boolean hasMethod(String methodName, Class[] classes) {
+		if (classes == null) classes = new Class[] {};
+		return config.namespace.getMethod(methodName, classes) != null;
+	}
+
+	boolean hasSuccess = hasMethod("onSuccess", new Class[] { HashMap.class });
+	boolean hasSuccessMulti = hasMethod("onSuccess", new Class[] { ArrayList.class });
+	boolean hasCancel = hasMethod("onCancel", null);
+	boolean hasTimeout = hasMethod("onTimeout", null);
+
+	CompletableSubject waitTimeout = CompletableSubject.create();
+
+	remove() {
+		if (activity != null) {
+			activity.finish();
+			activity = null;
+		}
+		isRemoved = true;
+		if (timeout != 0 && !waitTimeout.hasComplete()) waitTimeout.onComplete();
+	}
+
+	layout(Activity act) {
+		activity = act;
+		DisplayMetrics dm = activity.getResources().getDisplayMetrics();
+		int screenHeight = dm.heightPixels;
+
+		/* Normalize Max Heights */
+		float mhVal = Float.parseFloat(rawMaxH.toString());
+		int limitDialog = (mhVal < 1.0f) ? (int)(screenHeight * mhVal) : dp((int) mhVal);
+
+		float mlVal = Float.parseFloat(rawMaxL.toString());
+		int limitList = (mlVal < 1.0f) ? (int)(screenHeight * mlVal) : dp((int) mlVal);
+
+		final android.content.pm.PackageManager pm = activity.getPackageManager();
+
+		Window window = activity.getWindow();
+		window.requestFeature(Window.FEATURE_NO_TITLE);
+		window.setLayout(-1, -2);
+		window.setBackgroundDrawableResource(android.R.color.transparent);
+		window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+		WindowManager.LayoutParams lp = window.getAttributes();
+		lp.gravity = Gravity.BOTTOM;
+		window.setAttributes(lp);
+
+		This tm = ThemeManager(activity);
+		tm.setThemeDark();
+
+		root = new FloatingToolbarLayout(activity);
+		root.setBackgroundColor(Color.TRANSPARENT);
+
+		LinearLayout mainContainer = new LinearLayout(activity);
+		mainContainer.setOrientation(1);
+
+		/* Apply Dialog Max Height constraint */
+		mainContainer.setLayoutParams(new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
+		mainContainer.setPadding(dp(20), dp(20), dp(20), dp(20));
+
+		GradientDrawable shape = new GradientDrawable();
+		shape.setCornerRadius(dp(28));
+		shape.setColor((int) tm.attr("colorSurfaceContainerHigh"));
+		mainContainer.setBackground(shape);
+		mainContainer.setClipToOutline(true);
+
+		if (title != null) {
+			MaterialToolbar toolbar = new MaterialToolbar(activity);
+			toolbar.setTitle(title);
+			toolbar.setTitleCentered(true);
+			mainContainer.addView(toolbar);
+		}
+
+		TextInputEditText filterInput = null;
+		if (showFilter) {
+			filterWrapper = new TextInputLayout(activity);
+			filterWrapper.setHint("Search...");
+			filterWrapper.setBoxBackgroundMode(2);
+			filterInput = new TextInputEditText(filterWrapper.getContext());
+			filterWrapper.addView(filterInput);
+			mainContainer.addView(filterWrapper);
+		}
+
+		ListView listView = new ListView(activity);
+		listView.setDivider(null);
+		listView.setDividerHeight(0);
+
+		ArrayList filteredList = new ArrayList(originalList);
+
+		if (isMulti && preSelect != null) {
+			for (int i = 0; i < originalList.size(); i++) {
+				Map item = (Map) originalList.get(i);
+				for (int j = 0; j < preSelect.size(); j++) {
+					Object pre = preSelect.get(j);
+					if (item.get("title").equals(pre) || item.get("subtitle").equals(pre)) {
+						selectedItems.add(item);
+						break;
+					}
+				}
+			}
+		}
+
+		ClassImplementation adapterHandler = new ClassImplementation() {
+			run(Callable superCaller, String methodName, Object[] args) {
+				if (methodName.equals("getCount")) return filteredList.size();
+				if (methodName.equals("getItem")) return filteredList.get((Integer) args[0]);
+				if (methodName.equals("getItemId")) return ((Integer) args[0]).longValue();
+				if (methodName.equals("getView")) {
+					int pos = (Integer) args[0];
+					View cnv = (View) args[1];
+					Map itemData = (Map) filteredList.get(pos);
+
+					LinearLayout row;
+					ImageView iv;
+					TextView t1, t2;
+
+					if (cnv == null) {
+						row = new LinearLayout(activity);
+						row.setOrientation(0);
+						row.setGravity(Gravity.CENTER_VERTICAL);
+						row.setPadding(dp(0), dp(12), dp(0), dp(12));
+
+						iv = new ImageView(activity);
+						iv.setLayoutParams(new LinearLayout.LayoutParams(dp(40), dp(40)));
+						iv.setPadding(0, 0, dp(16), 0);
+						row.addView(iv);
+
+						LinearLayout tg = new LinearLayout(activity);
+						tg.setOrientation(1);
+						tg.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1.0f));
+
+						t1 = new TextView(activity);
+						t1.setTextSize(16);
+						t1.setTextColor((int) tm.attr("colorOnSurface"));
+						t1.setEllipsize(TextUtils.TruncateAt.END);
+// 						t1.setSingleLine(true);
+						tg.addView(t1);
+
+						t2 = new TextView(activity);
+						t2.setTextSize(14);
+						t2.setTextColor((int) tm.attr("colorOnSurfaceVariant"));
+						tg.addView(t2);
+						row.addView(tg);
+
+						if (isMulti) {
+							CheckBox ck = new CheckBox(activity);
+							ck.setFocusable(false);
+							ck.setClickable(false);
+							row.addView(ck);
+						}
+					} else {
+						row = (LinearLayout) cnv;
+						iv = (ImageView) row.getChildAt(0);
+						LinearLayout tg = (LinearLayout) row.getChildAt(1);
+						t1 = (TextView) tg.getChildAt(0);
+						t2 = (TextView) tg.getChildAt(1);
+					}
+
+					t1.setText((String) itemData.get("title"));
+					Object sub = itemData.get("subtitle");
+					boolean hasSub = sub != null && !sub.toString().equals("");
+					t2.setText(hasSub ? sub.toString() : "");
+					t2.setVisibility(hasSub ? View.VISIBLE : View.GONE);
+
+					if (isMulti) {
+						CheckBox cb = (CheckBox) row.getChildAt(row.getChildCount() - 1);
+						boolean found = false;
+						for (int k = 0; k < selectedItems.size(); k++) {
+							if (((Map) selectedItems.get(k)).get("title").equals(itemData.get("title"))) {
+								found = true;
+								break;
+							}
+						}
+						cb.setChecked(found);
+					}
+
+					if ("app".equals(itemData.get("type")) && sub != null) {
+						iv.setVisibility(0);
+						Drawable dr = (Drawable) iconCache.get(sub.toString());
+						if (dr == null) {
+							try {
+								dr = pm.getApplicationIcon(sub.toString());
+								iconCache.put(sub.toString(), dr);
+							} catch (Exception e) {}
+						}
+						iv.setImageDrawable(dr);
+					} else {
+						iv.setVisibility(8);
+					}
+					return row;
+				}
+				return superCaller.call();
+			}
+		};
+
+		BaseAdapter adapter = (BaseAdapter) tasker.implementClass(BaseAdapter.class, adapterHandler);
+		listView.setAdapter(adapter);
+
+		Runnable updateHeight = new Runnable() {
+			run() {
+				int count = filteredList.size();
+				if (count == 0) {
+					listView.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
+					return;
+				}
+
+				/* Calculate dynamic row height based on content */
+				boolean anySub = false;
+				for (int i = 0; i < count; i++) {
+					Map m = (Map) filteredList.get(i);
+					if (m.get("subtitle") != null && !m.get("subtitle").toString().equals("")) {
+						anySub = true;
+						break;
+					}
+				}
+				int rowH = anySub ? dp(72) : dp(56);
+				int totalH = Math.min(count * rowH, limitList);
+
+				ViewGroup.LayoutParams p = listView.getLayoutParams();
+				if (p == null) p = new LinearLayout.LayoutParams(-1, totalH);
+				else p.height = totalH;
+				listView.setLayoutParams(p);
+			}
+		};
+
+		mainContainer.addView(listView);
+		updateHeight.run();
+
+		LinearLayout bc = new LinearLayout(activity);
+		bc.setOrientation(0);
+		bc.setGravity(Gravity.END);
+		bc.setPadding(0, dp(8), 0, 0);
+
+		MaterialButton cBtn = new MaterialButton(activity);
+		cBtn.setText("CANCEL");
+		cBtn.setOnClickListener(new View.OnClickListener() {
+			onClick(View v) {
+				if (hasCancel) config.onCancel();
+				remove();
+			}
+		});
+		bc.addView(cBtn);
+
+		if (isMulti) {
+			MaterialButton oBtn = new MaterialButton(activity);
+			LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-2, -2);
+			ol.leftMargin = dp(12);
+			oBtn.setLayoutParams(ol);
+			oBtn.setText("OK");
+			oBtn.setOnClickListener(new View.OnClickListener() {
+				onClick(View v) {
+					if (hasSuccessMulti) config.onSuccess(selectedItems);
+					remove();
+				}
+			});
+			bc.addView(oBtn);
+		}
+		mainContainer.addView(bc);
+
+		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			onItemClick(AdapterView p, View v, int pos, long id) {
+				Map clicked = (Map) filteredList.get(pos);
+				clicked.put("index", pos);
+				if (isMulti) {
+					int idx = -1;
+					for (int i = 0; i < selectedItems.size(); i++) {
+						if (((Map) selectedItems.get(i)).get("title").equals(clicked.get("title"))) { idx = i; break; }
+					}
+					if (idx != -1) selectedItems.remove(idx);
+					else selectedItems.add(clicked);
+					adapter.notifyDataSetChanged();
+				} else {
+					if (hasSuccess) config.onSuccess(clicked);
+					remove();
+				}
+			}
+		});
+
+		if (filterInput != null) {
+			filterInput.addTextChangedListener(new TextWatcher() {
+				beforeTextChanged(CharSequence s, int start, int count, int after) {}
+				onTextChanged(CharSequence s, int start, int b, int c) {
+					String q = s.toString().toLowerCase();
+					filteredList.clear();
+					if (q.isEmpty()) filteredList.addAll(originalList);
+					else {
+						for (int i = 0; i < originalList.size(); i++) {
+							Map m = (Map) originalList.get(i);
+							String t = m.get("title").toString().toLowerCase();
+							String st = m.get("subtitle") != null ? m.get("subtitle").toString().toLowerCase() : "";
+							if (t.contains(q) || st.contains(q)) filteredList.add(m);
+						}
+					}
+					adapter.notifyDataSetChanged();
+					updateHeight.run();
+				}
+				afterTextChanged(Editable s) {}
+			});
+		}
+
+		root.addView(mainContainer);
+		activity.setContentView(root);
+
+		activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+			onViewAttachedToWindow(View v) {
+				hasShown = true;
+				isRemoved = false;
+			}
+			onViewDetachedFromWindow(View v) {
+				remove();
+			}
+		});
+	}
+
+	show() {
+		if (!hasShown) {
+			isRemoved = false;
+			hasShown = true;
+			tasker.doWithActivity(new Consumer() {
+				accept(Object activity) { layout((Activity) activity); }
+			});
+			if (timeout != 0) {
+				boolean isSuccess = waitTimeout.blockingAwait(timeout, TimeUnit.MILLISECONDS);
+				if (hasTimeout && !isSuccess) config.onTimeout();
+				remove();
+				return isSuccess;
+			}
+		}
+	}
+
+	return this;
+}
+
+
+/*───────────────────────────────────────────────────────────────
+  Execution Logic
+  ───────────────────────────────────────────────────────────────*/
+
+// dialog(This THIS) {
+// 	String title = "Select Actions";
+// 	boolean showFilter = true;
+// 	boolean multiSelect = true;
+// 	List preSelect = new ArrayList();
+// 	// 	preSelect.add("Flashlight");
+// 	long timeout = 30000;
+// 	List itemList = new ArrayList();
+// 	String[] titles = new String[] { "Wifi Toggle", "Bluetooth Toggle", "Flashlight", "Airplane Mode", "Do Not Disturb" };
+// 	String[] subs = new String[] { "System Action", "System Action", "Hardware Action", "Network Action", "Sound Action" };
+
+// 	for (int i = 0; i < titles.length; i++) {
+// 		Map item = new HashMap();
+// 		item.put("title", titles[i]);
+// 		item.put("subtitle", subs[i]);
+// 		itemList.add(item);
+// 	}
+
+// 	onSuccess(List list) {
+// 		THIS.result = list;
+// 		tasker.showToast(tasker.toJson(list, true));
+// 	}
+
+// 	onSuccess(Map map) {
+// 		THIS.result = map;
+// 		tasker.showToast(tasker.toJson(map, true));
+// 	}
+
+// 	onCancel() {
+// 		tasker.showToast("Cancel");
+// 	}
+	
+// 	onTimeout() {
+// 		tasker.showToast("Timeout");
+// 	}
+
+// 	return this;
+// }
+// This config = dialog(this);
+
+// dialog = ListDialog(config);
+// dialog.show();
+// return result;
