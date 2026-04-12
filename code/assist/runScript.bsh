@@ -1,3 +1,5 @@
+import java.util.concurrent.Executors;
+
 /*───────────────────────────────────────────────────────────────
   runScript(String script, long delayMs)
   **Executes Script**
@@ -5,11 +7,16 @@
  ───────────────────────────────────────────────────────────────*/
 public void runScript(String script, long delayMs) {
 	wait(delayMs);
-	String header = "set();\n";
+	String header = """tasker.getJavaVariable("a11Y").set();
+""";
 	This a11Y = tasker.getJavaVariable("a11Y");
+	if (a11Y.executor == void || a11Y.executor == null) {
+		a11Y.executor = Executors.newFixedThreadPool(2);
+	}
+
 	a11Y.executor.submit(new Runnable() {
 		run() {
-			this.interpreter.eval(header + script, a11Y.namespace);
+			this.interpreter.eval(header + script);
 		}
 	});
 }
