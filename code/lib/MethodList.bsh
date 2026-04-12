@@ -1,0 +1,101 @@
+import java.util.ArrayList;
+import java.util.List;
+
+/*───────────────────────────────────────────────────────────────
+  MethodList(List array)
+  **Scripted Object for List Manipulation**
+  Provides utility methods to toggle between raw and capitalized 
+  strings within a list.
+ 
+  Arguments:
+   - array → The source list containing strings.
+ 
+  Example:
+  ml = MethodList(myList);
+  capitalList = ml.getCapitalized();
+  ───────────────────────────────────────────────────────────────*/
+MethodList(List array) {
+	/* Use a raw ArrayList to store the data internally. */
+	List data = new ArrayList();
+	if (array != null) {
+		data.addAll(array);
+	}
+
+	/* 1. Returns a new list with capitalized strings. */
+	getCapitalized() {
+		List newList = new ArrayList();
+		for (int i = 0; i < data.size(); i++) {
+			newList.add(capitalizeString((String) data.get(i)));
+		}
+		return newList;
+	}
+
+	/* 2. Returns the original list. */
+	getOriginal() {
+		List newList = new ArrayList();
+		newList.addAll(data);
+		return newList;
+	}
+
+	/* 3. Converts the internal list state to capitalized. */
+	convertToCapital() {
+		for (int i = 0; i < data.size(); i++) {
+			data.set(i, capitalizeString((String) data.get(i)));
+		}
+	}
+
+	/* 4. Converts the internal list state back to the original (lowercase). */
+	convertToOriginal() {
+		for (int i = 0; i < data.size(); i++) {
+			data.set(i, ((String) data.get(i)).toLowerCase());
+		}
+	}
+
+	/* 5. Gets an item at a specific index. */
+	get(int index) {
+		if (index < 0 || index >= data.size()) {
+			return null;
+		}
+		return (String) data.get(index);
+	}
+
+	/* Helper function to handle capitalization logic. */
+	capitalizeString(String input) {
+		if (input == null || input.length() == 0) {
+			return input;
+		}
+		/* Handle camelCase strings like 'longClick' -> 'Long Click' */
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < input.length(); i++) {
+			char c = input.charAt(i);
+			if (i == 0) {
+				sb.append(Character.toUpperCase(c));
+				continue;
+			}
+			if (Character.isUpperCase(c)) {
+				sb.append(" ");
+			}
+			sb.append(c);
+		}
+		return sb.toString();
+	}
+
+	return this;
+}
+
+// /* Example Usage for Tasker */
+// myList = new ArrayList();
+// myList.add("click");
+// myList.add("longClick");
+
+// /* Create the scripted object */
+// ml = MethodList(myList);
+
+// /* Get the capitalized versions */
+// caps = ml.getCapitalized(); /* [Click, Long Click] */
+
+// /* Log result to verify */
+// return "Original: " + ml.getOriginal().toString();
+// return "Capitalized: " + caps.toString();
+
+// return caps;
