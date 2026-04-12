@@ -5,7 +5,8 @@ This code was generated using AI with minimal human editing.
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.graphics.Color;
 import bsh.This;
-
+import android.graphics.Point;
+import android.graphics.Rect;
 /*────────────────────────────────────────────────────────────────
 	SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox)
 	Custom class to manage similar nodes for given node on given screen
@@ -35,6 +36,16 @@ import bsh.This;
 
 SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	AccessibilityNodeInfo node = nodeBox.node;
+	String viewId = node.getViewIdResourceName();
+	Rect bounds = new Rect();
+	Point coordinates = getCoordinates(node);
+	boolean isClickable = node.isClickable();
+	boolean isEnabled = node.isEnabled();
+	boolean isFocusable = node.isFocusable();
+	boolean isScrollable = node.isScrollable();
+	boolean isEditable = node.isEditable();
+	int childCount = node.getChildCount();
+	boolean isSettable = (node.getActions() & node.ACTION_SET_TEXT) != 0;
 	String text = getText(node);
 	int textIndex;
 	List textBoxes = new ArrayList();
@@ -45,7 +56,11 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	List idBoxes = new ArrayList();
 	List idNodes = new ArrayList();
 
-
+	String className = node.getClassName();
+	int classIndex;
+	List classBoxes = new ArrayList();
+	List classNodes = new ArrayList();
+	
 	if (text != null && text.length() > 0) {
 		textNodes = findNodes(rootNode, "text", text);
 		if (!textNodes.isEmpty()) {
@@ -53,6 +68,7 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 			textNodes.remove(node);
 		}
 	}
+	
 	if (id != null && id.length() > 0) {
 		idNodes = findNodes(rootNode, "id", id);
 		if (!idNodes.isEmpty()) {
@@ -60,6 +76,23 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 			idNodes.remove(node);
 		}
 	}
+
+	if (className != null && className.length() > 0) {
+		classNodes = findNodes(rootNode, "class", className);
+		if (!classNodes.isEmpty()) {
+			classIndex = classNodes.indexOf(node);
+			classNodes.remove(node);
+		}
+	}
+
+
+	public String getText(int maxLength) {
+		if (text == null || text.length() <= maxLength) {
+			return text;
+		}
+		return text.substring(0, maxLength) + "...";
+	}
+
 
 	highlight(AccessibilityNodeInfo targetNode, int strokeWidth, int strokeColor, int fillColor) {
 		This nodeBox = nodeBoxesMap.get(targetNode);
@@ -139,6 +172,6 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 			return null;
 		}
 	}
-
+	tasker.setJavaVariable("nodeData", this);
 	return this;
 }
