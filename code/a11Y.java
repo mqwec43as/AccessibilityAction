@@ -1,7 +1,20 @@
 import bsh.This;
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+
 
 a11Y() {
+	This old = tasker.getJavaVariable("a11Y");
+	if (old != null) {
+		try {
+			if (old.executor != void) old.executor.shutdown();
+			old.clean();
+		} catch (e) {
+
+		}
+	}
 	boolean debugSteps = false;
 	boolean debugMe = false;
 	boolean debugInfo = true;
@@ -14,12 +27,15 @@ a11Y() {
 	boolean useA11yOffset = true;
 	boolean waitNodes = true;
 	boolean useA11yStructure = false;
+	boolean includeAllMethods = false;
+	boolean quickAddMode = true;
 	This TOP;
-
+	String scriptEditor = "";
+	ExecutorService executor = Executors.newFixedThreadPool(2);
 	debug() {
 		debugMe = true;
 	}
-
+	This inspector;
 	set(This THIS) {
 		THIS.namespace.setVariable("debugMe", debugMe, false);
 		THIS.namespace.setVariable("debugSteps", debugSteps, false);
@@ -30,6 +46,8 @@ a11Y() {
 		THIS.namespace.setVariable("useA11yOffset", useA11yOffset, false);
 		THIS.namespace.setVariable("waitNodes", waitNodes, false);
 		THIS.namespace.setVariable("useA11yStructure", useA11yStructure, false);
+		THIS.namespace.setVariable("includeAllMethods", includeAllMethods, false);
+		THIS.namespace.setVariable("quickAddMode", quickAddMode, false);
 		if (ENV == null) {
 			String superImport = tasker.getVariable("ImportJava");
 			try {
@@ -87,10 +105,18 @@ a11Y() {
 		}
 		assistOverlays.clear();
 	}
-
+	
+	if (old != null) {
+		if (old.scriptEditor != void) scriptEditor = old.scriptEditor;
+	}
 	return this;
 };
 String ENV = new File(getSourceFileInfo()).getParentFile().getAbsolutePath();
 This a11Y = a11Y();
 a11Y.setEnv(ENV);
+a11Y.set();
+This inspector = MethodInspector(this);
+inspector.read();
+inspector.ignoreNearby();
+a11Y.inspector = inspector;
 tasker.setJavaVariable("a11Y", a11Y);

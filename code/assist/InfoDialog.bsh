@@ -59,7 +59,7 @@ public int dp(int value) {
 	Extracts data from a given node
   ─────────────────────────────────────────────────────────────── */
 public Map getNodeData(Object node) {
-	data = new HashMap();
+	Map data = new HashMap();
 	if (node == null) return data;
 
 	data.put("class", node.getClassName());
