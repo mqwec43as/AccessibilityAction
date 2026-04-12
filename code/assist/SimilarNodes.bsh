@@ -60,7 +60,8 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	int classIndex;
 	List classBoxes = new ArrayList();
 	List classNodes = new ArrayList();
-	
+	boolean oldDebugMe = debugMe;
+	debugMe = false;
 	if (text != null && text.length() > 0) {
 		textNodes = findNodes(rootNode, "text", text);
 		if (!textNodes.isEmpty()) {
@@ -84,7 +85,8 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 			classNodes.remove(node);
 		}
 	}
-
+	
+	debugMe = oldDebugMe;
 
 	public String getText(int maxLength) {
 		if (text == null || text.length() <= maxLength) {
@@ -172,6 +174,5 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 			return null;
 		}
 	}
-	tasker.setJavaVariable("nodeData", this);
 	return this;
 }
