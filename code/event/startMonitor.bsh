@@ -1,0 +1,115 @@
+import com.joaomgcd.taskerm.action.java.JavaCodeException;
+import io.reactivex.subjects.CompletableSubject;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Action;
+import io.reactivex.schedulers.Schedulers; // NEW: Needed for thread control
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
+import bsh.This;
+import io.reactivex.internal.operators.observable.ObservableHide;
+
+startMonitor() {
+
+	if (tasker.getAccessibilityService() == null) {
+		throw new JavaCodeException("Tasker Accessibility Monitor is not started.");
+	}
+
+	This a11E = tasker.getJavaVariable("a11E");
+	if (a11E == null || a11E == void) {
+		throw new JavaCodeException("The a11E object is missing.");
+	}
+
+	if (a11E.disposable != void && a11E.disposable != null) {
+		if (!a11E.disposable.isDisposed()) {
+			tasker.logAndToast("Monitor is already running.");
+			return;
+		}
+	}
+
+	try {
+		ObservableHide events = tasker.getAccessibilityEvents();
+		if (events == null) {
+			throw new JavaCodeException("Could not get accessibility events.");
+		}
+
+		/* * Use observeOn to force the 'accept' block onto your custom executor.
+		 * This prevents the Accessibility Service thread from hanging during validation.
+		 */
+		disposable = events.observeOn(Schedulers.from(a11E.executor))
+			.subscribe(new Consumer() {
+				accept(Object accessibilityEvent) {
+					// Now running on "a11E_x" thread
+					This a11E = tasker.getJavaVariable("a11E");
+					int eventType = accessibilityEvent.getEventType();
+
+					if (a11E == null || a11E == void) {
+						accessibilityEvent.recycle();
+						return;
+					}
+					
+					if (!a11E.eventList.contains(eventType)) {
+						accessibilityEvent.recycle();
+						return;
+					}
+
+					// [Remainder of your accept logic remains untouched as requested]
+					a11E.event = accessibilityEvent;
+					a11E.node = accessibilityEvent.getSource();
+
+					int limit = 10;
+					if (a11E.history.size() > limit) {
+						a11E.history.subList(limit, a11E.history.size()).clear();
+					}
+
+					Map listeners = a11E.listeners != void ? a11E.listeners : null;
+
+					if (listeners == null) return;
+					for (String key: listeners.keySet()) {
+
+						This listener = listeners.get(key);
+						boolean hasEvent = listener.EVENT_TYPES.containsKey(eventType);
+						if (!hasEvent) continue;
+						This sourceListener;
+						boolean valid = validate(listener, accessibilityEvent);
+
+						if (!valid) {
+							tasker.setJavaVariable("failedL", listener);
+							tasker.setJavaVariable("failedE", accessibilityEvent);
+						}
+
+						if (listener.namespace.getMethod("Source", new Class[] {}) != null && valid) {
+
+							sourceListener = listener.Source();
+							AccessibilityNodeInfo node = accessibilityEvent.getSource();
+							if (node != null) valid = validate(sourceListener, node);
+						}
+
+						if (valid) {
+
+							String methodName = listener.EVENT_TYPES.get(eventType);
+							a11E.executor.submit(new Runnable() {
+								run() {
+									listener.invokeMethod(methodName, new Object[] { accessibilityEvent });
+								}
+							});
+						}
+					}
+					
+					accessibilityEvent.recycle();
+				}
+			}, new Consumer() {
+				accept(Object errorObject) {
+					Throwable error = (Throwable) errorObject;
+					a11E.namespace.unsetVariable("disposable");
+					tasker.showToast("Monitor Stream Error: " + error.getMessage());
+				}
+			});
+
+		a11E.namespace.setVariable("disposable", disposable, false);
+
+	} catch (Exception e) {
+		a11E.namespace.unsetVariable("disposable");
+		throw e;
+	}
+}

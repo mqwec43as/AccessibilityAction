@@ -1,0 +1,152 @@
+import android.view.accessibility.AccessibilityEvent;
+import bsh.This;
+import bsh.BshMethod;
+import java.lang.reflect.Field;
+import java.util.stream.Collectors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import io.reactivex.disposables.Disposable;
+
+a11E() {
+	This old = tasker.getJavaVariable("a11E");
+	if (old != null) {
+		try {
+			if (old.executor != void && old.executor != null) {
+				if (!old.executor.isShutdown()) {
+					old.executor.shutdownNow();
+				}
+			}
+		} catch (Exception e) {}
+
+		try {
+			if (old.disposable != void && old.disposable != null) {
+				if (!old.disposable.isDisposed()) {
+					old.disposable.dispose();
+				}
+			}
+		} catch (Exception e) {}
+	}
+
+	ThreadFactory customThreadFactory = new ThreadFactory() {
+		private AtomicInteger count = new AtomicInteger(0);
+		public Thread newThread(Runnable r) {
+			Thread thread = new Thread(r, "a11E_" + count.incrementAndGet());
+			thread.setPriority(Thread.MAX_PRIORITY);
+			return thread;
+		}
+	};
+
+
+	ThreadPoolExecutor executor = new ThreadPoolExecutor(
+		1, // Core size
+		10, // Max size
+		30, // Idle timeout
+		TimeUnit.SECONDS, // Timeout unit
+		new SynchronousQueue(), 
+		customThreadFactory, // Custom naming/priority
+		new ThreadPoolExecutor.DiscardOldestPolicy()
+	);
+
+	Disposable disposable;
+	List history = new ArrayList();
+	Map listeners = new HashMap();
+	List eventList = new ArrayList();
+	public String toConstant(String methodName) {
+		if (methodName == null || methodName.length() < 3) return "";
+		String body = methodName.substring(2);
+		StringBuilder result = new StringBuilder("TYPE");
+
+		for (int i = 0; i < body.length(); i++) {
+			char c = body.charAt(i);
+			// If we hit an uppercase letter, it's a new word boundary
+			if (Character.isUpperCase(c)) {
+				result.append("_");
+			}
+			result.append(Character.toUpperCase(c));
+		}
+
+		return result.toString();
+	}
+
+	start() {
+		startMonitor();
+	}
+
+	removeEvents() {
+		if (disposable != null) {
+			if (!disposable.isDisposed()) {
+				disposable.dispose();
+				eventList.clear();
+				listeners.clear();
+			}
+		}
+	}
+
+	updateEventList() {
+		eventList.clear();
+		if (listeners.isEmpty()) {
+			removeEvents();
+			return;
+		}
+
+		for (String key: listeners.keySet()) {
+			This listener = listeners.get(key);
+			if (listener.EVENT_TYPES != void) {
+				Set keyset = listener.EVENT_TYPES.keySet();
+				eventList.addAll(new ArrayList(keyset));
+			}
+		}
+		eventList = eventList.stream().distinct().collect(Collectors.toList());
+		if (!eventList.isEmpty()) {
+			if (disposable == null || disposable.isDisposed()) {
+				start();
+			}
+		}
+	}
+	setEventTypes(This THIS) {
+		AccessibilityEvent event = new AccessibilityEvent();
+		List ignored = Arrays.asList(new String[] { "condition", "Source" });
+		List methods = Arrays.asList(THIS.methods);
+		List constants = new ArrayList();
+		Map map = new HashMap();
+		for (String method: methods) {
+			if (ignored.contains(method)) continue;
+			String constantStr = toConstant(method);
+			try {
+				Field field = event.getClass().getField(constantStr);
+				int value = field.get(null);
+				constants.add(value);
+				map.put(value, method);
+			} catch (e) {
+				continue;
+			}
+		}
+
+		THIS.namespace.setTypedVariable("EVENT_TYPES", map.getClass(), map, true);
+		return constants;
+	}
+
+	add(String eventId, This eventListener) {
+		setEventTypes(eventListener);
+		listeners { eventId } = eventListener;
+		updateEventList();
+	}
+
+	remove(String eventId) {
+		listeners.remove(eventId);
+		updateEventList();
+	}
+
+
+	hasMethod(This THIS, String methodName) {
+		return THIS.namespace.getMethod(methodName, new Class[] { AccessibilityEvent.class }) != null;
+	}
+
+	hasVariable(This THIS, String varName) {
+		return THIS.namespace.getMethod(varName) != null;
+	}
+
+	return this;
+}

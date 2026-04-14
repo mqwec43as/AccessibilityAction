@@ -2,19 +2,23 @@ import bsh.This;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 a11Y() {
+	// 1. Retrieve the previous instance from Tasker's memory
 	This old = tasker.getJavaVariable("a11Y");
 	if (old != null) {
 		try {
-			if (old.executor != void) old.executor.shutdown();
-			old.clean();
-		} catch (e) {
-
-		}
+			if (old.executor != void && old.executor != null) {
+				if (!old.executor.isShutdown()) {
+					old.executor.shutdownNow();
+				}
+			}
+		} catch (Exception e) {}
 	}
+
 	boolean debugSteps = false;
 	boolean debugMe = false;
 	boolean debugInfo = true;
@@ -27,11 +31,30 @@ a11Y() {
 	boolean useA11yOffset = true;
 	boolean waitNodes = true;
 	boolean useA11yStructure = false;
-	boolean includeAllMethods = false;
+	boolean includeAllMethods = true;
 	boolean quickAddMode = true;
 	This TOP;
 	String scriptEditor = "";
-	ExecutorService executor = Executors.newFixedThreadPool(2);
+
+	ThreadFactory customThreadFactory = new ThreadFactory() {
+		private AtomicInteger count = new AtomicInteger(0);
+		public Thread newThread(Runnable r) {
+			Thread thread = new Thread(r, "a11Y_" + count.incrementAndGet());
+			thread.setPriority(Thread.MAX_PRIORITY);
+			return thread;
+		}
+	};
+
+	ThreadPoolExecutor executor = new ThreadPoolExecutor(
+		1, // Core size
+		1, // Max size
+		30, // Idle timeout
+		TimeUnit.SECONDS, // Timeout unit
+		new ArrayBlockingQueue(1), // Task wait-list
+		customThreadFactory, // Thread factory
+		new ThreadPoolExecutor.DiscardOldestPolicy()
+	);
+
 	debug() {
 		debugMe = true;
 	}
@@ -105,11 +128,35 @@ a11Y() {
 		}
 		assistOverlays.clear();
 	}
-	
+
+	addEvent(String eventId, This eventListener) {
+		This a11E = tasker.getJavaVariable("a11E");
+		if (a11E != null) a11E.add(eventId, eventListener);
+	}
+
+	removeEvent(String eventId) {
+		This a11E = tasker.getJavaVariable("a11E");
+		if (a11E != null) a11E.remove(eventId);
+	}
+
+	removeEvents() {
+		This a11E = tasker.getJavaVariable("a11E");
+		if (a11E != null) a11E.removeEvents();
+	}
+
+	getEvents() {
+		This a11E = tasker.getJavaVariable("a11E");
+		if (a11E != null) {
+			Set keyset = a11E.listeners.keySet();
+			return new ArrayList(keyset);
+		}
+	}
+
 	if (old != null) {
 		if (old.scriptEditor != void) scriptEditor = old.scriptEditor;
 	}
 	return this;
+
 };
 String ENV = new File(getSourceFileInfo()).getParentFile().getAbsolutePath();
 This a11Y = a11Y();
@@ -117,6 +164,7 @@ a11Y.setEnv(ENV);
 a11Y.set();
 This inspector = MethodInspector(this);
 inspector.read();
-inspector.ignoreNearby();
 a11Y.inspector = inspector;
 tasker.setJavaVariable("a11Y", a11Y);
+This a11E = a11E();
+tasker.setJavaVariable("a11E", a11E);
