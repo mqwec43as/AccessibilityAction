@@ -32,13 +32,9 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingtoolbar.FloatingToolbarLayout;
 import java.util.function.Consumer;
-import android.view.WindowManager;
 import bsh.This;
 import io.reactivex.subjects.CompletableSubject;
 import java.util.concurrent.TimeUnit;
-
-a11Y.set();
-
 
 /*───────────────────────────────────────────────────────────────
   ListDialog Component
@@ -48,7 +44,6 @@ ListDialog(This config) {
 	Activity activity;
 	boolean isRemoved = true;
 	boolean hasShown = false;
-	This a11Y = tasker.getJavaVariable("a11Y");
 	ArrayList selectedItems = new ArrayList();
 
 	String title = config.title == void ? null : config.title;
@@ -56,8 +51,9 @@ ListDialog(This config) {
 	boolean isMulti = config.multiSelect == void ? false : config.multiSelect;
 	List preSelect = config.preSelect == void ? null : config.preSelect;
 	long timeout = config.timeout == void ? 0 : config.timeout;
+	
 	/* Height Logic Setup */
-	Object rawMaxH = config.maxHeight == void ? 0.5 : config.maxHeight;
+	Object rawMaxH = config.maxHeight == void ? 0.8 : config.maxHeight;
 	Object rawMaxL = config.maxHeightList == void ? 0.5 : config.maxHeightList;
 
 	final Map iconCache = new HashMap();
@@ -91,15 +87,8 @@ ListDialog(This config) {
 		activity = act;
 		DisplayMetrics dm = activity.getResources().getDisplayMetrics();
 		int screenHeight = dm.heightPixels;
-
-		/* Normalize Max Heights */
-		float mhVal = Float.parseFloat(rawMaxH.toString());
-		int limitDialog = (mhVal < 1.0f) ? (int)(screenHeight * mhVal) : dp((int) mhVal);
-
-		float mlVal = Float.parseFloat(rawMaxL.toString());
-		int limitList = (mlVal < 1.0f) ? (int)(screenHeight * mlVal) : dp((int) mlVal);
-
-		final android.content.pm.PackageManager pm = activity.getPackageManager();
+		
+		android.content.pm.PackageManager pm = activity.getPackageManager();
 
 		Window window = activity.getWindow();
 		window.requestFeature(Window.FEATURE_NO_TITLE);
@@ -120,8 +109,10 @@ ListDialog(This config) {
 		LinearLayout mainContainer = new LinearLayout(activity);
 		mainContainer.setOrientation(1);
 
-		/* Apply Dialog Max Height constraint */
-		mainContainer.setLayoutParams(new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
+		// LayoutParams for the dialog container
+		LinearLayout.LayoutParams mainLp = new LinearLayout.LayoutParams(-1, -2);
+		mainLp.gravity = Gravity.BOTTOM;
+		mainContainer.setLayoutParams(mainLp);
 		mainContainer.setPadding(dp(20), dp(20), dp(20), dp(20));
 
 		GradientDrawable shape = new GradientDrawable();
@@ -150,6 +141,13 @@ ListDialog(This config) {
 		ListView listView = new ListView(activity);
 		listView.setDivider(null);
 		listView.setDividerHeight(0);
+		
+		/* FIX: We cannot use onMeasure override in BeanShell.
+		   Instead, we use weight=1 to make the list flexible, but set its 
+		   actual height to limitList to ensure buttons are always visible.
+		*/
+		LinearLayout.LayoutParams listLp = new LinearLayout.LayoutParams(-1, -2, 1.0f);
+		listView.setLayoutParams(listLp);
 
 		ArrayList filteredList = new ArrayList(originalList);
 
@@ -199,7 +197,6 @@ ListDialog(This config) {
 						t1.setTextSize(16);
 						t1.setTextColor((int) tm.attr("colorOnSurface"));
 						t1.setEllipsize(TextUtils.TruncateAt.END);
-// 						t1.setSingleLine(true);
 						tg.addView(t1);
 
 						t2 = new TextView(activity);
@@ -262,36 +259,9 @@ ListDialog(This config) {
 		BaseAdapter adapter = (BaseAdapter) tasker.implementClass(BaseAdapter.class, adapterHandler);
 		listView.setAdapter(adapter);
 
-		Runnable updateHeight = new Runnable() {
-			run() {
-				int count = filteredList.size();
-				if (count == 0) {
-					listView.setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
-					return;
-				}
-
-				/* Calculate dynamic row height based on content */
-				boolean anySub = false;
-				for (int i = 0; i < count; i++) {
-					Map m = (Map) filteredList.get(i);
-					if (m.get("subtitle") != null && !m.get("subtitle").toString().equals("")) {
-						anySub = true;
-						break;
-					}
-				}
-				int rowH = anySub ? dp(72) : dp(56);
-				int totalH = Math.min(count * rowH, limitList);
-
-				ViewGroup.LayoutParams p = listView.getLayoutParams();
-				if (p == null) p = new LinearLayout.LayoutParams(-1, totalH);
-				else p.height = totalH;
-				listView.setLayoutParams(p);
-			}
-		};
-
 		mainContainer.addView(listView);
-		updateHeight.run();
 
+		/* Button Container */
 		LinearLayout bc = new LinearLayout(activity);
 		bc.setOrientation(0);
 		bc.setGravity(Gravity.END);
@@ -321,6 +291,7 @@ ListDialog(This config) {
 			});
 			bc.addView(oBtn);
 		}
+		
 		mainContainer.addView(bc);
 
 		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -358,12 +329,11 @@ ListDialog(This config) {
 						}
 					}
 					adapter.notifyDataSetChanged();
-					updateHeight.run();
 				}
 				afterTextChanged(Editable s) {}
 			});
 		}
-
+		
 		root.addView(mainContainer);
 		activity.setContentView(root);
 
@@ -401,7 +371,7 @@ ListDialog(This config) {
 /*───────────────────────────────────────────────────────────────
   Execution Logic
   ───────────────────────────────────────────────────────────────*/
-
+// a11Y.set();
 // dialog(This THIS) {
 // 	String title = "Select Actions";
 // 	boolean showFilter = true;
@@ -418,6 +388,8 @@ ListDialog(This config) {
 // 		item.put("title", titles[i]);
 // 		item.put("subtitle", subs[i]);
 // 		itemList.add(item);
+// // 		itemList.add(item);
+// // 		itemList.add(item);
 // 	}
 
 // 	onSuccess(List list) {

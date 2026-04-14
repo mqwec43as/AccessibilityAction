@@ -1,0 +1,115 @@
+import java.util.function.Consumer;
+import android.app.Activity;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.Gravity;
+import android.widget.LinearLayout;
+import android.widget.FrameLayout;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.text.InputType;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingtoolbar.FloatingToolbarLayout;
+import android.content.Context;
+import bsh.This;
+
+/*───────────────────────────────────────────────────────────────
+  textDialog(String text)
+  **Direct UI Launcher**
+  Uses FloatingToolbarLayout to wrap a bottom-aligned input dialog.
+ ───────────────────────────────────────────────────────────────*/
+public void textDialog(String text) {
+	
+	Consumer uiLogic = new Consumer() {
+		accept(Object activityObj) {
+			final Activity activity = (Activity) activityObj;
+			float density = activity.getResources().getDisplayMetrics().density;
+			int dp16 = (int)(16 * density);
+			int padding = (int)(20 * density);
+
+			/* Window Configuration */
+			Window window = activity.getWindow();
+			window.requestFeature(Window.FEATURE_NO_TITLE);
+			window.setBackgroundDrawableResource(android.R.color.transparent);
+			
+			WindowManager.LayoutParams lp = window.getAttributes();
+// 			lp.gravity = Gravity.BOTTOM;
+			lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+			window.setAttributes(lp);
+
+			/* Theme Setup */
+			This tm = ThemeManager(activity);
+			tm.setThemeDark();
+
+			/* Root Setup using FloatingToolbarLayout */
+			FloatingToolbarLayout root = new FloatingToolbarLayout(activity);
+			root.setBackgroundColor(Color.TRANSPARENT);
+
+			/* Main Content Container */
+			LinearLayout main = new LinearLayout(activity);
+			main.setOrientation(LinearLayout.VERTICAL);
+			main.setPadding(padding, padding, padding, padding);
+
+			/* Styling the background of the main layout */
+			GradientDrawable shape = new GradientDrawable();
+			shape.setCornerRadius(padding);
+			shape.setColor((int) tm.attr("colorSurface"));
+			main.setBackground(shape);
+
+			/* Positioning the main layout at the bottom */
+			FrameLayout.LayoutParams mainParams = new FrameLayout.LayoutParams(-1, -2);
+			mainParams.gravity = Gravity.BOTTOM;
+			main.setLayoutParams(mainParams);
+
+			/* Input Layout */
+			TextInputLayout inputLayout = new TextInputLayout(activity);
+			TextInputEditText editText = new TextInputEditText(inputLayout.getContext());
+			editText.setText(text);
+			editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+			editText.setShowSoftInputOnFocus(false);
+			
+			inputLayout.addView(editText);
+			main.addView(inputLayout);
+
+			/* Spacer */
+			View spacer = new View(activity);
+			spacer.setLayoutParams(new LinearLayout.LayoutParams(-1, dp16));
+			main.addView(spacer);
+
+			/* Buttons Row */
+			LinearLayout buttonRow = new LinearLayout(activity);
+			buttonRow.setOrientation(LinearLayout.HORIZONTAL);
+			buttonRow.setGravity(Gravity.END);
+
+			MaterialButton cancelBtn = new MaterialButton(activity);
+			cancelBtn.setText("CANCEL");
+			cancelBtn.setOnClickListener(new View.OnClickListener() {
+				onClick(View v) {
+					activity.finish();
+				}
+			});
+
+			buttonRow.addView(cancelBtn);
+			main.addView(buttonRow);
+
+			/* Add main content to the FloatingToolbarLayout root */
+			root.addView(main);
+			activity.setContentView(root);
+			activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+			onViewAttachedToWindow(View v) {
+				
+			}
+			onViewDetachedFromWindow(View v) {
+				activity.finish();
+			}
+		});
+		}
+	};
+
+	tasker.doWithActivity(uiLogic);
+}
+
+
