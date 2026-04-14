@@ -16,6 +16,7 @@ if (RUNNING_ENV == "TASKER") {
 	import io.reactivex.Observable;
 	import io.reactivex.Single;
 	import com.joaomgcd.taskerm.action.java.JavaCodeException;
+	import io.reactivex.disposables.Disposable;
 }
 /*───────────────────────────────────────────────────────────────
 waitNodes(Object[][] argsConfigs, long timeout, boolean hasAll)
@@ -40,7 +41,7 @@ waitNodes(Object[][] argsConfigs, long timeout, boolean allFound) {
 	if (RUNNING_ENV == "TASKER") {
 		boolean oldDebug = debugMe;
 		if (oldDebug == true) debugMe = false;
-		
+
 		try {
 			nodesMap = tasker.getAccessibilityEvents()
 				.map(new io.reactivex.functions.Function() {
@@ -59,19 +60,19 @@ waitNodes(Object[][] argsConfigs, long timeout, boolean allFound) {
 				.blockingGet();
 		} catch (Exception e) {
 			debugMe = oldDebug;
-			
+
 			if (waitNodes == void || waitNodes != void && waitNodes == true) {
 				throw new JavaCodeException("Timeout reached while waiting for nodesMap: " + e.getMessage());
 			}
-			
+
 			return NO_RESULT;
 		}
-		
+
 		debugMe = oldDebug;
 		if (!nodesMap.isEmpty()) {
 			debugMe(nodesMap);
 		}
-		
+
 		return nodesMap;
 	} else if (RUNNING_ENV == "MACRODROID") {
 		root = getRoot();

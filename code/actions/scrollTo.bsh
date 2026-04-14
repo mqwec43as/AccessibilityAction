@@ -41,6 +41,10 @@ scrollTo(String text, int scrollCount, double startY, double endY) {
 	return scrollTo("text", text, scrollCount, startY, endY);
 }
 
+scrollTo(String text, int scrollCount) {
+	return scrollTo("text", text, scrollCount, 0.8, 0.2);
+}
+
 scrollTo(String key, String value, int scrollCount) {
 	return scrollTo(key, value, scrollCount, 0.8, 0.2);
 }

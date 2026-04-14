@@ -1,0 +1,7 @@
+checkEnv() {
+	if (tasker != void && context != void) return "TASKER";
+	if (magicText != void && variableSetter != void) return "MACRODROID";
+}
+
+return checkEnv();
+
