@@ -1,0 +1,124 @@
+import android.os.Bundle;
+import android.os.Build;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+import bsh.This;
+
+/**
+ * Processes active notifications based on the provided query criteria.
+ * Strict Action Logic:
+ * 1. No action() method -> No intent fired.
+ * 2. action() with NO variables -> Click Notification (ContentIntent).
+ * 3. action() WITH variables -> Match Button ONLY. NO fallback to click.
+ */
+
+validate(This criteria, Object object) {
+	List values = new ArrayList();
+	hasMethod(This THIS, String methodName) {
+		return THIS.namespace.getMethod(methodName, new Class[] { Object.class }) != null;
+	}
+	List results = new ArrayList();
+	String globalRegexList = "," + criteria.namespace.getVariable("regex") + ",";
+	String globalContainsList = "," + criteria.namespace.getVariable("contains") + ",";
+	String globalInsensitiveList = "," + criteria.namespace.getVariable("insensitive") + ",";
+	String[] queryVariableNames = criteria.namespace.getVariableNames();
+	boolean isMatch = true;
+
+	for (int j = 0; j < queryVariableNames.length; j++) {
+		String key = queryVariableNames[j];
+		if (key.equals("namespace") || key.equals("condition") || key.equals("regex") ||
+			key.equals("contains") || key.equals("insensitive") || key.equals("action")) {
+			continue;
+		}
+
+		Object targetVariable = criteria.namespace.getVariable(key);
+		if (targetVariable == null) continue;
+		String targetValue = targetVariable.toString();
+
+		Object actualValue = null;
+		String firstChar = key.substring(0, 1);
+		String thirdChar = key.substring(2, 3);
+
+		if (firstChar.equals(firstChar.toUpperCase())) {
+			try {
+				String methodName = "get" + key;
+				java.lang.reflect.Method m = object.getClass().getMethod(methodName, new Class[0]);
+				actualValue = m.invoke(object, new Object[0]);
+			} catch (Exception e) {
+				values.add(e.getMessage());
+				continue;
+			}
+		} else if (key.startsWith("is") && thirdChar.equals(thirdChar.toUpperCase())) {
+			try {
+				String methodName = key;
+				java.lang.reflect.Method m = object.getClass().getMethod(methodName, new Class[0]);
+				actualValue = m.invoke(object, new Object[0]);
+			} catch (Exception e) {
+				values.add(e.getMessage());
+				continue;
+			}
+		} else {
+			continue;
+		}
+
+		if (actualValue == null) {
+			isMatch = false;
+			break;
+		}
+
+		String actualValueString = actualValue.toString();
+		values.add(actualValueString);
+		String keySearchPattern = "," + key + ",";
+		boolean useRegex = globalRegexList.indexOf(keySearchPattern) != -1;
+		boolean useContains = globalContainsList.indexOf(keySearchPattern) != -1;
+		boolean useInsensitive = globalInsensitiveList.indexOf(keySearchPattern) != -1;
+
+		if (useRegex) {
+			int flags = useInsensitive ? (Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE) : 0;
+			if (!Pattern.compile(targetValue, flags).matcher(actualValueString).find()) {
+				isMatch = false;
+				break;
+			}
+		} else if (useContains) {
+			String v1 = useInsensitive ? actualValueString.toLowerCase() : actualValueString;
+			String v2 = useInsensitive ? targetValue.toLowerCase() : targetValue;
+			if (v1.indexOf(v2) == -1) {
+				isMatch = false;
+				break;
+			}
+		} else {
+			if (useInsensitive ? !actualValueString.equalsIgnoreCase(targetValue) : !actualValueString.equals(targetValue)) {
+				isMatch = false;
+				break;
+			}
+		}
+	}
+
+	if (isMatch && hasMethod(criteria, "condition")) {
+		tasker.showToast("Has condition");
+		isMatch = criteria.condition(object);
+	}
+
+	if (!isMatch) {
+		tasker.setJavaVariable("isMatch", values);
+	}
+
+	return isMatch;
+}
+
+// myEvent() {
+// 	PackageName = "net.dinglisch.android.taskerm";
+// 	regex = "Text";
+// 	return this;
+
+// }
+// a11Y.set();
+// start = System.currentTimeMillis();
+// res = validate(myEvent(), a11yEvent);
+// tasker.setVariable("time", System.currentTimeMillis() - start);
+// tasker.setVariable("res", res);
+// tasker.setVariable("values", values);
+// return a11yEvent;

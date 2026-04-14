@@ -253,12 +253,20 @@ public This MethodInspector(This THIS) {
 	List IGNORED_PARAMETERS = new ArrayList();
 	Map DIRECTORIES_MAP = new HashMap();
 	List DIRECTORIES = new ArrayList();
-
+	
+	
+	removeIgnore() {
+		IGNORED_PARAMETERS = new ArrayList();
+		updateAvailable();
+	}
+	
+	
 	ignoreDefault() {
 		IGNORED_PARAMETERS.addAll(ADVANCED_PARAMETERS);
 		IGNORED_PARAMETERS = IGNORED_PARAMETERS.stream()
 			.distinct()
 			.collect(Collectors.toList());
+		updateAvailable();
 	}
 
 	updateAvailable() {
@@ -495,6 +503,23 @@ public This MethodInspector(This THIS) {
 			result.add(getParameter(key));
 		}
 		return result;
+	}
+
+	
+	isKeyRequired(String methodName) {
+		List overloads = getMethodOverloads(methodName);
+		List keys = new ArrayList(KEYS);
+		List params = getMethodOverloadParams(overloads);
+		boolean requireKeys;
+		for (Map param: params) {
+			if (param == null) continue;
+			String key = param.get("key");
+			if (key.equals("value") || key.equals("text")) {
+				requireKeys = true;
+				break;
+			}
+		}
+		return requireKeys;
 	}
 
 	return this;
