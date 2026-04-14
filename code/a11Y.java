@@ -31,7 +31,7 @@ a11Y() {
 	boolean useA11yOffset = true;
 	boolean waitNodes = true;
 	boolean useA11yStructure = false;
-	boolean includeAllMethods = true;
+	boolean includeAllMethods = false;
 	boolean quickAddMode = true;
 	This TOP;
 	String scriptEditor = "";
