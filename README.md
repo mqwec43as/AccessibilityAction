@@ -19,8 +19,16 @@ click("Subscription");
 back();
 ```
 
+&nbsp;
 ### 2. Debug highlighter & UI inspector
 
 Highlight certain actions and maps the entire UI.
 
-[Demo](https://files.catbox.moe/1akbc1.mp4)
+<video width ="320" src="https://files.catbox.moe/1akbc1.mp4" controls="controls" muted="muted" playsinline="playsinline"></video>
+
+&nbsp;
+### 3. Script builder
+Create and test UI automation script by choosing through dialogs.
+
+<video width ="320" src="https://files.catbox.moe/o7qqpm.mp4" controls="controls" muted="muted" playsinline="playsinline"></video>
+
