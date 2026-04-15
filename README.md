@@ -23,12 +23,12 @@ back();
 ### 2. Debug highlighter & UI inspector
 
 Highlight certain actions and maps the entire UI.
+<video width ="320" src="https://github.com/user-attachments/assets/d87dbd79-3aab-4c42-a4eb-f2b5e4397771" controls="controls" muted="muted" playsinline="playsinline"></video>
 
-<video width ="320" src="https://files.catbox.moe/1akbc1.mp4" controls="controls" muted="muted" playsinline="playsinline"></video>
 
 &nbsp;
 ### 3. Script builder
 Create and test UI automation script by choosing through dialogs.
 
-<video width ="320" src="https://files.catbox.moe/o7qqpm.mp4" controls="controls" muted="muted" playsinline="playsinline"></video>
+<video width ="320" src="https://github.com/user-attachments/assets/37fbec1e-f809-4241-a570-e2dee39b005a" controls="controls" muted="muted" playsinline="playsinline"></video>
 
