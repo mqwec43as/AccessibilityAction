@@ -5,7 +5,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
+String ENV = new File(getSourceFileInfo()).getParentFile().getAbsolutePath();
+addClassPath(ENV);
+importCommands("main");
+importCommands("gestures");
+importCommands("actions");
+importCommands("others");
+importCommands("assist");
+importCommands("lib");
+importCommands("event");
 a11Y() {
 	// 1. Retrieve the previous instance from Tasker's memory
 	This old = tasker.getJavaVariable("a11Y");
@@ -54,6 +62,9 @@ a11Y() {
 		customThreadFactory, // Thread factory
 		new ThreadPoolExecutor.DiscardOldestPolicy()
 	);
+
+
+	This assistButton = AssistButton(0.8, 0.8);
 
 	debug() {
 		debugMe = true;
@@ -155,10 +166,19 @@ a11Y() {
 	if (old != null) {
 		if (old.scriptEditor != void) scriptEditor = old.scriptEditor;
 	}
+
+	showAssist() {
+		if (!assistButton.isShown) assistButton.show();
+	}
+	
+	removeAssist() {
+		if (assistButton.isShown) assistButton.remove();
+	}
 	return this;
 
 };
-String ENV = new File(getSourceFileInfo()).getParentFile().getAbsolutePath();
+
+
 This a11Y = a11Y();
 a11Y.setEnv(ENV);
 a11Y.set();
@@ -168,3 +188,4 @@ a11Y.inspector = inspector;
 tasker.setJavaVariable("a11Y", a11Y);
 This a11E = a11E();
 tasker.setJavaVariable("a11E", a11E);
+tasker.sendCommand("a11Y=:=start");
