@@ -250,8 +250,8 @@ AssistSetting() {
 }
 
 /* Auto-start if called directly */
-if (MAIN_DIRECTORY == void) {
-	a11Y.set();
-	assistSetting = AssistSetting();
-	assistSetting.show();
-}
+// if (MAIN_DIRECTORY == void) {
+// 	a11Y.set();
+// 	assistSetting = AssistSetting();
+// 	assistSetting.show();
+// }

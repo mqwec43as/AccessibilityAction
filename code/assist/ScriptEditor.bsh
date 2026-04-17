@@ -328,9 +328,9 @@ ScriptEditor() {
 	return this;
 }
 
-if (MAIN_DIRECTORY == void) {
-	This a11Y = tasker.getJavaVariable("a11Y");
-	a11Y.set();
-	editor = ScriptEditor();
-	editor.show();
-}
+// if (MAIN_DIRECTORY == void) {
+// 	This a11Y = tasker.getJavaVariable("a11Y");
+// 	a11Y.set();
+// 	editor = ScriptEditor();
+// 	editor.show();
+// }

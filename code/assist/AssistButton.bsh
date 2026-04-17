@@ -52,7 +52,7 @@ public This AssistButton(int initialX, int initialY) {
 	This assistSetting = AssistSetting();
 	boolean isRemoved;
 	boolean useA11yStructure;
-	boolean isAttached;
+	boolean isShown;
 
 	isRemoved() {
 		return activeStructure != null && activeStructure.isRemoved();
@@ -146,7 +146,7 @@ public This AssistButton(int initialX, int initialY) {
 		assistParams.height = measuredHeight;
 		assistParams.width = measuredWidth;
 
-		if (!isAttached) return;
+		if (!isShown) return;
 		try {
 			windowManager.updateViewLayout(assistButton, (WindowManager.LayoutParams) assistParams);
 		} catch (e) {}
@@ -356,11 +356,11 @@ public This AssistButton(int initialX, int initialY) {
 
 	assistButton.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 		onViewAttachedToWindow(View v) {
-			isAttached = true;
+			isShown = true;
 			refreshSize();
 		}
 		onViewDetachedFromWindow(View v) {
-			isAttached = false;
+			isShown = false;
 		}
 	});
 
