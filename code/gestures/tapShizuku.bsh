@@ -1,0 +1,104 @@
+/*───────────────────────────────────────────────────────────────
+	This code was generated with the asssitance of AI Tools.
+	link: https://taskernet.com/shares/?user=AS35m8mYAsKnyvlz5PqGXgNUZ9JjdBkYfoFVvHU2Sv3VHWY8qbQr6i6XTqmBRJqwPDPzKu5ypD%2FkbH%2BQyA%3D%3D&id=Project%3AEdge+Bar+Final
+────────────────────────────────────────────────────────────── */
+
+import android.view.MotionEvent;
+import android.view.InputDevice;
+import android.view.InputEvent;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
+import android.content.Context;
+import rikka.shizuku.ShizukuBinderWrapper;
+import java.lang.reflect.Method;
+
+/*───────────────────────────────────────────────────────────────
+  tapShizuku(double x, double y, long duration)
+  **Performs a Tap via Shizuku (Direct Implementation)**
+  Normalizes coordinates and injects MotionEvents directly using
+  reflected InputManager methods via Shizuku.
+ 
+  Arguments:
+   - x → X coordinate (absolute or 0.0-1.0 for percentage).
+   - y → Y coordinate (absolute or 0.0-1.0 for percentage).
+   - duration → How long to hold the tap in milliseconds.
+ 
+  Returns: true on success, false on failure.
+  ───────────────────────────────────────────────────────────────*/
+tapShizuku(double x, double y, long duration) {
+	try {
+		/* 1. Normalize Coordinates */
+		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		DisplayMetrics dm = new DisplayMetrics();
+		wm.getDefaultDisplay().getRealMetrics(dm);
+
+		int screenWidth = dm.widthPixels;
+		int screenHeight = dm.heightPixels;
+
+		if (Math.abs(x) <= 1.0) x *= screenWidth;
+		if (Math.abs(y) <= 1.0) y *= screenHeight;
+
+		float finalX = (float) x;
+		float finalY = (float) y;
+		debugMe(finalX, finalY);
+		
+		/* 2. Setup Shizuku InputManager Connection */
+		ShizukuBinderWrapper rawBinder = tasker.getShizukuService("input");
+		Class iimStub = Class.forName("android.hardware.input.IInputManager$Stub");
+		Method asInterface = iimStub.getMethod("asInterface", new Class[] { android.os.IBinder.class });
+		android.hardware.input.IInputManager$Stub$Proxy iim = asInterface.invoke(null, new Object[] { rawBinder });
+
+		/* 3. Prepare Injection Method */
+		Method injectM = iim.getClass().getMethod("injectInputEvent", new Class[] { InputEvent.class, int.class });
+		injectM.setAccessible(true);
+
+		/* 4. Execute ACTION_DOWN */
+		long downTime = System.currentTimeMillis();
+		
+		MotionEvent evDown = MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, finalX, finalY, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
+		evDown.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+		injectM.invoke(iim, new Object[] { evDown, 1 });
+		evDown.recycle();
+
+		/* 5. Handle Duration (Wait for hold) */
+		if (duration > 0) {
+			Thread.sleep(duration);
+		}
+		
+		/* 6. Execute ACTION_UP */
+		long eventTime = System.currentTimeMillis();
+		MotionEvent evUp = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_UP, finalX, finalY, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
+		evUp.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+		injectM.invoke(iim, new Object[] { evUp, 1 });
+		evUp.recycle();
+		return true;
+
+	} catch (Exception e) {
+		tasker.log("tapShizuku direct error: " + e.getMessage());
+		return false;
+	}
+}
+
+boolean tapShizuku(double startx, double starty) {
+	return tapShizuku(startx, starty,20L);
+}
+
+boolean tapShizuku(int x, int y, long duration) {
+	return tapShizuku((double) x, (double) y, duration);
+}
+
+boolean tapShizuku(int x, int y) {
+	return tapShizuku((double) x, (double) y,20L);
+}
+
+boolean tapShizuku(float x, float y) {
+	if (x >=1f || y >=1f) return false;
+	return tapShizuku((double) x, (double) y,20L);
+}
+
+boolean tapShizuku(float x, float y, long duration) {
+	if (x >=1f || y >=1f) return false;
+	return tapShizuku((double) x, (double) y, duration);
+}
+
+

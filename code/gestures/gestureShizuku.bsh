@@ -1,0 +1,191 @@
+/*───────────────────────────────────────────────────────────────
+	This code was generated with the asssitance of AI Tools.
+	link: https://taskernet.com/shares/?user=AS35m8mYAsKnyvlz5PqGXgNUZ9JjdBkYfoFVvHU2Sv3VHWY8qbQr6i6XTqmBRJqwPDPzKu5ypD%2FkbH%2BQyA%3D%3D&id=Project%3AEdge+Bar+Final
+────────────────────────────────────────────────────────────── */
+
+
+import android.view.MotionEvent;
+import android.view.InputDevice;
+import android.view.InputEvent;
+import android.graphics.Path;
+import android.graphics.Paint;
+import android.graphics.Canvas;
+import android.graphics.Bitmap;
+import android.graphics.PixelFormat;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
+import android.view.Gravity;
+import android.widget.ImageView;
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.IBinder;
+import java.util.ArrayList;
+
+/*───────────────────────────────────────────────────────────────
+  gestureShizuku(Object[][] points, Paint paint)
+  **Replays Touch Events via Shizuku with Bézier Support**
+  
+  Arguments:
+   - points: Object[][] [x, y, actionType, duration, (opt) cx1, (opt) cy1]
+   - paint: If not null, draws a visual trail on an overlay
+───────────────────────────────────────────────────────────────*/
+public boolean gestureShizuku(Object[][] points, Paint paint) {
+	if (points == null || points.length == 0) return false;
+
+	/* 1. Setup Environment & Screen Metrics */
+	Context context = context;
+	WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+	DisplayMetrics dm = new DisplayMetrics();
+	windowManager.getDefaultDisplay().getRealMetrics(dm);
+	int screenWidth = dm.widthPixels;
+	int screenHeight = dm.heightPixels;
+
+	/* 2. Setup Shizuku Input Service via Reflection */
+	Object iim;
+	java.lang.reflect.Method injectM;
+	try {
+		IBinder rawBinder = (IBinder) tasker.getShizukuService("input");
+		Class iimStub = Class.forName("android.hardware.input.IInputManager$Stub");
+		java.lang.reflect.Method asIfaceM = iimStub.getMethod("asInterface", new Class[] { IBinder.class });
+		iim = asIfaceM.invoke(null, new Object[] { rawBinder });
+		injectM = iim.getClass().getMethod("injectInputEvent", new Class[] { InputEvent.class, Integer.TYPE });
+	} catch (Exception e) {
+		tasker.log("Shizuku Init Failed: " + e.getMessage());
+		return false;
+	}
+
+	/* 3. Setup Visual Trail Overlay (Optional) */
+	boolean showTrail = (paint != null);
+	Bitmap bitmapRef = null;
+	Canvas canvasRef = null;
+	ImageView overlayRef = null;
+	WindowManager.LayoutParams params = null;
+
+	if (showTrail) {
+		bitmapRef = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
+		canvasRef = new Canvas(bitmapRef);
+		overlayRef = new ImageView(context);
+		overlayRef.setImageBitmap(bitmapRef);
+
+		params = new WindowManager.LayoutParams(
+			WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+			WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, // Shizuku usually allows this if Tasker has permission
+			WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+			PixelFormat.TRANSLUCENT
+		);
+		params.gravity = Gravity.TOP | Gravity.LEFT;
+		
+		final ImageView finalOverlay = overlayRef;
+		final WindowManager.LayoutParams finalParams = params;
+		new Handler(Looper.getMainLooper()).post(new Runnable() {
+			public void run() { 
+				try { windowManager.addView(finalOverlay, finalParams); } catch (Exception e) {} 
+			}
+		});
+	}
+
+	/* 4. Process Points and Inject Events */
+	try {
+		long downTime = System.currentTimeMillis();
+		long currentTime = downTime;
+		float lastX = 0f;
+		float lastY = 0f;
+
+		for (int i = 0; i < points.length; i++) {
+			float targetX = ((Number) points[i][0]).floatValue();
+			float targetY = ((Number) points[i][1]).floatValue();
+			
+			/* Normalize coordinates */
+			if (Math.abs(targetX) <= 1.0f) targetX *= (float) screenWidth;
+			if (Math.abs(targetY) <= 1.0f) targetY *= (float) screenHeight;
+
+			int actionType = ((Number) points[i][2]).intValue();
+			long totalDuration = ((Number) points[i][3]).longValue();
+
+			/* Calculate steps: Bézier (3) needs interpolation, others are single events */
+			int steps = (actionType == 3) ? (int) Math.max(1, totalDuration / 16) : 1;
+			long stepDuration = (steps > 0) ? totalDuration / steps : 0;
+
+			for (int s = 1; s <= steps; s++) {
+				float t = (float) s / steps;
+				float currentStepX, currentStepY;
+
+				/* Quadratic Bézier Logic */
+				if (actionType == 3 && points[i].length >= 6) {
+					float cx1 = ((Number) points[i][4]).floatValue();
+					float cy1 = ((Number) points[i][5]).floatValue();
+					if (Math.abs(cx1) <= 1.0f) { cx1 *= screenWidth; cy1 *= screenHeight; }
+					
+					float invT = 1.0f - t;
+					currentStepX = (invT * invT * lastX) + (2 * invT * t * cx1) + (t * t * targetX);
+					currentStepY = (invT * invT * lastY) + (2 * invT * t * cy1) + (t * t * targetY);
+				} else {
+					currentStepX = targetX;
+					currentStepY = targetY;
+				}
+
+				/* Determine actual MotionEvent action */
+				int injectAction = actionType;
+				if (actionType == 3) injectAction = MotionEvent.ACTION_MOVE;
+
+				/* Create and Inject Event */
+				currentTime += stepDuration;
+				float size = 10f;
+				// https://developer.android.com/reference/android/view/MotionEvent#obtain(long,%20long,%20int,%20float,%20float,%20float,%20float,%20int,%20float,%20float,%20int,%20int)
+				MotionEvent ev = MotionEvent.obtain(downTime, currentTime, injectAction, currentStepX, currentStepY, 1f, size, 0, 1f, 1f, 0, 0);
+				ev.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+				injectM.invoke(iim, new Object[] { ev, new Integer(1) }); // 1 = WAIT_FOR_FINISH
+				ev.recycle();
+
+				/* Update Trail */
+				if (showTrail) {
+					canvasRef.drawLine(lastX, lastY, currentStepX, currentStepY, paint);
+					final ImageView fOverlay = overlayRef;
+					new Handler(Looper.getMainLooper()).post(new Runnable() {
+						public void run() { fOverlay.invalidate(); }
+					});
+				}
+
+				if (stepDuration > 0) Thread.sleep(stepDuration);
+
+				lastX = currentStepX;
+				lastY = currentStepY;
+			}
+		}
+
+		/* Cleanup Overlay */
+		if (showTrail) {
+			final ImageView fOverlay = overlayRef;
+			new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+				public void run() { try { windowManager.removeView(fOverlay); } catch (Exception e) {} }
+			}, 500);
+		}
+
+		return true;
+	} catch (Exception ex) {
+		tasker.log("gestureShizuku Error: " + ex.getMessage());
+		return false;
+	}
+}
+
+/* Overloaded method for convenience */
+public boolean gestureShizuku(Object[][] points) {
+	return gestureShizuku(points, null);
+}
+
+/* Example: Execute a circle gestureShizuku */
+// float cx = 0.5f; 
+// float cy = 0.5f; 
+// float r = 0.2f; 
+
+// Object[][] circlePoints = new Object[][] {
+// 	{ new Double(cx),     new Double(cy - r), new Integer(0), new Long(100) },   // ACTION_DOWN
+// 	{ new Double(cx + r), new Double(cy),     new Integer(3), new Long(200), new Double(cx + r), new Double(cy - r) },
+// 	{ new Double(cx),     new Double(cy + r), new Integer(3), new Long(200), new Double(cx + r), new Double(cy + r) },
+// 	{ new Double(cx - r), new Double(cy),     new Integer(3), new Long(200), new Double(cx - r), new Double(cy + r) },
+// 	{ new Double(cx),     new Double(cy - r), new Integer(3), new Long(200), new Double(cx - r), new Double(cy - r) },
+// 	{ new Double(cx),     new Double(cy - r), new Integer(1), new Long(500) }    // ACTION_UP
+// };
+
+// return gestureShizuku(circlePoints);
