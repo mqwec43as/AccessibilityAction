@@ -22,6 +22,11 @@ public boolean tap(double x, double y, long duration) {
 	Object accessibilityService = tasker.getAccessibilityService();
 	if (accessibilityService == null) return false;
 	AccessibilityService service = (AccessibilityService) accessibilityService;
+	
+	AccessibilityNodeInfo root = accessibilityService.getRootInActiveWindow();
+	if (root == null) {
+		return tapShizuku(x, y, duration);
+	}
 
 	try {
 		// Get screen size
