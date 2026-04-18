@@ -27,6 +27,7 @@ import java.util.HashMap;
 import io.reactivex.subjects.CompletableSubject;
 import com.joaomgcd.taskerm.action.java.ClassImplementation;
 import java.util.concurrent.Callable;
+import android.view.accessibility.AccessibilityNodeInfo;
 
 public boolean gesture(Object[][] points, Paint paint) {
 	Object accessibilityService = tasker.getAccessibilityService();
@@ -37,7 +38,7 @@ public boolean gesture(Object[][] points, Paint paint) {
 	
 	AccessibilityNodeInfo root = accessibilityService.getRootInActiveWindow();
 	if (root == null) {
-		return gesture(points, paint);
+		return gestureShizuku(points, paint);
 	}
 	WindowManager windowManager = (WindowManager) service.getSystemService(Context.WINDOW_SERVICE);
 
