@@ -13,10 +13,33 @@ The codes here need to be ran via Java Code action, which is available only on v
 
 Use text to build our automation, like AutoHotkey or AutoInput Action V2
 
-```
+**Open Youtube subscription**
+```java
 openApp("Youtube");
 click("Subscription");
-back();
+```
+
+**React on click.**
+```java
+a11Y.set();
+myEvent() {
+	String PackageName = "net.dinglisch.android.taskerm";
+	
+	Source() {
+		String ViewIdResourceName = "net.dinglisch.android.taskerm:id/button_add_action";
+		return this;
+	}
+
+	onViewClicked(Object event) {
+		click("Filter");
+	}
+
+	return this;
+}
+
+String myEvent = myEvent();
+String eventName = "Tasker add action";
+a11Y.addEvent(eventName, myEvent);
 ```
 
 &nbsp;
