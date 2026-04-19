@@ -23,7 +23,7 @@ Several views and apps that are flagged as such:
 
 Tasker direct purchase version has to be declared as Accessibility Tool `isAccessibilityTool=true` in the manifest.
 
-As seen the snippet above, the view is only visible if the service is Accessibility Tool or not flagged with `accessibilityDataSensitive`
+As seen the snippet above, the view is only visible if the service is Accessibility Tool or the view is not flagged with `accessibilityDataSensitive`.
 
 >[!NOTE]
 >One of the other benefit is that Tasker's accessibility service will also work when [Android Advanced Protection Mode](https://developer.android.com/privacy-and-security/advanced-protection-mode) is turned on on Android 17.
