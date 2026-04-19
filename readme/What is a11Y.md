@@ -54,29 +54,39 @@ click("Add");
 
 ### 2.1 Enviroment
 
-| Variable | Type | Description | Default Value |
-| :--- | :--- | :--- | :--- |
-| `assistOverlays` | `List` | Store recently displayed views from `StructureOverlay`, `NodeBox`, `InfoToast`, and `InfoDialog`. | `new ArrayList()` |
-| `importPath` | `String` | The full path location of `import.java`. (e.g., `"/storage/emulated/0/Folder/import.java"`) | `null` |
-| `ENV` | `String` | The full path location of AccessibilityAction. (e.g., `"/storage/emulated/0/Folder"`) | `null` |
+| Variable         | Type                 | Description                                                                                       | Default Value     |
+| :--------------- | :------------------- | :------------------------------------------------------------------------------------------------ | :---------------- |
+| `assistOverlays` | `List`               | Store recently displayed views from `StructureOverlay`, `NodeBox`, `InfoToast`, and `InfoDialog`. | `new ArrayList()` |
+| `assistButton`   | `bsh.This`           | Store assist button.                                                                              | `null`            |
+| `ENV`            | `String`             | The full path location of AccessibilityAction. (e.g., `"/storage/emulated/0/Folder"`)             | `null`            |
+| `exechtor`       | `ThreadPoolExecutor` | Thread reserved to execute script in the editor                                                   | 1 thread          |
+| `scriptEditor`   | `String`             | Store script in the script editor.                                                                | ` `               |
 
 ### 2.2 Debugging
 
-| Variable | Type | Description | Default Value |
-| :--- | :--- | :--- | :--- |
-| `debugMe` | `boolean` | Control debug mode. | `false` |
-| `debugSteps` | `boolean` | Activate debug steps mode. (Not yet implemented in V3). | `false` |
-| `debugInfo` | `boolean` | Show information toast about interacted node. | `true` |
-| `findDelay` | `long` | Duration for how long found nodes are highlighted. | `100` |
-| `debugDelay` | `long` | Duration for how long generic actions are highlighted. | `1000` |
-| `assistButton` | `bsh.This` | Assist button instances if any are shown. | `null` |
-| `useOffset` | `boolean` | Use status bar offset to show structure overlay for `TYPE_APPLICATION_OVERLAY`. | `true` |
-| `useA11yOffset` | `boolean` | Use status bar offset to show structure overlay for `TYPE_ACCESSIBILITY_OVERLAY`. | `true` |
+| Variable            | Type       | Description                                                                       | Default Value |
+| :------------------ | :--------- | :-------------------------------------------------------------------------------- | :------------ |
+| `debugMe`           | `boolean`  | Control debug mode.                                                               | `false`       |
+| `debugSteps`        | `boolean`  | Activate debug steps mode. (Not yet implemented in V3).                           | `false`       |
+| `debugInfo`         | `boolean`  | Show information toast about interacted node.                                     | `true`        |
+| `findDelay`         | `long`     | Duration for how long found nodes are highlighted.                                | `100`         |
+| `debugDelay`        | `long`     | Duration for how long generic actions are highlighted.                            | `1000`        |
+| `assistButton`      | `bsh.This` | Assist button instances if any are shown.                                         | `null`        |
+| `useOffset`         | `boolean`  | Use status bar offset to show structure overlay for `TYPE_APPLICATION_OVERLAY`.   | `true`        |
+| `useA11yOffset`     | `boolean`  | Use status bar offset to show structure overlay for `TYPE_ACCESSIBILITY_OVERLAY`. | `true`        |
+| `includeAllMethods` | `boolean`  | Show all methods when picking action.                                             | `false`       |
+| `quickAddMode`      | `boolean`  | Long press a box enter quick mode instead of opening copy dialog                  | `false`       |
 
    
 ## 3. Methods / Functions
 
-1. `set()`
+
+### Main
+
+1. `debug()`
+
+	Turn on debug mode.
+2. `set()`
     Set all the variables above and run [import.java](/code/import.java).
 
     if `ENV` is null, it will try to use the super import file called **mainImport.java** stored in Tasker Global Variable %ImportJava
@@ -84,14 +94,14 @@ click("Add");
     *mainImport.java is only included in the taskernet project.*
 
     Otherwise ENV need to be set with [setENV](#func-setEnv)
-2. `setEnv(String path)`
+3. `setEnv(String path)`
    <a name="func-setEnv"></a>
    
    Set enviroment file path. Must be set after `a11Y` is available and set with [a11Y.java](/code/a11Y.java)
-3. `resetEnv()`
+4. `resetEnv()`
 
     Set enviroment to null and will fallback to use %ImportJava variable and super import file.
-4. `reset()`
+5. `reset()`
 
     Will set the following debugging variables to default value.
     ```
@@ -101,18 +111,42 @@ click("Add");
 	findDelay = 100;
 	debugDelay = 1000;
     ```
-5. `addOverlay(This overlay)`
+6. `addOverlay(This overlay)`
     <a name="func-addOverlay"></a>
 
     Add [StructureOverlay](/code/assist/StructureOverlay.bsh), [NodeBox](/code/assist/NodeBox.bsh), [InfoToast](/code/assist/InfoToast.bsh), [InfoDialog](/code/assist/InfoDialog.bsh) to existing overlays.
 
-6. `removeOverlay(This overlay)`
+7. `removeOverlay(This overlay)`
 
    Remove any stored overalys added with [addOverlay()](#func-addOverlay). Those 4 classes before will try to automatically run this if removed.
     
-7. `clean()`
+8. `clean()`
 
     Clean up any displayed overlays.
+
+### Events
+
+All variables and methods related to events are stored in [a11E](/code/event/a11E.bsh) global java variable.
+
+1. `addEvent(String eventId, This eventListener)`
+
+	Add event to listen. Will [start monitoring](/code/event/startMonitor.bsh) necessary events once added.
+2. `removeEvent(String eventId)`
+
+	Remove added event. If empty, will stop monitoring.
+3. `removeEvents()`
+
+	Remove all added events and stop monitoring.
+
+### Others
+
+1. `showAssist()`
+
+	Show overlay to assist building UI automation by running [AssistButton.bsh](/code/assist/AssistButton.bsh)
+2. `removeAssist()`
+
+	Remove the assist overlay.
+
 
 &nbsp;
    
