@@ -19,7 +19,7 @@ a11Y() {
 			}
 		} catch (Exception e) {}
 	}
-
+	
 	boolean debugSteps = false;
 	boolean debugMe = false;
 	boolean debugInfo = true;
@@ -28,6 +28,7 @@ a11Y() {
 	List assistOverlays = new ArrayList();
 	String ENV;
 	This assistButton;
+	This updateManager;
 	boolean useOffset = true;
 	boolean useA11yOffset = true;
 	boolean waitNodes = true;
@@ -165,6 +166,11 @@ a11Y() {
 	removeAssist() {
 		if (assistButton.isShown) assistButton.remove();
 	}
+	
+	update() {
+		if (updateManager != null) updateManager.update();
+	}
+	
 	return this;
 
 };
@@ -177,8 +183,15 @@ This inspector = MethodInspector(this);
 inspector.read();
 a11Y.inspector = inspector;
 tasker.setJavaVariable("a11Y", a11Y);
+
 This a11E = a11E();
 tasker.setJavaVariable("a11E", a11E);
+
 This assistButton = AssistButton(0.8,0.8);
 a11Y.namespace.setVariable("assistButton", assistButton, false);
+
+This updateManager = UpdateManager();
+updateManager.namespace.setVariable("directoryPath", ENV, false);
+a11Y.namespace.setVariable("updateManager", updateManager, false);
+
 tasker.sendCommand("a11Y=:=start");
