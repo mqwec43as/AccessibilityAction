@@ -42,8 +42,8 @@ startMonitor() {
 					// Now running on "a11E_x" thread
 					This a11E = tasker.getJavaVariable("a11E");
 					int eventType = accessibilityEvent.getEventType();
-
-					if (a11E == null || a11E == void) {
+					
+					if (a11E == null || a11E == void || a11E.isMuted()) {
 						accessibilityEvent.recycle();
 						return;
 					}
@@ -52,6 +52,7 @@ startMonitor() {
 						accessibilityEvent.recycle();
 						return;
 					}
+					
 
 					// [Remainder of your accept logic remains untouched as requested]
 					a11E.event = accessibilityEvent;

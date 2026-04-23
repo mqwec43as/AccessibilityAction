@@ -44,7 +44,7 @@ a11E() {
 		10, // Max size
 		30, // Idle timeout
 		TimeUnit.SECONDS, // Timeout unit
-		new SynchronousQueue(), 
+		new SynchronousQueue(),
 		customThreadFactory, // Custom naming/priority
 		new ThreadPoolExecutor.DiscardOldestPolicy()
 	);
@@ -53,6 +53,8 @@ a11E() {
 	List history = new ArrayList();
 	Map listeners = new HashMap();
 	List eventList = new ArrayList();
+
+	boolean isMuted;
 	public String toConstant(String methodName) {
 		if (methodName == null || methodName.length() < 3) return "";
 		String body = methodName.substring(2);
@@ -148,5 +150,16 @@ a11E() {
 		return THIS.namespace.getMethod(varName) != null;
 	}
 
+	mute() {
+		isMuted = true;
+	}
+
+	unmute() {
+		isMuted = false;
+	}
+
+	isMuted() {
+		return isMuted;
+	}
 	return this;
 }

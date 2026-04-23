@@ -7,16 +7,26 @@ import java.util.concurrent.Executors;
  ───────────────────────────────────────────────────────────────*/
 public void runScript(String script, long delayMs) {
 	wait(delayMs);
-	String header = """tasker.getJavaVariable("a11Y").set();
+	String header ="""tasker.getJavaVariable("a11Y").set();
 """;
 	This a11Y = tasker.getJavaVariable("a11Y");
-	if (a11Y.executor == void || a11Y.executor == null) {
-		a11Y.executor = Executors.newFixedThreadPool(2);
-	}
-
 	a11Y.executor.submit(new Runnable() {
-		run() {
-			this.interpreter.eval(header + script);
-		}
-	});
+        run() {
+            /* Ensure the accessibility object exists in this scope. */
+            if (a11Y != null && a11Y != void) {
+                a11Y.muteEvents();
+            }
+
+            try {
+                /* Use the captured interpreter reference to evaluate code. */
+               this.interpreter.eval(header + script);
+            } catch (Exception e) {
+                tasker.showToast("Script Error: " + e.getMessage());
+            } finally {
+                if (a11Y != null && a11Y != void) {
+                    a11Y.unmuteEvents();
+                }
+            }
+        }
+    });
 }

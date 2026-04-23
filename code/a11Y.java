@@ -19,7 +19,7 @@ a11Y() {
 			}
 		} catch (Exception e) {}
 	}
-	
+
 	boolean debugSteps = false;
 	boolean debugMe = false;
 	boolean debugInfo = true;
@@ -162,15 +162,25 @@ a11Y() {
 	showAssist() {
 		if (!assistButton.isShown) assistButton.show();
 	}
-	
+
 	removeAssist() {
 		if (assistButton.isShown) assistButton.remove();
 	}
-	
+
 	update() {
 		if (updateManager != null) updateManager.update();
 	}
+
+	muteEvents() {
+		This a11E = tasker.getJavaVariable("a11E");
+		a11E.mute();
+	}
 	
+	unmuteEvents() {
+		This a11E = tasker.getJavaVariable("a11E");
+		a11E.unmute();
+	}
+
 	return this;
 
 };
@@ -187,7 +197,7 @@ tasker.setJavaVariable("a11Y", a11Y);
 This a11E = a11E();
 tasker.setJavaVariable("a11E", a11E);
 
-This assistButton = AssistButton(0.8,0.8);
+This assistButton = AssistButton(0.8, 0.8);
 a11Y.namespace.setVariable("assistButton", assistButton, false);
 
 This updateManager = UpdateManager();
