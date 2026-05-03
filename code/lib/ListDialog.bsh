@@ -24,6 +24,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.Callable;
 import com.joaomgcd.taskerm.action.java.ClassImplementation;
 import com.google.android.material.textfield.TextInputLayout;
@@ -37,7 +38,7 @@ import io.reactivex.subjects.CompletableSubject;
 import java.util.concurrent.TimeUnit;
 
 /*───────────────────────────────────────────────────────────────
-  ListDialog Component
+  ListDialog Component[cite: 1]
   ───────────────────────────────────────────────────────────────*/
 ListDialog(This config) {
 
@@ -52,7 +53,7 @@ ListDialog(This config) {
 	List preSelect = config.preSelect == void ? null : config.preSelect;
 	long timeout = config.timeout == void ? 0 : config.timeout;
 	
-	/* Height Logic Setup */
+	/* Height Logic Setup[cite: 1] */
 	Object rawMaxH = config.maxHeight == void ? 0.8 : config.maxHeight;
 	Object rawMaxL = config.maxHeightList == void ? 0.5 : config.maxHeightList;
 
@@ -86,7 +87,6 @@ ListDialog(This config) {
 	layout(Activity act) {
 		activity = act;
 		DisplayMetrics dm = activity.getResources().getDisplayMetrics();
-		int screenHeight = dm.heightPixels;
 		
 		android.content.pm.PackageManager pm = activity.getPackageManager();
 
@@ -109,7 +109,6 @@ ListDialog(This config) {
 		LinearLayout mainContainer = new LinearLayout(activity);
 		mainContainer.setOrientation(1);
 
-		// LayoutParams for the dialog container
 		LinearLayout.LayoutParams mainLp = new LinearLayout.LayoutParams(-1, -2);
 		mainLp.gravity = Gravity.BOTTOM;
 		mainContainer.setLayoutParams(mainLp);
@@ -130,7 +129,7 @@ ListDialog(This config) {
 
 		TextInputEditText filterInput = null;
 		if (showFilter) {
-			filterWrapper = new TextInputLayout(activity);
+			TextInputLayout filterWrapper = new TextInputLayout(activity);
 			filterWrapper.setHint("Search...");
 			filterWrapper.setBoxBackgroundMode(2);
 			filterInput = new TextInputEditText(filterWrapper.getContext());
@@ -142,10 +141,6 @@ ListDialog(This config) {
 		listView.setDivider(null);
 		listView.setDividerHeight(0);
 		
-		/* FIX: We cannot use onMeasure override in BeanShell.
-		   Instead, we use weight=1 to make the list flexible, but set its 
-		   actual height to limitList to ensure buttons are always visible.
-		*/
 		LinearLayout.LayoutParams listLp = new LinearLayout.LayoutParams(-1, -2, 1.0f);
 		listView.setLayoutParams(listLp);
 
@@ -228,8 +223,9 @@ ListDialog(This config) {
 					if (isMulti) {
 						CheckBox cb = (CheckBox) row.getChildAt(row.getChildCount() - 1);
 						boolean found = false;
+						/* FIX: Use object identity to handle items with duplicate titles correctly[cite: 1] */
 						for (int k = 0; k < selectedItems.size(); k++) {
-							if (((Map) selectedItems.get(k)).get("title").equals(itemData.get("title"))) {
+							if (selectedItems.get(k).equals(itemData)) {
 								found = true;
 								break;
 							}
@@ -261,7 +257,7 @@ ListDialog(This config) {
 
 		mainContainer.addView(listView);
 
-		/* Button Container */
+		/* Button Container[cite: 1] */
 		LinearLayout bc = new LinearLayout(activity);
 		bc.setOrientation(0);
 		bc.setGravity(Gravity.END);
@@ -300,8 +296,12 @@ ListDialog(This config) {
 				clicked.put("index", pos);
 				if (isMulti) {
 					int idx = -1;
+					/* FIX: Use object identity to handle items with duplicate titles correctly[cite: 1] */
 					for (int i = 0; i < selectedItems.size(); i++) {
-						if (((Map) selectedItems.get(i)).get("title").equals(clicked.get("title"))) { idx = i; break; }
+						if (selectedItems.get(i) == clicked) { 
+							idx = i; 
+							break; 
+						}
 					}
 					if (idx != -1) selectedItems.remove(idx);
 					else selectedItems.add(clicked);
