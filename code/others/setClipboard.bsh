@@ -20,18 +20,18 @@ setClipboard(text) {
 		return;
 	}
 
-
 	/* Get the Clipboard Manager service. */
-	cm = context.getSystemService(Context.CLIPBOARD_SERVICE);
+	ClipboardManager cm = context.getSystemService(Context.CLIPBOARD_SERVICE);
 
 	if (cm == null) {
 		throw new JavaCodeException("Failed to get ClipboardManager service.");
 	}
 
 	/* Create a ClipData object with the text. Label is set to 'Tasker'. */
-	clip = ClipData.newPlainText("Tasker", text);
+	ClipData clip = ClipData.newPlainText("Tasker", text);
 
 	/* Set the primary clip. */
 	cm.setPrimaryClip(clip);
 
 }
+
