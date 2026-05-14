@@ -1,0 +1,118 @@
+import android.view.MotionEvent;
+import android.view.InputDevice;
+import android.view.InputEvent;
+import android.graphics.Path;
+import android.graphics.Paint;
+import android.graphics.Canvas;
+import android.graphics.Bitmap;
+import android.graphics.PixelFormat;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
+import android.view.Gravity;
+import android.widget.ImageView;
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.IBinder;
+import android.os.SystemClock;
+import java.lang.reflect.Method;
+import rikka.shizuku.ShizukuBinderWrapper;
+
+/*───────────────────────────────────────────────────────────────
+swipeShizuku(double sX, double sY, double eX, double eY, long dur, boolean stopFlick)
+**Performs a swipe gesture via Shizuku**
+Provides control over momentum (flick) at the end of the gesture.
+
+Arguments:
+
+* sX, sY: Start coordinates (0.0-1.0 for relative, or absolute pixels).
+* eX, eY: End coordinates.
+* dur: Duration of the swipe in milliseconds.
+* stopFlick: If true, pauses at the end to prevent momentum.
+
+Example:
+swipeShizuku(0.5, 0.8, 0.5, 0.2, 300, true);
+───────────────────────────────────────────────────────────────*/
+public boolean swipeShizuku(double sX, double sY, double eX, double eY, long dur, boolean stopFlick) {
+	ShizukuBinderWrapper rawBinder = tasker.getShizukuService("input");
+	Class iimStub = Class.forName("android.hardware.input.IInputManager$Stub");
+	Method asInterface = iimStub.getMethod("asInterface", new Class[] { android.os.IBinder.class });
+	android.hardware.input.IInputManager$Stub$Proxy iim = asInterface.invoke(null, new Object[] { rawBinder });
+	if (iim == null) return false;
+
+
+	/* Setup screen metrics */
+	WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+	DisplayMetrics dm = new DisplayMetrics();
+	wm.getDefaultDisplay().getRealMetrics(dm);
+	float screenW = (float) dm.widthPixels;
+	float screenH = (float) dm.heightPixels;
+
+	/* Normalize coordinates */
+	float startX = (float) sX;
+	float startY = (float) sY;
+	float endX = (float) eX;
+	float endY = (float) eY;
+	if (Math.abs(startX) <= 1.0f) startX *= screenW;
+	if (Math.abs(startY) <= 1.0f) startY *= screenH;
+	if (Math.abs(endX) <= 1.0f) endX *= screenW;
+	if (Math.abs(endY) <= 1.0f) endY *= screenH;
+
+	try {
+		long downTime = SystemClock.uptimeMillis();
+
+		/* 1. ACTION_DOWN */
+		MotionEvent evDown = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, startX, startY, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
+		evDown.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+		iim.injectInputEvent(evDown, 1);
+		evDown.recycle();
+
+		/* 2. Interpolate ACTION_MOVE */
+		int steps = (int) Math.max(2, dur / 16);
+		long stepDelay = dur / steps;
+
+		for (int i = 1; i <= steps; i++) {
+			float t = (float) i / steps;
+			float moveX = startX + (endX - startX) * t;
+			float moveY = startY + (endY - startY) * t;
+
+			MotionEvent evMove = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, moveX, moveY, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
+			evMove.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+			iim.injectInputEvent(evMove, 1);
+			evMove.recycle();
+
+			if (stepDelay > 0) Thread.sleep(stepDelay);
+		}
+
+		/* 3. Stop Flick Logic */
+		if (stopFlick) {
+			/* Hold at target to zero out calculated velocity */
+			MotionEvent evHold = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, endX, endY, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
+			evHold.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+			iim.injectInputEvent(evHold, 1);
+			evHold.recycle();
+			Thread.sleep(60);
+		}
+
+		/* 4. ACTION_UP */
+		MotionEvent evUp = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, endX, endY, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
+		evUp.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+		iim.injectInputEvent(evUp, 1);
+		evUp.recycle();
+
+		return true;
+	} catch (Exception e) {
+		tasker.log("swipeShizuku Error: " + e.toString());
+		return false;
+	}
+
+
+
+}
+
+/* Overloaded swipe method */
+public boolean swipeShizuku(double sX, double sY, double eX, double eY, long dur) {
+	return swipeShizuku(sX, sY, eX, eY, dur, false);
+}
+
+
