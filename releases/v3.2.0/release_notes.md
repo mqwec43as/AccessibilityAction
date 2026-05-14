@@ -1,6 +1,6 @@
 # **New**
 
-1. Added `tapShizuku` and `gestureShizuku`.
+1. Added `tapShizuku`, `swipeShizuku` and `gestureShizuku`.
 2. Added a new method `waitUntilGone` to wait until specific UI nodes have disappeared.
 3. Introduced `PackageManager` object to handle app operations.
 4. Added `getClipboard` to retrieve clipboard content.
