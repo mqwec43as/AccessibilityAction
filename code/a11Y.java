@@ -37,6 +37,9 @@ a11Y() {
 	boolean useA11yStructure = false;
 	boolean includeAllMethods = false;
 	boolean quickAddMode = true;
+	boolean updatePreRelease = false;
+	long lastActionPickerReminder = 0;
+	long actionPickerReminderDelay = 120000;
 	This TOP;
 	String scriptEditor = "";
 	This inspector;
@@ -172,7 +175,14 @@ a11Y() {
 	}
 
 	update() {
-		if (updateManager != null) updateManager.update();
+		if (updateManager != null) {
+			if (updateManager.isPreRelease){
+				updateManager.updatePreRelease();
+			}
+			else {
+				updateManager.update();
+			}
+		}
 	}
 
 	updatePreRelease() {
