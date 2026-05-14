@@ -63,6 +63,14 @@ a11Y() {
 		new ThreadPoolExecutor.DiscardOldestPolicy()
 	);
 
+	reload() {
+		executor.execute(new Runnable() {
+			run() {
+				if (ENV != null) source(ENV + "/a11Y.java");
+			}
+		});
+	}
+
 	debug() {
 		debugMe = true;
 	}
@@ -176,24 +184,30 @@ a11Y() {
 
 	update() {
 		if (updateManager != null) {
-			if (updatePreRelease){
+			if (updatePreRelease) {
 				updateManager.updatePreRelease();
 			}
 			else {
 				updateManager.update();
 			}
 		}
+
+		reload();
+
 	}
 
 	updatePreRelease() {
-		if (updateManager != null) updateManager.updatePreRelease();
+		if (updateManager != null) {
+			updateManager.updatePreRelease();
+			reload();
+		}
 	}
 
 	muteEvents() {
 		This a11E = tasker.getJavaVariable("a11E");
 		a11E.mute();
 	}
-	
+
 	unmuteEvents() {
 		This a11E = tasker.getJavaVariable("a11E");
 		a11E.unmute();
@@ -224,6 +238,5 @@ a11Y.namespace.setVariable("updateManager", updateManager, false);
 
 This packageManager = PackageManager();
 a11Y.namespace.setVariable("packageManager", packageManager, false);
-
 
 tasker.sendCommand("a11Y=:=start");
