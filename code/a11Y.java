@@ -175,6 +175,10 @@ a11Y() {
 		if (updateManager != null) updateManager.update();
 	}
 
+	updatePreRelease() {
+		if (updateManager != null) updateManager.updatePreRelease();
+	}
+
 	muteEvents() {
 		This a11E = tasker.getJavaVariable("a11E");
 		a11E.mute();

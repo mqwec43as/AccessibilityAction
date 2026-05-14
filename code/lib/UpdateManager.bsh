@@ -35,6 +35,7 @@ UpdateManager() {
 	String owner = "mqwec43as";
 	String targetFile = "AccessibilityAction.zip";
 	String[] urls = { "https://github.com/" + owner + "/" + repo + "/releases/latest/download/" + targetFile };
+	String[] preReleaseUrls = { "https://github.com/" + owner + "/" + repo + "/releases/download/" + targetFile };
 	String directoryPath;
 
 	/*───────────────────────────────────────────────────────────────
@@ -323,6 +324,17 @@ UpdateManager() {
 		}
 		for (int j = 0; j < urls.length; j++) {
 			downloadAndUnzip(urls[j], directoryPath);
+		}
+		return directoryPath;
+	}
+
+	public String updatePreRelease() {
+		if (directoryPath == null) {
+			tasker.showToast("No folder selected");
+			return null;
+		}
+		for (int j = 0; j < preReleaseUrls.length; j++) {
+			downloadAndUnzip(preReleaseUrls[j], directoryPath);
 		}
 		return directoryPath;
 	}
