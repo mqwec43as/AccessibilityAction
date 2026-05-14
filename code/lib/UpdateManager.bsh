@@ -29,14 +29,16 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import io.reactivex.subjects.SingleSubject;
 import android.view.KeyEvent;
+import org.json.JSONObject;
+import org.json.JSONArray;
 
 UpdateManager() {
 	String repo = "AccessibilityAction";
 	String owner = "mqwec43as";
 	String targetFile = "AccessibilityAction.zip";
 	String[] urls = { "https://github.com/" + owner + "/" + repo + "/releases/latest/download/" + targetFile };
-	String[] preReleaseUrls = { "https://github.com/" + owner + "/" + repo + "/releases/download/" + targetFile };
 	String directoryPath;
+	OkHttpClient client = new OkHttpClient();
 
 	/*───────────────────────────────────────────────────────────────
 	  browseUrl(String url)
@@ -127,7 +129,6 @@ UpdateManager() {
 	  Downloads a file and handles filename sniffing and renaming.
 	───────────────────────────────────────────────────────────────*/
 	public String downloadFile(String url, String destinationPath) {
-		OkHttpClient client = new OkHttpClient();
 		Response response = makeRequest(client, url, "GET", null, null);
 
 		String contentType = response.header("Content-Type");
@@ -328,13 +329,31 @@ UpdateManager() {
 		return directoryPath;
 	}
 
+	getLatestUrls() {
+		String preReleaseUrl = "https://api.github.com/repos/" + owner + "/" + repo + "/releases";
+		Response response = makeRequest(client, preReleaseUrl, "GET", null, null);
+		String bodyJson = response.body().string();
+		JSONArray jsonArray = new JSONArray(bodyJson);
+		JSONArray assetsArray = jsonArray.getJSONObject(0).getJSONArray("assets");
+		List latestUrls = new ArrayList();
+		for (int i = 0; i < assetsArray.length(); i++) {
+			String url = assetsArray.getJSONObject(i).getString("browser_download_url");
+			String fileName = assetsArray.getJSONObject(i).getString("name");
+			if (fileName.equals(targetFile)) {
+				latestUrls.add(url);
+			}
+		}
+		return latestUrls;
+	}
+
 	public String updatePreRelease() {
 		if (directoryPath == null) {
 			tasker.showToast("No folder selected");
 			return null;
 		}
-		for (int j = 0; j < preReleaseUrls.length; j++) {
-			downloadAndUnzip(preReleaseUrls[j], directoryPath);
+		List preReleaseUrl = getLatestUrls();
+		for (String url : preReleaseUrl) {
+			downloadAndUnzip(url, directoryPath);
 		}
 		return directoryPath;
 	}
