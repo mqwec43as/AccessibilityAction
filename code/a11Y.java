@@ -176,7 +176,7 @@ a11Y() {
 
 	update() {
 		if (updateManager != null) {
-			if (isPreRelease){
+			if (updatePreRelease){
 				updateManager.updatePreRelease();
 			}
 			else {
