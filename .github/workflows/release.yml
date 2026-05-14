@@ -5,6 +5,8 @@ on:
   push:
     tags:
       - "v*.*.*"
+      - "v*.*.*-beta*"
+      - "v*.*.*-rc*"
   workflow_dispatch:
 
 permissions:
@@ -42,7 +44,7 @@ jobs:
           "**/.github/*" \
           "**/.*"
 
-          # 3. MOVE the zip to the root workspace so the next steps find it
+          # 3. MOVE the zip to the root workspace
           mv AccessibilityAction.zip ../AccessibilityAction.zip
 
       - name: Create Release and Upload Asset
@@ -52,14 +54,16 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           files: AccessibilityAction.zip
-          # Ensure this path to your notes is correct relative to the root
           body_path: releases/${{ github.ref_name }}/release_notes.md
           append_body: true
           generate_release_notes: true
+          # Marks as pre-release if the tag contains 'beta' or 'rc'
+          prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
 
       - name: Upload Artifacts (Manual Run)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v6
         with:
+          name: AccessibilityAction-Manual
           path: AccessibilityAction.zip
           if-no-files-found: error
