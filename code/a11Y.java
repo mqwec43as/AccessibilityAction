@@ -18,6 +18,7 @@ a11Y() {
 				}
 			}
 		} catch (Exception e) {}
+		old.removeAssist();
 	}
 
 	boolean debugSteps = false;
@@ -67,7 +68,11 @@ a11Y() {
 	reload() {
 		executor.execute(new Runnable() {
 			run() {
-				if (ENV != null) source(ENV + "/a11Y.java");
+				try {
+					if (ENV != null) source(ENV + "/a11Y.java");
+				} catch (e) {
+					tasker.logAndToast(e.getMessage(), LOG_FILE);
+				}
 			}
 		});
 	}
@@ -215,6 +220,7 @@ a11Y() {
 		a11E.unmute();
 	}
 
+	long startTime = System.currentTimeMillis();
 	return this;
 
 };
