@@ -1,0 +1,78 @@
+import android.view.accessibility.AccessibilityWindowInfo;
+
+setDisplayId(int displayId) {
+	global.DISPLAY_ID = displayId;
+	return displayId;
+}
+
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.content.Context;
+import android.view.accessibility.AccessibilityWindowInfo;
+import android.accessibilityservice.AccessibilityService;
+import android.util.SparseArray;
+import java.util.List;
+import java.util.Iterator;
+
+/*───────────────────────────────────────────────────────────────
+setDisplayId(String packageName)
+**Set Display ID by Package Name**
+Finds the first active application window belonging to the specified
+package name across all displays, and saves its display ID to the
+global variable 'DISPLAY_ID'.
+
+Arguments:
+
+* packageName → The target application package name (e.g., "com.android.settings").
+
+Example:
+setDisplayId("com.android.settings");
+───────────────────────────────────────────────────────────────*/
+public int setDisplayId(String packageName) {
+	if (packageName == null) {
+		return;
+	}
+
+	AccessibilityService service = getService();
+	if (service == null) {
+		return;
+	}
+
+	SparseArray allDisplaysWindows = service.getWindowsOnAllDisplays();
+	if (allDisplaysWindows == null) {
+		return;
+	}
+
+	for (int i = 0; i < allDisplaysWindows.size(); i++) {
+		int displayId = allDisplaysWindows.keyAt(i);
+		List windows = (List) allDisplaysWindows.valueAt(i);
+		if (windows == null) {
+			continue;
+		}
+
+		Iterator iterator = windows.iterator();
+		while (iterator.hasNext()) {
+			AccessibilityWindowInfo window = (AccessibilityWindowInfo) iterator.next();
+			if (window == null) {
+				continue;
+			}
+
+			if (window.getType() != AccessibilityWindowInfo.TYPE_APPLICATION) {
+				continue;
+			}
+
+			AccessibilityNodeInfo rootNode = window.getRoot();
+			if (rootNode == null) {
+				continue;
+			}
+
+			CharSequence nodePackage = rootNode.getPackageName();
+			rootNode.recycle();
+
+			if (nodePackage != null && packageName.equals(nodePackage.toString())) {
+				global.DISPLAY_ID = displayId;
+				return displayId;
+			}
+		}
+	}
+
+}

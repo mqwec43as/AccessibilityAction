@@ -1,0 +1,55 @@
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.content.Context;
+import android.view.accessibility.AccessibilityWindowInfo;
+import android.accessibilityservice.AccessibilityService;
+import android.util.SparseArray;
+import java.util.List;
+import java.util.Iterator;
+
+/*───────────────────────────────────────────────────────────────
+setDisplayIdByWindowId(int windowId)
+**Set Display ID by Window ID**
+Scans all displays for a window matching the provided window ID,
+and saves its corresponding display ID to the global variable 'DISPLAY_ID'.
+
+Arguments:
+
+* windowId → The unique integer ID of the target window.
+
+Example:
+setDisplayIdByWindowId(1234);
+───────────────────────────────────────────────────────────────*/
+public void setDisplayIdByWindowId(int windowId) {
+	AccessibilityService service = tasker.getAccessibilityService();
+	if (service == null) {
+		return;
+	}
+
+
+	SparseArray allDisplaysWindows = service.getWindowsOnAllDisplays();
+	if (allDisplaysWindows == null) {
+		return;
+	}
+
+	for (int i = 0; i < allDisplaysWindows.size(); i++) {
+		int displayId = allDisplaysWindows.keyAt(i);
+		List windows = (List) allDisplaysWindows.valueAt(i);
+		if (windows == null) {
+			continue;
+		}
+
+		Iterator iterator = windows.iterator();
+		while (iterator.hasNext()) {
+			AccessibilityWindowInfo window = (AccessibilityWindowInfo) iterator.next();
+			if (window == null) {
+				continue;
+			}
+
+			if (window.getId() == windowId) {
+				global.DISPLAY_ID = displayId;
+				return;
+			}
+		}
+	}
+
+}
