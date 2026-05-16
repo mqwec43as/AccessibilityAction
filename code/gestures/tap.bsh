@@ -1,55 +1,86 @@
 /*─────────────────────────────────────────────────────────────── 
 This code was primarily generated using AI.
 ───────────────────────────────────────────────────────────────*/
+import android.content.Context;
+import android.graphics.Path;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.graphics.Path;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.DisplayMetrics;
-import android.view.WindowManager;
-import android.content.Context;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.concurrent.Callable;
+import android.os.Handler;
+import android.hardware.display.DisplayManager;
+import android.view.Display;
 import io.reactivex.subjects.CompletableSubject;
 import com.joaomgcd.taskerm.action.java.ClassImplementation;
+import java.util.concurrent.Callable;
 
+
+
+/*────────────────────────────────────────────────────────────────
+tap(double x, double y, long duration)
+Dispatches a tap gesture at the specified coordinates, adapting
+to the targeted display context from global.DISPLAY_ID.
+
+Arguments:
+
+* x → X coordinate (absolute or normalized between -1 and 1)
+* y → Y coordinate (absolute or normalized between -1 and 1)
+* duration → Length of the tap hold in milliseconds
+
+Returns:
+
+* boolean → True if gesture dispatched successfully, false otherwise.
+──────────────────────────────────────────────────────────────── */
 public boolean tap(double x, double y, long duration) {
 	Object accessibilityService = tasker.getAccessibilityService();
 	if (accessibilityService == null) return false;
 	AccessibilityService service = (AccessibilityService) accessibilityService;
-	
-	AccessibilityNodeInfo root = accessibilityService.getRootInActiveWindow();
+
+
+	AccessibilityNodeInfo root = service.getRootInActiveWindow();
 	if (root == null) {
 		return tapShizuku(x, y, duration);
 	}
 
 	try {
-		// Get screen size
-		WindowManager wm = (WindowManager) service.getSystemService(Context.WINDOW_SERVICE);
+		Context windowContext = service;
+		if (global.DISPLAY_ID != void && global.DISPLAY_ID != null) {
+			try {
+				int displayId = global.DISPLAY_ID;
+				DisplayManager dm = (DisplayManager) service.getSystemService(Context.DISPLAY_SERVICE);
+				if (dm != null) {
+					Display targetDisplay = dm.getDisplay(displayId);
+					if (targetDisplay != null) {
+						windowContext = service.createDisplayContext(targetDisplay);
+					}
+				}
+			} catch (Exception e) {
+				tasker.log("tap: Failed to target display context: " + e.getMessage());
+			}
+		}
+
+		WindowManager wm = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
 		DisplayMetrics dm = new DisplayMetrics();
 		wm.getDefaultDisplay().getRealMetrics(dm);
 
 		int screenWidth = dm.widthPixels;
 		int screenHeight = dm.heightPixels;
 
-		// Normalize if between -1 and 1
 		if (Math.abs(x) <= 1.0f) x *= screenWidth;
 		if (Math.abs(y) <= 1.0f) y *= screenHeight;
+
 		debugMe(x, y);
-		// Tap path
+
 		Path path = new Path();
-		path.moveTo((float) x,(float) y);
+		path.moveTo((float) x, (float) y);
 
 		GestureDescription.StrokeDescription stroke =
 			new GestureDescription.StrokeDescription(path, 0, duration, false);
 
 		GestureDescription gesture =
-			new GestureDescription.Builder().addStroke(stroke).build();
+			new GestureDescription.Builder().addStroke(stroke).setDisplayId(global.DISPLAY_ID).build();
 
 		HandlerThread handlerThread = new HandlerThread("TapThread");
 		handlerThread.start();
@@ -58,7 +89,7 @@ public boolean tap(double x, double y, long duration) {
 		CompletableSubject signal = CompletableSubject.create();
 
 		ClassImplementation impl = new ClassImplementation() {
-			public Object run(Callable supercaller, String methodName, Object[] args) {
+			run(Callable supercaller, String methodName, Object[] args) {
 				if (methodName.equals("onCompleted")) {
 					signal.onComplete();
 				} else if (methodName.equals("onCancelled")) {
@@ -86,6 +117,9 @@ public boolean tap(double x, double y, long duration) {
 	} catch (Exception e) {
 		return false;
 	}
+
+
+
 }
 
 
@@ -128,7 +162,7 @@ boolean tap(AccessibilityNodeInfo node, long duration) {
 }
 
 boolean tap(AccessibilityNodeInfo node) {
-	return tap(coor.x, coor.y, 20L);
+	return tap(coor.x, coor.y,20L);
 }
 /* Collection Overloads */
 boolean tap(ArrayList nodes, long duration) {
