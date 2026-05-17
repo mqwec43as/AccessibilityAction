@@ -27,7 +27,6 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.hardware.display.DisplayManager;
 import android.view.Display;
-
 /*────────────────────────────────────────────────────────────────
 NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node)
 Custom class to manage the node box overlay for given node.
@@ -89,22 +88,8 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	if (this.caller.nodeBoxStrokeColor != void) DEFAULT_STROKE_COLOR = this.caller.nodeBoxStrokeColor;
 	if (this.caller.nodeBoxStrokeWidth != void) DEFAULT_STROKE_WIDTH = this.caller.nodeBoxStrokeWidth;
 
-	/* Create display context dynamically based on the global.DISPLAY_ID variable if specified */
-	displayContext = nodeContext;
-	if (global.DISPLAY_ID != void && global.DISPLAY_ID != null) {
-		try {
-			int displayId = global.DISPLAY_ID;
-			DisplayManager dm = (DisplayManager) nodeContext.getSystemService(Context.DISPLAY_SERVICE);
-			if (dm != null) {
-				Display targetDisplay = dm.getDisplay(displayId);
-				if (targetDisplay != null) {
-					displayContext = nodeContext.createDisplayContext(targetDisplay);
-				}
-			}
-		} catch (Exception e) {
-			tasker.log("NodeBox: Failed to apply custom display context: " + e.getMessage());
-		}
-	}
+	/* Create display context dynamically based on the DISPLAY_ID variable if specified */
+	displayContext = getContext(WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY);
 
 	View view = new View(displayContext);
 	Rect bounds = new Rect();
