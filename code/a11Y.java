@@ -17,8 +17,9 @@ a11Y() {
 					old.executor.shutdownNow();
 				}
 			}
+			old.removeAssist();
 		} catch (Exception e) {}
-		old.removeAssist();
+		
 	}
 
 	boolean debugSteps = false;
