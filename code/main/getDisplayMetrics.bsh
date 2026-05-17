@@ -1,0 +1,47 @@
+import android.content.Context;
+import android.hardware.display.DisplayManager;
+import android.util.DisplayMetrics;
+import android.view.Display;
+
+/*───────────────────────────────────────────────────────────────
+getDisplayMetrics(int displayId)
+**Retrieves Display Metrics by ID**
+Gets the real width and height for a specific display ID.
+4
+Arguments:
+
+* displayId → The integer ID of the target display.
+
+Returns:
+
+* DisplayMetrics object containing screen dimensions.
+
+Example:
+dm = getDisplayMetrics(0);
+tasker.log("Width: " + dm.widthPixels);
+───────────────────────────────────────────────────────────────*/
+public DisplayMetrics getDisplayMetrics(int displayId) {
+	DisplayManager displayManager = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
+	if (displayManager == null) {
+		return null;
+	}
+
+
+	Display display = displayManager.getDisplay(displayId);
+	if (display == null) {
+		return null;
+	}
+
+	DisplayMetrics dm = new DisplayMetrics();
+	display.getRealMetrics(dm);
+	return dm;
+	
+}
+
+getDisplayMetrics() {
+	if (DISPLAY_ID == void) {
+		return getDisplayMetrics(0);
+	} else {
+		return getDisplayMetrics(DISPLAY_ID);
+	}
+}
