@@ -34,7 +34,7 @@ import android.view.Display;
 /*────────────────────────────────────────────────────────────────
 gesture(Object[][] points, Paint paint)
 Dispatches a multi-step gesture trail using modern accessibility metrics,
-safely adapting to target displays if defined in global.DISPLAY_ID.
+safely adapting to target displays if defined in DISPLAY_ID.
 
 Arguments:
 
@@ -46,39 +46,19 @@ Returns:
 * boolean → True if gesture execution finishes successfully, false otherwise.
 ──────────────────────────────────────────────────────────────── */
 public boolean gesture(Object[][] points, Paint paint) {
-	Object accessibilityService = tasker.getAccessibilityService();
 	if (points == null || points.length == 0) return false;
-	if (accessibilityService == null || accessibilityService == void) return false;
+	AccessibilityService service = (AccessibilityService) getService();
 
-
-	AccessibilityService service = (AccessibilityService) accessibilityService;
-
-	AccessibilityNodeInfo root = service.getRootInActiveWindow();
+	AccessibilityNodeInfo root = getRoot();
 	if (root == null) {
 		return gestureShizuku(points, paint);
 	}
 
-	Context windowContext = service;
-	int targetDisplayId = 0; /* Default Display ID */
-
-	if (global.DISPLAY_ID != void && global.DISPLAY_ID != null) {
-		try {
-			targetDisplayId = DISPLAY_ID;
-			DisplayManager dm = (DisplayManager) service.getSystemService(Context.DISPLAY_SERVICE);
-			if (dm != null) {
-				Display targetDisplay = dm.getDisplay(targetDisplayId);
-				if (targetDisplay != null) {
-					windowContext = service.createDisplayContext(targetDisplay);
-				}
-			}
-		} catch (Exception e) {
-			tasker.log("gesture: Failed to resolve custom display ID: " + e.getMessage());
-		}
-	}
+	Context windowContext = getContext(true);
+	int targetDisplayId = windowContext.getDisplayId();
 
 	WindowManager windowManager = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
-	DisplayMetrics dm = new DisplayMetrics();
-	windowManager.getDefaultDisplay().getRealMetrics(dm);
+	DisplayMetrics dm = getDisplayMetrics(windowContext.getDisplayId());
 	int screenWidth = dm.widthPixels;
 	int screenHeight = dm.heightPixels;
 
