@@ -156,27 +156,7 @@ Parameters:
 ──────────────────────────────────────────────────────────────── */
 public void debugMe(double x, double y) {
 	if (debugMe == void || !debugMe) return;
-	Context accessibilityService = tasker.getAccessibilityService();
-	if (accessibilityService == null || accessibilityService == void) {
-		tasker.log("debugMe: Accessibility Service not running.");
-		return;
-	}
-
-
-	Context windowContext = accessibilityService;
-	try {
-		int displayId = DISPLAY_ID;
-		DisplayManager dm = (DisplayManager) accessibilityService.getSystemService(Context.DISPLAY_SERVICE);
-		if (dm != null) {
-			Display targetDisplay = dm.getDisplay(displayId);
-			if (targetDisplay != null) {
-				windowContext = accessibilityService.createDisplayContext(targetDisplay);
-			}
-		}
-	} catch (Exception e) {
-		tasker.log("debugMe: Failed to resolve target display context: " + e.getMessage());
-	}
-
+	Context windowContext = getContext(true);
 	WindowManager wm = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
 	WindowManager.LayoutParams params = new WindowManager.LayoutParams();
 	int width = 60;
