@@ -23,7 +23,7 @@ AccessibilityNodeInfo root = getRoot();
 ───────────────────────────────────────────────────────────────*/
 AccessibilityNodeInfo getRoot() {
 	Context service = getService();
-	if (global.DISPLAY_ID == 0) {
+	if (DISPLAY_ID == 0) {
 		return service.getRootInActiveWindow();
 	} else {
 		SparseArray allDisplaysWindows = service.getWindowsOnAllDisplays();
@@ -32,7 +32,7 @@ AccessibilityNodeInfo getRoot() {
 		}
 
 
-		List windows = (List) allDisplaysWindows.get(global.DISPLAY_ID);
+		List windows = (List) allDisplaysWindows.get(DISPLAY_ID);
 		if (windows == null) {
 			return null;
 		}
