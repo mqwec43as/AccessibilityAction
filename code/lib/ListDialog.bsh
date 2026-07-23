@@ -1,3 +1,5 @@
+importCommands("lib.ui");
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
@@ -43,6 +45,8 @@ import androidx.appcompat.content.res.AppCompatResources;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.android.material.card.MaterialCardView;
 import bsh.BshMethod;
+import com.joaomgcd.taskerm.genericaction.ActivityLifecycleEvent;
+
 /*───────────────────────────────────────────────────────────────
   ListDialog Component
   ───────────────────────────────────────────────────────────────*/
@@ -108,8 +112,19 @@ ListDialog(This config) {
 		}
 	}
 
+	activityListener() {
+		// ! Might need to remove later if Tasker allows Activity to not be excluded in recents
+		// Remove when activity is stopped
+		onStopped(ActivityLifecycleEvent event) {
+			event.activity.finish();
+		}
+		
+		return this;
+	}
+
 	layout(Activity act) {
 		activity = act;
+		This monitor = SimpleActivityMonitor(activity, activityListener());
 		activityContext = activity;
 		int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
 		// Commented since Tasker doens'title support running on target display

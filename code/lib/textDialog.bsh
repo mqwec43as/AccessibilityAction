@@ -1,3 +1,5 @@
+importCommands("lib.ui");
+
 import java.util.function.Consumer;
 import android.app.Activity;
 import android.view.View;
@@ -15,6 +17,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingtoolbar.FloatingToolbarLayout;
 import android.content.Context;
 import bsh.This;
+import com.joaomgcd.taskerm.genericaction.ActivityLifecycleEvent;
 
 /*───────────────────────────────────────────────────────────────
   textDialog(String text)
@@ -26,10 +29,20 @@ public void textDialog(String text) {
 	if (ENV == void || ENV == null) ENV = Environment();
 	ENV.checkMaterialLib(this);
 
+	activityListener() {
+		// ! Might need to remove later if Tasker allows Activity to not be excluded in recents
+		// Remove when activity is stopped
+		onStopped(ActivityLifecycleEvent event) {
+			event.activity.finish();
+		}
+		
+		return this;
+	}
 	
 	java.util.function.Consumer uiLogic = new java.util.function.Consumer() {
 		accept(Object activityObj) {
 			final Activity activity = (Activity) activityObj;
+			This monitor = SimpleActivityMonitor(activity, activityListener());
 			float density = activity.getResources().getDisplayMetrics().density;
 			int dp16 = (int)(16 * density);
 			int padding = (int)(20 * density);

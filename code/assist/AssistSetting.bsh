@@ -1,3 +1,5 @@
+importCommands("lib.ui");
+
 import java.util.function.Consumer;
 import android.app.Activity;
 import android.view.View;
@@ -13,6 +15,8 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import com.joaomgcd.taskerm.genericaction.ActivityLifecycleEvent;
+
 
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
@@ -60,8 +64,19 @@ AssistSetting() {
 		save();
 	}
 
+	activityListener() {
+		// ! Might need to remove later if Tasker allows Activity to not be excluded in recents
+		// Remove when activity is stopped
+		onStopped(ActivityLifecycleEvent event) {
+			event.activity.finish();
+		}
+		
+		return this;
+	}
+
 	layout(Activity act) {
 		activity = act;
+		This monitor = SimpleActivityMonitor(activity, activityListener());
 		float density = activity.getResources().getDisplayMetrics().density;
 
 		window = activity.getWindow();

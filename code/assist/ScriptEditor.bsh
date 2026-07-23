@@ -1,3 +1,5 @@
+importCommands("lib.ui");
+
 import java.util.function.Consumer;
 import android.app.Activity;
 import android.view.View;
@@ -20,6 +22,7 @@ import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.view.Display;
+import com.joaomgcd.taskerm.genericaction.ActivityLifecycleEvent;
 
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
@@ -170,10 +173,21 @@ ScriptEditor() {
 		}
 		return script.trim();
 	}
+
+	activityListener() {
+		// ! Might need to remove later if Tasker allows Activity to not be excluded in recents
+		// Remove when activity is stopped
+		onStopped(ActivityLifecycleEvent event) {
+			event.activity.finish();
+		}
+		
+		return this;
+	}
 						
 	layout(Activity act) {
 		selectedDisplayId = a11Y.assistBar.selectedDisplayId;
 		activity = act;
+		This monitor = SimpleActivityMonitor(activity, activityListener());
 		float density = activity.getResources().getDisplayMetrics().density;
 		This displayInfos = DisplayInfos();
 		Display[] displays = displayInfos.displayManager.getDisplays();
@@ -442,7 +456,7 @@ ScriptEditor() {
 }
 
 // if (MAIN_DIRECTORY == void) {
-// 	This a11Y = tasker.getJavaVariable("a11Y");
+// 	This a11Y = getA11yInstance();
 // 	a11Y.set();
 // 	editor = ScriptEditor();
 // 	editor.show();

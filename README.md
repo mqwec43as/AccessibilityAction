@@ -5,7 +5,7 @@
 
 &nbsp;
 # Accessibility Action
-Text based accessibility actions and events for android automation apps **[Tasker](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm)** and **[Macrodroid](https://play.google.com/store/apps/details?id=com.arlosoft.macrodroid)**
+Text based UI automation for android automation apps **[Tasker](https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm)** and **[Macrodroid](https://play.google.com/store/apps/details?id=com.arlosoft.macrodroid)**
 
 [![Downloads](https://img.shields.io/github/downloads/mqwec43as/AccessibilityAction/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&&style=for-the-badge)](https://github.com/mqwec43as/AccessibilityAction/releases/latest/download/AccessibilityAction.zip)
 [![Stable](https://img.shields.io/github/v/release/mqwec43as/AccessibilityAction?sort=date&display_name=tag&style=for-the-badge&label=stable
