@@ -4,7 +4,7 @@ run-name: "Build Release: ${{ github.ref_name }} by @${{ github.actor }}"
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*.*"
       - "v*.*.*-beta*"
       - "v*.*.*-rc*"
   workflow_dispatch:
