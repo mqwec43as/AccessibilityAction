@@ -30,8 +30,7 @@ ActionPicker() {
 		displayId = 0;
 	}
 	String displayName = display.getName();
-	AccessibilityWindowInfo focusedWindow = getFocusedWindow(displayId);
-	AccessibilityNodeInfo root = focusedWindow.getRoot();
+	AccessibilityNodeInfo root = getRoot(displayId);
 	String packageName; 
 	String className;
 	Map latestPackage;
