@@ -29,6 +29,9 @@ import android.hardware.display.DisplayManager;
 import android.view.Display;
 import android.view.accessibility.AccessibilityNodeInfo;
 import java.lang.reflect.Field;
+import android.view.Surface;
+import android.content.res.Configuration;
+
 /*────────────────────────────────────────────────────────────────
 NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node)
 Custom class to manage the node box overlay for given node.
@@ -55,7 +58,9 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	setAlpha(int color, int alpha) {
 		return (alpha << 24) | (color & 0x00ffffff);
 	}
-	int displayId = nodeContext.display.displayId;
+	int displayId = nodeContext.getDisplay().getDisplayId();
+	int rotation = nodeContext.getDisplay().getRotation();
+	int orientation = nodeContext.getResources().getConfiguration().orientation;
 	boolean useA11y = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY == overlayType ? true : false;
 	Runnable displayOverlay;
 	
@@ -91,6 +96,14 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 				return 0;
 			}
 		}
+	}
+
+	int getNavigationBarHeight() {
+		if (displayId != 0) return 0;
+		int result = 0;
+		int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+		if (resourceId > 0) result = context.getResources().getDimensionPixelSize(resourceId);
+		return result;
 	}
 
 	WindowManager WINDOW_MANAGER;
@@ -131,11 +144,25 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 		);
 		params.gravity = Gravity.TOP | Gravity.LEFT;
 		params.x = bounds.left;
-		params.y = bounds.top - getStatusBarHeight();
+		params.y = bounds.top;
+		switch (rotation) {
+			case Surface.ROTATION_90:
+				params.x -= getStatusBarHeight();
+				if (!useA11y) params.y -= getStatusBarHeight();
+				break;
+			case Surface.ROTATION_270:
+				if (!useA11y) {
+					params.x -= getNavigationBarHeight();
+					params.y -= getStatusBarHeight();
+				}
+				break;
+			default:
+				params.y -= getStatusBarHeight();
+		}
 
 		frameParams = new FrameLayout.LayoutParams(bounds.width(), bounds.height());
-		frameParams.leftMargin = bounds.left;
-		frameParams.topMargin = bounds.top - getStatusBarHeight();
+		frameParams.leftMargin = params.x;
+		frameParams.topMargin = params.y;
 	}
 
 	updateParams() {

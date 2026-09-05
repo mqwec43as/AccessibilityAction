@@ -105,6 +105,12 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 		PixelFormat.TRANSLUCENT
 	);
 
+	rootLayout.setOnClickListener(new View.OnClickListener() {
+		public void onClick(View view) {
+			tasker.showToast("Root");
+		}
+	});
+
 	rootParams.gravity = Gravity.TOP | Gravity.LEFT;
 
 	getContext() {
