@@ -346,7 +346,7 @@ public This AssistBar(int initialX, int initialY) {
 					log("Displaying Structure Overlay for display " + selectedDisplayId, "INFO", TOP);
 					removeStructure();
 					AccessibilityWindowInfo focusedWindow = getFocusedWindow(selectedDisplayId);
-					boolean useA11yStructure = isSystemWindow();
+					boolean useA11yStructure = true;
 					if (useA11yStructure) remove();
 					This listener = createStructureOverlayListener();
 					structureOverlay = StructureOverlay(listener, useA11yStructure, focusedWindow);

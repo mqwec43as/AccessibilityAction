@@ -13,9 +13,6 @@ Config(String filePath) {
         { "Debugging", "logIncludeNode", false, "Include node information in logs", true },
         { "Debugging", "debugSteps", true, "Show debugging information on a toast", false },
         { "Debugging", "debugInfo", true, "Show debugging information on a toast", true }, 
-        { "Debugging", "useA11yOffset", true, "Use offset for Accessibility", true},
-        { "Debugging", "useA11yStructure", true, "Use accessibility for structure overlay", true },
-        { "Debugging", "useOffset", true, "Use offset for normal overlay" ,true},
         { "Debugging", "debugDelay", (long) 1000, "Debug highlight duration (ms)", true },
         { "Debugging", "findDelay", (long) 100, "Find hint duration (ms)", true },
 

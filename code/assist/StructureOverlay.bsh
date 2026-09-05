@@ -28,6 +28,7 @@ import android.view.View.*;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityWindowInfo;
+import android.os.Build;
 
 
 /*────────────────────────────────────────────────────────────────
@@ -96,14 +97,20 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 		return (alpha << 24) | (color & 0x00ffffff);
 	}
 
+	int flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_FULLSCREEN;
+	
 	final FrameLayout rootLayout = new FrameLayout(context);
 	WindowManager.LayoutParams rootParams = new WindowManager.LayoutParams(
 		WindowManager.LayoutParams.MATCH_PARENT,
 		WindowManager.LayoutParams.MATCH_PARENT,
 		overlayType,
-		WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+		flags,
 		PixelFormat.TRANSLUCENT
 	);
+
+	if (Build.VERSION.SDK_INT >= 28) {
+		rootParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+	}
 
 	rootLayout.setOnClickListener(new View.OnClickListener() {
 		public void onClick(View view) {

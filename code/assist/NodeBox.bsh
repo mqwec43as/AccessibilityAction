@@ -83,19 +83,7 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 		int result = 0;
 		int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
 		if (resourceId > 0) result = context.getResources().getDimensionPixelSize(resourceId);
-		if (useA11y) {
-			if (a11Y.useA11yOffset) {
-				return result;
-			} else {
-				return 0;
-			}
-		} else {
-			if (a11Y.useOffset) {
-				return result;
-			} else {
-				return 0;
-			}
-		}
+		return result;
 	}
 
 	int getNavigationBarHeight() {
@@ -139,26 +127,21 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 			bounds.width(),
 			bounds.height(),
 			overlayType,
-			WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+			WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
 			PixelFormat.TRANSLUCENT
 		);
 		params.gravity = Gravity.TOP | Gravity.LEFT;
 		params.x = bounds.left;
 		params.y = bounds.top;
-		switch (rotation) {
-			case Surface.ROTATION_90:
-				params.x -= getStatusBarHeight();
-				if (!useA11y) params.y -= getStatusBarHeight();
-				break;
-			case Surface.ROTATION_270:
-				if (!useA11y) {
-					params.x -= getNavigationBarHeight();
-					params.y -= getStatusBarHeight();
-				}
-				break;
-			default:
-				params.y -= getStatusBarHeight();
-		}
+		
+		// switch (rotation) {
+		// 	case Surface.ROTATION_270:
+		// 		if (!useA11y) {
+		// 			params.x -= getNavigationBarHeight();
+		// 			params.y -= getStatusBarHeight();
+		// 		}
+		// 		break;
+		// }
 
 		frameParams = new FrameLayout.LayoutParams(bounds.width(), bounds.height());
 		frameParams.leftMargin = params.x;
