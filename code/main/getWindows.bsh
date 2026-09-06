@@ -1,0 +1,28 @@
+import android.util.SparseArray;
+import java.util.Iterator;
+
+/* ───────────────────────────────────────────────────────────────
+ * Get all windows for a display
+ *
+ * Returns:
+ * - List of AccessibilityWindowInfo
+ ────────────────────────────────────────────────────────────── */
+List getWindows(int displayId) {
+	SparseArray allDisplaysWindows = getService().getWindowsOnAllDisplays();
+    List windows = new ArrayList();
+	if (allDisplaysWindows == null) {
+		return windows;
+	}
+
+	List displayWindows = allDisplaysWindows.get(displayId);
+	if (displayWindows != null) {
+        windows.addAll(displayWindows);
+    }
+    
+	return windows;
+}
+
+List getWindows() {
+	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	return getWindows(displayId);
+}

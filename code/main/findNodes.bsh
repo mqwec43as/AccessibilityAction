@@ -1,17 +1,17 @@
 import android.view.accessibility.AccessibilityNodeInfo;
 import java.util.List;
-import java.util.List;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.lang.CharSequence;
 import bsh.This;
 import com.joaomgcd.taskerm.action.java.JavaCodeException;
+import java.util.LinkedHashSet;
 
-/*─────────────────────────────────────────────────────────────── 
-This code was primarily generated using AI with minimal human editing.
+/* ─────────────────────────────────────────────────────────────── 
+ * This code was primarily generated using AI with minimal human editing.
 ───────────────────────────────────────────────────────────────*/
 
-/*───────────────────────────────────────────────────────────────
+/* ───────────────────────────────────────────────────────────────
  * findNodes(AccessibilityNodeInfo root, String key, String value)
  * **Find Multiple Nodes**
  * Finds all UI nodes matching a selector ("id", "text", "regex", "focus").
@@ -31,17 +31,25 @@ List findNodes(AccessibilityNodeInfo root, String key, String value) {
 
 	switch (key) {
 		case "id":
+			if (findIncludeRoot != void && findIncludeRoot) {
+				if (isMatch(root, "id", value, true)) {
+					nodes.add(root);
+				}
+			}
+
 			List found = root.findAccessibilityNodeInfosByViewId(value);
 			if (found.isEmpty()) found = findNodesRecursive(root, key, value);
 			if (!found.isEmpty()) {
-				for (AccessibilityNodeInfo node: found) {
-					nodes.add(node);
-					node.recycle();
-				};
+				nodes.addAll(found);
 			}
 			break;
 
 		case "text":
+			if (findIncludeRoot != void && findIncludeRoot) {
+				if (isMatch(root, "text", value, true)) {
+					nodes.add(root);
+				}
+			}
 			// 1. Try system-level search
 			List found = root.findAccessibilityNodeInfosByText(value);
 			if (found != null && !found.isEmpty()) {
@@ -88,7 +96,6 @@ List findNodes(AccessibilityNodeInfo root, String key, String value) {
 		case "class":
 			nodes = findNodesRecursive(root, key, value);
 			break;
-
 		default:
 			if (key.endsWith("Span")) {
 				nodes = findSpannedNodes(root, key, value);
@@ -98,6 +105,10 @@ List findNodes(AccessibilityNodeInfo root, String key, String value) {
 			break;
 	}
 
+	LinkedHashSet nodesSet = new LinkedHashSet(nodes);
+	nodes.clear();
+	nodes.addAll(nodesSet);
+
 	if (!nodes.isEmpty()) {
 		debugMe(nodes);
 	}
@@ -106,28 +117,39 @@ List findNodes(AccessibilityNodeInfo root, String key, String value) {
 }
 
 List findNodes(String key, String value) {
-	return findNodes(getRoot(), key, value);
+	List roots = new ArrayList();
+	if (includeOverlays != null && includeOverlays) {
+		roots.addAll(getRoots());
+	} else {
+		roots.add(getRoot());
+	}
+
+	List nodes = new ArrayList();
+	for (AccessibilityNodeInfo root: roots) {
+		List foundNodes = findNodes(root, key, value);
+		if (!foundNodes.isEmpty()) {
+			nodes.addAll(foundNodes);
+		}
+	}
+
+	return nodes;
 }
 
 List findNodes(String text) {
 	return findNodes(getRoot(), "text", text);
 }
 
-/*───────────────────────────────────────────────────────────────
-findNodes(AccessibilityNodeInfo root, Object[][] argsConfigs, boolean allFound)
-**Bulk Search with ID Mapping**
-Finds multiple sets of nodes simultaneously and maps them to custom IDs.
+/* ───────────────────────────────────────────────────────────────
+ * Finds multiple sets of nodes simultaneously and maps them to custom IDs.
 
-Arguments:
+ * Arguments:
+	* root → The starting node for the search.
+	* argsConfigs → Array of configurations: { "id", "key", "value", [proximity] }.
+	* allFound → Until all configurations are found or not.
 
-* root → The starting node for the search.
-* argsConfigs → Array of configurations: { "id", "key", "value", [proximity] }.
-* allFound → Until all configurations are found or not.
-
-Returns:
-
-* HashMap: keys are the provided IDs, values are ArrayLists of nodes.
-* Returns an empty HashMap if no matches are found.
+ * Returns:
+	* HashMap: keys are the provided IDs, values are ArrayLists of nodes.
+	* Returns an empty HashMap if no matches are found.
 ───────────────────────────────────────────────────────────────*/
 findNodes(AccessibilityNodeInfo root, Object[][] argsConfigs, boolean allFound) {
 	if (root == null) root = getRoot();
@@ -183,25 +205,36 @@ findNodes(AccessibilityNodeInfo root, Object[][] argsConfigs, boolean allFound) 
 }
 
 findNodes(Object[][] argsConfigs, boolean allFound) {
-	return findNodes(null, argsConfigs, allFound);
+	List roots = new ArrayList();
+	if (includeOverlays != null && includeOverlays) {
+		roots.addAll(getRoots());
+	} else {
+		roots.add(getRoot());
+	}
+
+	Map nodes = new HashMap();
+	for (AccessibilityNodeInfo root: roots) {
+		Map foundNodes = findNodes(root, argsConfigs, allFound);
+		if (!foundNodes.isEmpty()) {
+			nodes.putAll(foundNodes);
+		}
+	}
+	return nodes;
 }
 
-/*───────────────────────────────────────────────────────────────
-findNodes(AccessibilityNodeInfo root, String key, String value, Object[][] argsConfigs)
-**Multi-Step Proximity Search**
-Finds nodes by criteria and filters them through sequential proximity checks.
+/* ───────────────────────────────────────────────────────────────
+ * Finds nodes by criteria and filters them through sequential proximity checks.
 
-Arguments:
+ * Arguments:
+	* root → The starting node for the search.
+	* key → Selector type (e.g., "id", "text", "regex").
+	* value → Value to match for the initial search.
+	* argsConfigs → Nested arrays for isNearby/isNotNearby logic.
 
-* root → The starting node for the search.
-* key → Selector type (e.g., "id", "text", "regex").
-* value → Value to match for the initial search.
-* argsConfigs → Nested arrays for isNearby/isNotNearby logic.
-
-Example:
-args = new Object[][] { { "Label" }, { 2, "text", "Status", false } };
-results = findNodes(root, "id", "my_btn", args);
-───────────────────────────────────────────────────────────────*/
+ * Example:
+	args = new Object[][] { { "Label" }, { 2, "text", "Status", false } };
+	results = findNodes(root, "id", "my_btn", args);
+ ───────────────────────────────────────────────────────────────*/
 List findNodes(AccessibilityNodeInfo root, String key, String value, Object[][] argsConfigs) {
 	if (root == null) { root = getRoot(); }
 	List foundNodes = findNodes(root, key, value);
@@ -210,7 +243,22 @@ List findNodes(AccessibilityNodeInfo root, String key, String value, Object[][] 
 
 
 List findNodes(String key, String value, Object[][] argsConfigs) {
-	return findNodes(getRoot(), key, value, argsConfigs);
+	List roots = new ArrayList();
+	if (includeOverlays != null && includeOverlays) {
+		roots.addAll(getRoots());
+	} else {
+		roots.add(getRoot());
+	}
+
+	List nodes = new ArrayList();
+	for (AccessibilityNodeInfo root: roots) {
+		List foundNodes = findNodes(root, key, value, argsConfigs);
+		if (!foundNodes.isEmpty()) {
+			nodes.addAll(foundNodes);
+		}
+	}
+
+	return nodes;
 }
 
 List findNodes(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
@@ -218,6 +266,28 @@ List findNodes(AccessibilityNodeInfo root, String key, String value, int parentL
 		{ parentLevel, nearbyKey, nearbyValue }
 	};
 	return findNodes(root, key, value, config);
+}
+
+List findNodes(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
+	Object[][] config = new Object[][] {
+		{ parentLevel, nearbyKey, nearbyValue }
+	};
+
+	List roots = new ArrayList();
+	if (includeOverlays != null && includeOverlays) {
+		roots.addAll(getRoots());
+	} else {
+		roots.add(getRoot());
+	}
+
+	List nodes = new ArrayList();
+	for (AccessibilityNodeInfo root: roots) {
+		List foundNodes = findNodes(root, key, value, parentLevel, nearbyKey, nearbyValue);
+		if (!foundNodes.isEmpty()) {
+			nodes.addAll(foundNodes);
+		}
+	}
+	return nodes;
 }
 
 List findNodes(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyKey, String nearbyValue) {
@@ -230,10 +300,6 @@ List findNodes(AccessibilityNodeInfo root, String key, String value, int parentL
 
 List findNodes(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyText) {
 	return findNodes(root, "text", text, parentLevel, "text", nearbyText);
-}
-
-List findNodes(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return findNodes(getRoot(), key, value, parentLevel, nearbyKey, nearbyValue);
 }
 
 List findNodes(String text, int parentLevel, String nearbyKey, String nearbyValue) {
@@ -250,7 +316,7 @@ List findNodes(String text, int parentLevel, String nearbyText) {
 
 List findNodes(AccessibilityNodeInfo root, This multiKeys) {
 	if (multiKeys.text == void && multiKeys.id == void) {
-		log("Multi keys requires at least 'text' or 'id' " +  multiKeys.variables, "ERROR");
+		log("Multi keys requires at least 'text' or 'id' " + multiKeys.variables, "ERROR");
 		throw new JavaCodeException("Multi keys requires at least 'text' or 'id'");
 	}
 
@@ -276,10 +342,24 @@ List findNodes(AccessibilityNodeInfo root, This multiKeys) {
 	if (debugMe) {
 		debugMe(matchNodes);
 	}
-	
+
 	return matchNodes;
 }
 
 List findNodes(This multiKeys) {
-	return findNodes(getRoot(), multiKeys);
+	List roots = new ArrayList();
+	if (includeOverlays != null && includeOverlays) {
+		roots.addAll(getRoots());
+	} else {
+		roots.add(getRoot());
+	}
+
+	List nodes = new ArrayList();
+	for (AccessibilityNodeInfo root: roots) {
+		List foundNodes = findNodes(root, multiKeys);
+		if (!foundNodes.isEmpty()) {
+			nodes.addAll(foundNodes);
+		}
+	}
+	return nodes;
 }

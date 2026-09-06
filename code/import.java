@@ -31,3 +31,4 @@ if (ENV == void) ENV = Environment();
 if (NodeInfo == void) NodeInfo = NodeInfo();
 if (logIncludeNode == void ) logIncludeNode = false;
 if (limitParentLevel == void) limitParentLevel = 1;
+if (includeOverlays == void) includeOverlays = false;
