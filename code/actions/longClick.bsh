@@ -175,23 +175,23 @@ longClick(AccessibilityNodeInfo root, String text) {
 }
 
 longClick(String text, Object[][] argsConfigs) {
-	AccessibilityNodeInfo node = getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs);
+	AccessibilityNodeInfo node = getNode("text", text, 0, waitNodesTimeout, argsConfigs);
 	return longClick(node);
 }
 
 /* Parent and Sibling Overloads */
 longClick(String text, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
 	return longClick(node);
 }
 
 longClick(String key, String value, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode(key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
 	return longClick(node);
 }
 
 longClick(String key, String value, int index, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode(getRoot(), key, value, index, timeout, parentLevel, nearbyKey, nearbyValue);
+	AccessibilityNodeInfo node = getNode(key, value, index, timeout, parentLevel, nearbyKey, nearbyValue);
 	return longClick(node);
 }
 

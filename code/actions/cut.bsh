@@ -78,11 +78,11 @@ cut(String text, int index) {
 }
 
 cut(String text, long timeout) {
-	return cut(getNode(getRoot(), "text", text, 0, timeout));
+	return cut(getNode("text", text, 0, timeout));
 }
 
 cut(String text, int index, long timeout) {
-	return cut(getNode(getRoot(), "text", text, index, timeout));
+	return cut(getNode("text", text, index, timeout));
 }
 
 /* Key-Value Search Overloads */
@@ -91,11 +91,11 @@ cut(String key, String value) {
 }
 
 cut(String key, String value, int index) {
-	return cut(getNode(getRoot(), key, value, index));
+	return cut(getNode(key, value, index));
 }
 
 cut(String key, String value, int index, long timeout) {
-	return cut(getNode(getRoot(), key, value, index, timeout));
+	return cut(getNode(key, value, index, timeout));
 }
 
 /* Focus and Shortcut Overloads */
@@ -110,20 +110,20 @@ cut(AccessibilityNodeInfo root, String value) {
 }
 
 cut(String text, Object[][] argsConfigs) {
-	return cut(getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs));
+	return cut(getNode("text", text, 0, waitNodesTimeout, argsConfigs));
 }
 
 /* Parent and Sibling Overloads */
 // cut(String text, String nearbyText) {
-// 	return cut(getNode(getRoot(), "text", text, 0, waitNodesTimeout, 0, "text", nearbyText));
+// 	return cut(getNode("text", text, 0, waitNodesTimeout, 0, "text", nearbyText));
 // }
 
 cut(String text, int parentLevel, String nearbyText) {
-	return cut(getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
+	return cut(getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
 cut(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return cut(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
+	return cut(getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }
 
 /* AccessibilityNodeInfo Root specific variants */

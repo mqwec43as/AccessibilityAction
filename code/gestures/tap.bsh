@@ -149,7 +149,7 @@ boolean tap(HashMap nodes, String key, long duration) {
 }
 
 boolean tap(String key, String value, int index, long duration) {
-	node = getNode(getRoot(), key, value, index);
+	node = getNode(key, value, index);
 	if (node == null) {
 		throw new com.joaomgcd.taskerm.action.java.JavaCodeException("No node found for key=" + key + ", value=" + value);
 	}
@@ -162,15 +162,15 @@ boolean tap(String value, long duration) {
 }
 
 boolean tap(String value, int index, long duration) {
-	return tap(getNode(getRoot(), "text", value, index, waitNodesTimeout), duration);
+	return tap(getNode("text", value, index, waitNodesTimeout), duration);
 }
 
 boolean tap(String value, long timeout, long duration) {
-	return tap(getNode(getRoot(), "text", value, 0, timeout), duration);
+	return tap(getNode("text", value, 0, timeout), duration);
 }
 
 boolean tap(String value, int index, long timeout, long duration) {
-	return tap(getNode(getRoot(), "text", value, index, timeout), duration);
+	return tap(getNode("text", value, index, timeout), duration);
 }
 
 /* Key-Value Search Overloads */
@@ -179,7 +179,7 @@ boolean tap(String key, String value, long duration) {
 }
 
 boolean tap(String key, String value, int index, long timeout, long duration) {
-	return tap(getNode(getRoot(), key, value, index, timeout), duration);
+	return tap(getNode(key, value, index, timeout), duration);
 }
 
 /* Complex Search Overloads */
@@ -188,23 +188,23 @@ boolean tap(AccessibilityNodeInfo root, String value, long duration) {
 }
 
 boolean tap(String value, Object[][] argsConfigs, long duration) {
-	return tap(getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs), duration);
+	return tap(getNode("text", value, 0, waitNodesTimeout, argsConfigs), duration);
 }
 
 boolean tap(String value, int parentLevel, String nearbyValue, long duration) {
-	return tap(getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue), duration);
+	return tap(getNode("text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue), duration);
 }
 
 boolean tap(String key, String value, int parentLevel, String nearbyValue, long duration) {
-	return tap(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue), duration);
+	return tap(getNode(key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue), duration);
 }
 
 boolean tap(String key, String value, int parentLevel, String nearbyKey, String nearbyValue, long duration) {
-	return tap(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue), duration);
+	return tap(getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue), duration);
 }
 
 boolean tap(String key, String value, int index, long timeout, int parentLevel, String nearbyKey, String nearbyValue, long duration) {
-	return tap(getNode(getRoot(), key, value, index, timeout, parentLevel, nearbyKey, nearbyValue), duration);
+	return tap(getNode(key, value, index, timeout, parentLevel, nearbyKey, nearbyValue), duration);
 }
 
 /* AccessibilityNodeInfo Root specific variants */

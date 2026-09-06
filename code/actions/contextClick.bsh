@@ -76,11 +76,11 @@ contextClick(String text, int index) {
 }
 
 contextClick(String text, long timeout) {
-	return contextClick(getNode(getRoot(), "text", text, 0, timeout));
+	return contextClick(getNode("text", text, 0, timeout));
 }
 
 contextClick(String value, int index, long timeout) {
-	return contextClick(getNode(getRoot(), "text", value, index, timeout));
+	return contextClick(getNode("text", value, index, timeout));
 }
 
 /* Key-Value Search Overloads */
@@ -89,11 +89,11 @@ contextClick(String key, String value) {
 }
 
 contextClick(String key, String value, int index) {
-	return contextClick(getNode(getRoot(), key, value, index));
+	return contextClick(getNode(key, value, index));
 }
 
 contextClick(String key, String value, int index, long timeout) {
-	return contextClick(getNode(getRoot(), key, value, index, timeout));
+	return contextClick(getNode(key, value, index, timeout));
 }
 
 /* Complex Search Overloads (Root and Configs) */
@@ -102,16 +102,16 @@ contextClick(AccessibilityNodeInfo root, String value) {
 }
 
 contextClick(String text, Object[][] argsConfigs) {
-	return contextClick(getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs));
+	return contextClick(getNode("text", text, 0, waitNodesTimeout, argsConfigs));
 }
 
 
 contextClick(String text, int parentLevel, String nearbyText) {
-	return contextClick(getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
+	return contextClick(getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
 contextClick(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return contextClick(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
+	return contextClick(getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }
 
 /* AccessibilityNodeInfo Root specific variants */

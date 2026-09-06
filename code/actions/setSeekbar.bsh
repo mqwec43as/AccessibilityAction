@@ -85,54 +85,54 @@ setSeekbar(HashMap nodes, String key, value) {
 
 /* Basic Search Overloads (Text-based) */
 setSeekbar(String value, progress) {
-    AccessibilityNodeInfo node = getNode(getRoot(), "text", value, 0);
+    AccessibilityNodeInfo node = getNode("text", value, 0);
     return setSeekbar(node, progress);
 }
 
 setSeekbar(String value, int percentage) {
-    AccessibilityNodeInfo node = getNode(getRoot(), "text", value, 0);
+    AccessibilityNodeInfo node = getNode("text", value, 0);
     return setSeekbar(node, percentage);
 }
 
 setSeekbar(String value, progress, int index) {
-    AccessibilityNodeInfo node = getNode(getRoot(), "text", value, index);
+    AccessibilityNodeInfo node = getNode("text", value, index);
     return setSeekbar(node, progress);
 }
 
 setSeekbar(String value, progress, long timeout) {
-    AccessibilityNodeInfo node = getNode(getRoot(), "text", value, 0, timeout);
+    AccessibilityNodeInfo node = getNode("text", value, 0, timeout);
     return setSeekbar(node, progress);
 }
 
 /* Key-Value Search Overloads */
 setSeekbar(String key, String value, progress) {
-    AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0);
+    AccessibilityNodeInfo node = getNode(key, value, 0);
     return setSeekbar(node, progress);
 }
 
 setSeekbar(String key, String value, int percentage) {
-    AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0);
+    AccessibilityNodeInfo node = getNode(key, value, 0);
     return setSeekbar(node, percentage);
 }
 
 setSeekbar(String key, String value, progress, int index) {
-    AccessibilityNodeInfo node = getNode(getRoot(), key, value, index);
+    AccessibilityNodeInfo node = getNode(key, value, index);
     return setSeekbar(node, progress);
 }
 
 setSeekbar(String key, String value, progress, int index, long timeout) {
-    AccessibilityNodeInfo node = getNode(getRoot(), key, value, index, timeout);
+    AccessibilityNodeInfo node = getNode(key, value, index, timeout);
     return setSeekbar(node, progress);
 }
 
 /* Parent and Sibling Overloads */
 setSeekbar(String key, String value, progress, int parentLevel, String nearbyValue) {
-    AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
+    AccessibilityNodeInfo node = getNode(key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
     return setSeekbar(node, progress);
 }
 
 setSeekbar(String key, String value, progress, int parentLevel, String nearbyKey, String nearbyValue) {
-    AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+    AccessibilityNodeInfo node = getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
     return setSeekbar(node, progress);
 }
 
@@ -143,7 +143,7 @@ setSeekbar(AccessibilityNodeInfo root, String value, progress) {
 }
 
 setSeekbar(String value, progress, Object[][] argsConfigs) {
-    AccessibilityNodeInfo node = getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs);
+    AccessibilityNodeInfo node = getNode("text", value, 0, waitNodesTimeout, argsConfigs);
     return setSeekbar(node, progress);
 }
 

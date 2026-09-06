@@ -80,7 +80,7 @@ copy(String text, long timeout) {
 }
 
 copy(String text, int index, long timeout) {
-	return copy(getNode(getRoot(), "text", text, index, timeout));
+	return copy(getNode("text", text, index, timeout));
 }
 
 /* Key-Value Search Overloads */
@@ -90,11 +90,11 @@ copy(String key, String value) {
 }
 
 copy(String key, String value, int index) {
-	return copy(getNode(getRoot(), key, value, index));
+	return copy(getNode(key, value, index));
 }
 
 copy(String key, String value, int index, long timeout) {
-	return copy(getNode(getRoot(), key, value, index, timeout));
+	return copy(getNode(key, value, index, timeout));
 }
 
 /* Focus and Shortcut Overloads */
@@ -109,15 +109,15 @@ copy(AccessibilityNodeInfo root, String value) {
 }
 
 copy(String text, Object[][] argsConfigs) {
-	return copy(getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs));
+	return copy(getNode("text", text, 0, waitNodesTimeout, argsConfigs));
 }
 
 copy(String text, int parentLevel, String nearbyText) {
-	return copy(getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
+	return copy(getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
 copy(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return copy(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
+	return copy(getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }
 
 /* AccessibilityNodeInfo Root specific variants */

@@ -138,18 +138,18 @@ setSelection(AccessibilityNodeInfo root, String value, int start, int end) {
 }
 
 setSelection(String value, int start, int end, Object[][] argsConfigs) {
-	AccessibilityNodeInfo node = getNode(getRoot(), "text", value, 0, waitNodesTimeout, argsConfigs);
+	AccessibilityNodeInfo node = getNode("text", value, 0, waitNodesTimeout, argsConfigs);
 	return setSelection(node, start, end);
 }
 
 /* Parent and Sibling Overloads */
 setSelection(String value, int start, int end, int parentLevel, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode(getRoot(), "text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
+	AccessibilityNodeInfo node = getNode("text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
 	return setSelection(node, start, end);
 }
 
 setSelection(String key, String value, int start, int end, int parentLevel, String nearbyKey, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	AccessibilityNodeInfo node = getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
 	return setSelection(node, start, end);
 }
 

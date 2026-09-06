@@ -80,7 +80,7 @@ paste(String text, long timeout) {
 }
 
 paste(String text, int index, long timeout) {
-	AccessibilityNodeInfo node = getNode(getRoot(), "text", text, index, timeout);
+	AccessibilityNodeInfo node = getNode("text", text, index, timeout);
 	return paste(node);
 }
 
@@ -90,12 +90,12 @@ paste(String key, String value) {
 }
 
 paste(String key, String value, int index) {
-	AccessibilityNodeInfo node = getNode(getRoot(), key, value, index);
+	AccessibilityNodeInfo node = getNode(key, value, index);
 	return paste(node);
 }
 
 paste(String key, String value, int index, long timeout) {
-	AccessibilityNodeInfo node = getNode(getRoot(), key, value, index, timeout);
+	AccessibilityNodeInfo node = getNode(key, value, index, timeout);
 	return paste(node);
 }
 
@@ -112,18 +112,18 @@ paste(AccessibilityNodeInfo root, String value) {
 }
 
 paste(String text, Object[][] argsConfigs) {
-	AccessibilityNodeInfo node = getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs);
+	AccessibilityNodeInfo node = getNode("text", text, 0, waitNodesTimeout, argsConfigs);
 	return paste(node);
 }
 
 /* Parent and Sibling Overloads */
 paste(String text, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
 	return paste(node);
 }
 
 paste(String key, String value, int parentLevel, String nearbyKey, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyText);
+	AccessibilityNodeInfo node = getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyText);
 	return paste(node);
 }
 

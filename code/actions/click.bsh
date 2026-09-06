@@ -109,32 +109,32 @@ click(HashMap nodesMap, String mapKey) {
 
 /* Basic Search Overloads (Text-based) */
 click(String text) {
-	return click(getNode(getRoot(), "text", text, 0));
+	return click(getNode("text", text, 0));
 }
 
 click(String text, int index) {
-	return click(getNode(getRoot(), "text", text, index));
+	return click(getNode("text", text, index));
 }
 
 click(String text, long timeout) {
-	return click(getNode(getRoot(), "text", text, 0, timeout));
+	return click(getNode("text", text, 0, timeout));
 }
 
 click(String text, int index, long timeout) {
-	return click(getNode(getRoot(), "text", text, index, timeout));
+	return click(getNode("text", text, index, timeout));
 }
 
 /* Key-Value Search Overloads */
 click(String key, String value) {
-	return click(getNode(getRoot(), key, value, 0));
+	return click(getNode(key, value, 0));
 }
 
 click(String key, String value, int index) {
-	return click(getNode(getRoot(), key, value, index));
+	return click(getNode(key, value, index));
 }
 
 click(String key, String value, int index, long timeout) {
-	return click(getNode(getRoot(), key, value, index, timeout));
+	return click(getNode(key, value, index, timeout));
 }
 
 /* Complex Search Overloads (Root and Configs) */
@@ -143,23 +143,23 @@ click(AccessibilityNodeInfo root, String value) {
 }
 
 click(String text, Object[][] argsConfigs) {
-	return click(getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs));
+	return click(getNode("text", text, 0, waitNodesTimeout, argsConfigs));
 }
 
 click(String text, int parentLevel, String nearbyText) {
-	return click(getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
+	return click(getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
 click(String key, String value, int parentLevel, String nearbyText) {
-	return click(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
+	return click(getNode(key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
 click(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return click(getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
+	return click(getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }
 
 click(String key, String value, int index, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
-	return click(getNode(getRoot(), key, value, index, timeout, parentLevel, nearbyKey, nearbyValue));
+	return click(getNode(key, value, index, timeout, parentLevel, nearbyKey, nearbyValue));
 }
 
 /* AccessibilityNodeInfo Root specific variants */
