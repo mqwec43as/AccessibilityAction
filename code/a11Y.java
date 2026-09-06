@@ -54,6 +54,7 @@ a11Y() {
 	String scriptEditor = "";
 	This inspector;
 	This NodeInfo;
+	This WindowInfo;
 	This config;
 	Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -96,6 +97,7 @@ a11Y() {
 		config.setTo(TOP, THIS);
 		if (ENV != null) THIS.namespace.setVariable("ENV", ENV, false);
 		if (NodeInfo != null) THIS.namespace.setVariable("NodeInfo", NodeInfo, false);
+		if (WindowInfo != null) THIS.namespace.setVariable("WindowInfo", WindowInfo, false);
 		if (ENV_PATH == null) {
 			String superImport = tasker.getVariable("ImportJava");
 			try {
@@ -329,6 +331,9 @@ tasker.setJavaVariable("a11E", a11E);
 
 This NodeInfo = NodeInfo();
 a11Y.namespace.setVariable("NodeInfo", NodeInfo, false);
+
+This WindowInfo = WindowInfo();
+a11Y.namespace.setVariable("WindowInfo", WindowInfo, false);
 
 This updateManager = UpdateManager();
 updateManager.namespace.setVariable("directoryPath", ENV_PATH, false);

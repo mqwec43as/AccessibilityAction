@@ -30,8 +30,7 @@ Returns: HashMap where keys are IDs and values are ArrayLists of nodes.
 ───────────────────────────────────────────────────────────────*/
 waitNodes(Object[][] argsConfigs, long timeout, boolean allFound) {
 	Map NO_RESULT = new HashMap();
-	AccessibilityNodeInfo root = getRoot();
-	Map nodesMap = findNodes(root, argsConfigs, allFound);
+	Map nodesMap = findNodes(argsConfigs, allFound);
 	if (nodesMap.keySet().size() > 0) return nodesMap;
 
 	boolean oldDebug = debugMe;
@@ -40,8 +39,7 @@ waitNodes(Object[][] argsConfigs, long timeout, boolean allFound) {
 		nodesMap = tasker.getAccessibilityEvents()
 			.map(new io.reactivex.functions.Function() {
 				apply(Object event) {
-					root = getRoot();
-					return findNodes(root, argsConfigs, allFound);
+					return findNodes(argsConfigs, allFound);
 				}
 			})
 			.filter(new io.reactivex.functions.Predicate() {

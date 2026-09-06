@@ -30,6 +30,25 @@ getNode(AccessibilityNodeInfo root, String key, String value, int index, long ti
 	return node;
 }
 
+// * New
+getNode(String key, String value, int index, long timeout, Object[][] argsConfigs) {
+	List nodes = findNodes(key, value, argsConfigs);
+	if (nodes.size() == 0) {
+		nodes = waitNodes(key, value, argsConfigs, timeout);
+	}
+	AccessibilityNodeInfo node = toNode(nodes, index);
+	log("Found " + nodes.size() + " nodes. Used index: " + index + ".");
+	return node;
+}
+
+// * New
+getNode(String key, String value, int index, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
+	Object[][] config = new Object[][] {
+		{ parentLevel, nearbyKey, nearbyValue }
+	};
+	return getNode(key, value, index, timeout, config);
+}
+
 /* Sibling Config Wrapper */
 getNode(AccessibilityNodeInfo root, String key, String value, int index, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
 	Object[][] config = new Object[][] {
@@ -51,71 +70,63 @@ getNode(This multiKeys, int index, long timeout) {
   ───────────────────────────────────────────────────────────────*/
 
 getNode(String text) {
-	return getNode(getRoot(), "text", text, 0, waitNodesTimeout, null);
+	return getNode("text", text, 0, waitNodesTimeout, null);
 }
 
 getNode(String text, int index) {
-	return getNode(getRoot(), "text", text, index, waitNodesTimeout, null);
+	return getNode("text", text, index, waitNodesTimeout, null);
 }
 
 getNode(String text, long timeout) {
-	return getNode(getRoot(), "text", text, 0, timeout, null);
+	return getNode("text", text, 0, timeout, null);
 }
 
 getNode(String text, Object[][] argsConfigs) {
-	return getNode(getRoot(), "text", text, 0, waitNodesTimeout, argsConfigs);
+	return getNode("text", text, 0, waitNodesTimeout, argsConfigs);
 }
 
 getNode(String text, int index, long timeout) {
-	return getNode(getRoot(), "text", text, index, timeout, null);
+	return getNode("text", text, index, timeout, null);
 }
 
 getNode(String text, int index, long timeout, Object[][] argsConfigs) {
-	return getNode(getRoot(), "text", text, index, timeout, argsConfigs);
+	return getNode("text", text, index, timeout, argsConfigs);
 }
 
 getNode(String key, String value) {
-	return getNode(getRoot(), key, value, 0, waitNodesTimeout, null);
+	return getNode(key, value, 0, waitNodesTimeout, null);
 }
 
 getNode(String key, String value, int index) {
-	return getNode(getRoot(), key, value, index, waitNodesTimeout, null);
+	return getNode(key, value, index, waitNodesTimeout, null);
 }
 
 getNode(String key, String value, int index, long timeout) {
-	return getNode(getRoot(), key, value, index, timeout, null);
-}
-
-getNode(String key, String value, int index, long timeout, Object[][] argsConfigs) {
-	return getNode(getRoot(), key, value, index, timeout, argsConfigs);
+	return getNode(key, value, index, timeout, null);
 }
 
 getNode(String text, int parentLevel, String nearbyText) {
-	return getNode(getRoot(), "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	return getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
 }
 
 getNode(String text, int index, long timeout, int parentLevel, String nearbyText) {
-	return getNode(getRoot(), "text", text, index, timeout, parentLevel, "text", nearbyText);
+	return getNode("text", text, index, timeout, parentLevel, "text", nearbyText);
 }
 
 getNode(String text, int index, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
-	return getNode(getRoot(), "text", text, index, timeout, parentLevel, nearbyKey, nearbyValue);
+	return getNode("text", text, index, timeout, parentLevel, nearbyKey, nearbyValue);
 }
 
 getNode(String key, String value, int parentLevel, String nearbyText) {
-	return getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	return getNode(key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
 }
 
 getNode(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return getNode(getRoot(), key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	return getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
 }
 
 getNode(String key, String value, int index, long timeout, int parentLevel, String nearbyText) {
-	return getNode(getRoot(), key, value, index, timeout, parentLevel, "text", nearbyText);
-}
-
-getNode(String key, String value, int index, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
-	return getNode(getRoot(), key, value, index, timeout, parentLevel, nearbyKey, nearbyValue);
+	return getNode(key, value, index, timeout, parentLevel, "text", nearbyText);
 }
 
 /*───────────────────────────────────────────────────────────────

@@ -35,8 +35,25 @@ List getAllNodes(AccessibilityNodeInfo node) {
 }
 
 List getAllNodes() {
-	AccessibilityNodeInfo root = getRoot();
-	return getAllNodes(root);
+	List roots = new ArrayList();
+	if (includeAllWindows != void && includeAllWindows) {
+		roots.addAll(getRoots());
+	} else {
+		AccessibilityNodeInfo root = getRoot();
+		if (root != null) {
+			roots.add(root);
+		}
+	}
+
+	if (roots.isEmpty()) {
+		return roots;
+	} else {
+		List nodes = new ArrayList();
+		for (AccessibilityNodeInfo root: roots) {
+			nodes.addAll(getAllNodes(root));
+		}
+		return nodes;
+	}
 }
 
 List getAllNodes(List nodes) {

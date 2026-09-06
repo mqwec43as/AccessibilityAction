@@ -1,5 +1,6 @@
 import android.util.SparseArray;
 import java.util.Iterator;
+import java.util.regex.Pattern;
 
 /* ───────────────────────────────────────────────────────────────
  * Get all windows for a display
@@ -13,10 +14,28 @@ List getWindows(int displayId) {
 	if (allDisplaysWindows == null) {
 		return windows;
 	}
+	
+	int typeFlag = filterWindowType == void ? 0 : filterWindowType;
+	Pattern filterPackageNamePattern = filterWindowPackageName == void ? null : Pattern.compile(filterWindowPackageName);
 
+	if (typeFlag != 0) WindowInfo == void ? WindowInfo() : WindowInfo;
+	
 	List displayWindows = allDisplaysWindows.get(displayId);
 	if (displayWindows != null) {
-        windows.addAll(displayWindows);
+		if (typeFlag != 0) {
+			for(AccessibilityWindowInfo window: displayWindows) {
+				if (WindowInfo.hasFlag(window, typeFlag)) {
+					if (filterPackageNamePattern != null) {
+						String packageName = window.getRoot().getPackageName();
+						if (packageName == null) continue;
+						if (!filterPackageNamePattern.matcher(packageName).matches()) continue;
+					}
+					windows.add(window);
+				}				
+			}
+		} else {
+        	windows.addAll(displayWindows);
+		}
     }
     
 	return windows;
