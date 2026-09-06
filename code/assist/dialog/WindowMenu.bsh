@@ -3,72 +3,104 @@ importCommands("others");
 import bsh.This;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.graphics.Point;
+import android.util.SparseArray;
+import android.view.accessibility.AccessibilityWindowInfo;
+import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.graphics.Color;
+import android.graphics.drawable.Drawable;
+
 
 /*───────────────────────────────────────────────────────────────
   DisplayMenu()
   ───────────────────────────────────────────────────────────────*/
-DisplayMenu() {
+WindowMenu() {
 	final This TOP = this;
 	This a11Y = getA11yInstance();
 	final int WINDOW_TYPE = ENV.Layout.TYPE_NODE_SEARCH;
 	a11Y.viewControl.addView(TOP);
-	List displayList = new ArrayList();
-	This displayInfos;
+	List windowList = new ArrayList();
 	This config;
 	This listDialog;
 	This onClickListener;
 	List screenshots = new ArrayList();
-	long screenshotDelay = a11Y.screenshotDelay != void ? a11Y.screenshotDelay : 500;
+	This WindowInfo = a11Y.WindowInfo;
+	int allowed = WindowInfo.TYPE_SYSTEM | WindowInfo.TYPE_APPLICATION;
+    long screenshotDelay = a11Y.screenshotDelay != void ? a11Y.screenshotDelay : 500;
 
 	loadList() {
-		displayList.clear();
-		Display[] displays = displayInfos.displays;
-		for (int i = 0; i < displays.length; i++) {
-			Display display = displays[i];
-			Map item = new HashMap();
-			item.put("title", display.getName());
-			String size = display.getWidth() + "x" + display.getHeight();
-			int id = display.getDisplayId();
-			String description = "ID: " + id + "\nSize: " + size;
+		windowList.clear();
+		Thread.sleep(200);
+		SparseArray allDisplaysWindows = getService().getWindowsOnAllDisplays();
+		if (allDisplaysWindows == null) {
+			tasker.showToast("No windows found");
+			return;
+		}
+		// Loop through all displays windows
+		List windows = new ArrayList();
+		for (int i = 0; i < allDisplaysWindows.size(); i++) {
+			windows.addAll(allDisplaysWindows.valueAt(i));
+		}
 
-			AccessibilityNodeInfo root = getRoot(id);
+		for (int i = 0; i < windows.size(); i++) {
+			AccessibilityWindowInfo window = windows.get(i);
+			Map item = new HashMap();
+			String title = window.getTitle() == null ? "No Title" : window.getTitle().toString();
+			item.put("title", title);
+
+			int display = window.getDisplayId();
+			int id = window.getId();
+			Rect rect = new Rect();
+			window.getBoundsInScreen(rect);
+			String description = "ID: " + id + "\nDisplay: " + display + "\nBounds: " + rect.toString();
+
+			AccessibilityNodeInfo root = window.getRoot();
 			if (root != null) {
 				String packageName = root.getPackageName();
 				String packageLabel = a11Y.packageManager.getLabel(packageName);
 				description += "\nPackage: " + packageName + " (" + packageLabel + ")";
 			}
+			boolean isApplication = WindowInfo.hasFlag(window, WindowInfo.TYPE_APPLICATION);
+			String packageName = window.getRoot() != null ? window.getRoot().getPackageName() : null;
+			boolean isSystemUi = WindowInfo.hasFlag(window, WindowInfo.TYPE_SYSTEM) && "com.android.systemui".equals(packageName);
+			if (isApplication || isSystemUi) {
+				try {
+					int index = i + 1;
+					This ss = takeScreenshot(window.getId(), window.getDisplayId(), null);
+					screenshots.add(ss);
+					Thread.sleep(screenshotDelay);
+					item.put("icon", ss.getDrawable());
+					tasker.showToast("Loading" + index);
+				} catch (e) {
+					tasker.showToast(e.toString());
+				}
+			} else {
+				Drawable emptyDrawable = new ColorDrawable(Color.TRANSPARENT);
+				item.put("icon", emptyDrawable);
+			}
 
 			item.put("subtitle", description);
-			item.put("display", display);
-			try {
-				int index = i + 1; 
-				This ss = takeScreenshot(id);
-				screenshots.add(ss);
-				Thread.sleep(screenshotDelay);
-				item.put("icon", ss.getDrawable());
-			} catch(e) {
-				tasker.showToast(e.toString());
-			}
-			displayList.add(item);
+			item.put("window", window);
+			windowList.add(item);
 		}
 	}
 
 
 	config(This THIS) {
-		List itemList = TOP.displayList;
-		String title = "Display Menu";
+		List itemList = TOP.windowList;
+		String title = "Window Menu";
 		long timeout = 30000;
-		int iconSize = 240;
-		boolean showFilter;
+		boolean showFilter = true;
+		int iconSize = 200;
 		onSuccess(Map map) {
-			Display display = map.get("display");
+			AccessibilityWindowInfo window = map.get("window");
 			if (TOP.onClickListener != null) {
 				Runnable runMe = new Runnable() {
 					run() {
 						log("Running onClickListener", "INFO", TOP);
 						try {
 							if (TOP.namespace.getVariable("onClickListener") != null) {
-								TOP.onClickListener.onClick(display);
+								TOP.onClickListener.onClick(window);
 							} else {
 								log("No onClickListener set", "INFO", TOP);
 								showToast("No onClickListener set");
@@ -111,7 +143,6 @@ DisplayMenu() {
 	}
 
 	show() {
-		displayInfos = DisplayInfos();
 		loadList();
 		config = config(TOP);
 		TOP.listDialog = ListDialog(config);

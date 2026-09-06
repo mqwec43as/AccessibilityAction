@@ -11,6 +11,8 @@ import java.io.FileOutputStream;
 import java.util.concurrent.Executor;
 import android.view.accessibility.AccessibilityNodeInfo;
 import bsh.This;
+import android.graphics.drawable.BitmapDrawable;
+import android.content.Context;
 
 /*───────────────────────────────────────────────────────────────
   takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo node)
@@ -42,6 +44,8 @@ public This takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo no
 		displayId = node.getWindow().getDisplayId();
 		windowId = node.getWindowId();
 	}
+
+	Context context = getContext(true, displayId);
 
 	SingleSubject signal = SingleSubject.create();
 	Executor executor = context.getMainExecutor();
@@ -90,8 +94,20 @@ public This takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo no
 
 				ScreenshotHelper() {
 
+					getContext() {
+						return context;
+					}
+					
 					getBitmap() {
 						return finalBitmap;
+					}
+
+					getDrawable() {
+						return new BitmapDrawable(service.getResources(), finalBitmap);
+					}
+
+					getBitmap(Rect bounds) {
+						return Bitmap.createBitmap(finalBitmap, bounds.left, bounds.top, bounds.width(), bounds.height());
 					}
 
 					recycle() {

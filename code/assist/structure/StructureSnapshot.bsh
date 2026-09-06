@@ -1,0 +1,95 @@
+import bsh.This;
+import android.graphics.Bitmap;
+import android.graphics.Rect;
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import android.graphics.drawable.Drawable;
+
+/*───────────────────────────────────────────────────────────────
+  StructureSnapshot(int displayId)
+  **Captures Display Screenshots and Maps Node Bitmaps by Hashcode**
+  Helper object to capture a display screenshot once, crop node bounds,
+  and store created Bitmaps in an internal Map keyed by node.hashCode() for tracking and cleanup.
+
+  Arguments:
+   - displayId → Logical display ID to capture
+
+  Returns:
+   - This → Scripted helper object with screenshot and Map utilities.
+
+  Helper:
+   - takeScreenshot()                   → Triggers/updates full display screenshot.
+   - getNodeBitmap(AccessibilityNodeInfo) → Extracts cropped Bitmap for node and maps it by node.hashCode().
+   - recycle()                            → Recycles base screenshot and all mapped node Bitmaps.
+  ───────────────────────────────────────────────────────────────*/
+This StructureSnapshot(int displayId) {
+	This helper = null;
+	Map bitmapMap = new HashMap();
+
+	takeScreenshot() {
+		if (helper != null) {
+			helper.recycle();
+		}
+		helper = takeScreenshot(displayId);
+		return helper;
+	}
+
+	getNodeBitmap(AccessibilityNodeInfo node) {
+		if (node == null) {
+			return null;
+		}
+		if (helper == null) {
+			takeScreenshot();
+		}
+
+		Integer key = new Integer(node.hashCode());
+		if (bitmapMap.containsKey(key)) {
+			Bitmap cachedBmp = (Bitmap) bitmapMap.get(key);
+			if (cachedBmp != null && !cachedBmp.isRecycled()) {
+				return cachedBmp;
+			}
+		}
+
+		Rect bounds = new Rect();
+		node.getBoundsInScreen(bounds);
+		Bitmap bmp = helper.getBitmap(bounds);
+		if (bmp != null) {
+			bitmapMap.put(key, bmp);
+		}
+		return bmp;
+	}
+
+    getNodeDrawable(AccessibilityNodeInfo node) {
+        Bitmap bmp = getNodeBitmap(node);
+        if (bmp != null) {
+            return new BitmapDrawable(helper.getContext().getResources(), bmp);
+        }
+        return null;
+    }
+
+	recycle() {
+		if (helper != null) {
+			helper.recycle();
+			helper = null;
+		}
+		Iterator iterator = bitmapMap.values().iterator();
+		while (iterator.hasNext()) {
+			Object item = iterator.next();
+			if (item instanceof Bitmap) {
+				Bitmap bmp = (Bitmap) item;
+				if (!bmp.isRecycled()) {
+					bmp.recycle();
+				}
+			}
+		}
+		bitmapMap.clear();
+	}
+
+	return this;
+}
+
+This StructureSnapshot() {
+	return StructureSnapshot(0);
+}

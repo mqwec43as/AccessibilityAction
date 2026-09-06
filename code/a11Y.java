@@ -46,7 +46,7 @@ a11Y() {
 	String ENV_PATH;
 	String LOG_FILE;
 	long lastActionPickerReminder = 0;
-
+	long screenshotDelay = 500;
 	This assistBar;
 	This updateManager;
 	This materialColorFallback;

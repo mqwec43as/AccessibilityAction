@@ -1,3 +1,5 @@
+importCommands("assist.structure");
+
 import bsh.This;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.graphics.Point;
@@ -11,9 +13,9 @@ NodeSearch(This structureOverlay) {
     This a11Y = getA11yInstance();
     final int WINDOW_TYPE = ENV.Layout.TYPE_NODE_SEARCH;
     a11Y.viewControl.addView(TOP);
-
     Map map = structureOverlay.map;
     List itemList = new ArrayList();
+    int iconSize = dp(48);
 	config(This THIS) {
         List itemList = TOP.itemList;
 		String title = "Nodes";
@@ -68,7 +70,7 @@ NodeSearch(This structureOverlay) {
             contents.add("Coor: " + coor.x + "," + coor.y);
             String content = String.join("\n", contents);
 			item.put("subtitle", content);
-
+            item.put("icon", structureOverlay.getNodeDrawable(node));
             // Attach nodeBox
             item.put("nodeBox", nodeBox);
 

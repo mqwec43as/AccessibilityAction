@@ -1,3 +1,5 @@
+importCommands("assist.structure");
+
 /*────────────────────────────────────────────────────────────────
 	This code was generated using AI with minimal human editing.
 ──────────────────────────────────────────────────────────────── */
@@ -81,6 +83,8 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 	List hiddenBoxes = new ArrayList();
 	List boxHistory = new ArrayList();
 
+	This structureSnapshot = StructureSnapshot(displayId);
+
 	final Object accessibilityService = getService();
 	Context context = getContext(useA11y, displayId);
 	final WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -135,6 +139,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 	remove() {
 		if (activeBox != null) activeBox.reset();
 		if (!isRemoved()) windowManager.removeView(rootLayout);
+		if (structureSnapshot != null) structureSnapshot.recycle();
 	}
 
 	isRemoved() {
@@ -262,6 +267,17 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 		return this;
 	}
 
+	takeScreenshot() {
+		return structureSnapshot.takeScreenshot();
+	}
+
+	getNodeBitmap(AccessibilityNodeInfo node) {
+		return structureSnapshot.getNodeBitmap(node);
+	}
+
+	getNodeDrawable(AccessibilityNodeInfo node) {
+		return structureSnapshot.getNodeDrawable(node);
+	}
 
 	addHistory(This nodeBox) {
 		if (nodeBox == null) return;

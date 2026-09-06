@@ -79,6 +79,7 @@ public This AssistBar(int initialX, int initialY) {
 	This filterSheet;
 	This nodeSearch;
 	This displayMenu;
+	This windowMenu;
 	This scriptEditor;
 	This assistSetting;
 	This actionPicker;
@@ -339,17 +340,22 @@ public This AssistBar(int initialX, int initialY) {
 		return focusedWindow.type == AccessibilityWindowInfo.TYPE_SYSTEM;
 	}
 
-	displayStructure() {
+	displayStructure(AccessibilityWindowInfo window) {
 		Runnable displayMe = new Runnable() {
 			run() {
 				try {
-					log("Displaying Structure Overlay for display " + selectedDisplayId, "INFO", TOP);
+					log("Displaying Structure Overlay for display " + window, "INFO", TOP);
 					removeStructure();
-					AccessibilityWindowInfo focusedWindow = getFocusedWindow(selectedDisplayId);
 					boolean useA11yStructure = true;
 					if (useA11yStructure) remove();
 					This listener = createStructureOverlayListener();
-					structureOverlay = StructureOverlay(listener, useA11yStructure, focusedWindow);
+					structureOverlay = StructureOverlay(listener, useA11yStructure, window);
+					Runnable takeScreenshot = new Runnable() {
+						run() {
+							structureOverlay.takeScreenshot();
+						}
+					};
+					a11Y.execute(takeScreenshot);
 					structureOverlay.show();
 					if (useA11yStructure) show();
 				} catch (e) {
@@ -359,6 +365,18 @@ public This AssistBar(int initialX, int initialY) {
 			}
 		};
 		a11Y.post(displayMe);
+	}
+
+	displayStructure(int displayId) {
+		Thread.sleep(100);
+		AccessibilityWindowInfo focusedWindow = getFocusedWindow(displayId);
+		displayStructure(focusedWindow);
+	}
+
+	displayStructure() {
+		Thread.sleep(100);
+		AccessibilityWindowInfo focusedWindow = getFocusedWindow(selectedDisplayId);
+		displayStructure(focusedWindow);
 	}
 
 	toggleStructure() {
@@ -445,12 +463,25 @@ public This AssistBar(int initialX, int initialY) {
 				onClick(Object display) {
 					TOP.namespace.setVariable("selectedDisplayId", display.getDisplayId(), false);
 					showToast("Selected Display: " + display.getName());
-					TOP.displayStructure();
+					TOP.displayStructure(display.getDisplayId());
 				}
 				return this;
 			}
 			This listener = listener();
 			displayMenu.setOnClickListener(listener);
+		}
+		if (windowMenu == null) {
+			windowMenu = WindowMenu();
+			listener() {
+				onClick(AccessibilityWindowInfo window) {
+					TOP.namespace.setVariable("selectedDisplayId", window.getDisplayId(), false);
+					showToast("Selected Window: " + window.getTitle());
+					TOP.displayStructure(window);
+				}
+				return this;
+			}
+			This listener = listener();
+			windowMenu.setOnClickListener(listener);
 		}
 		if (scriptEditor == null) scriptEditor = ScriptEditor();
 		if (assistSetting == null) assistSetting = AssistSetting();
@@ -464,6 +495,8 @@ public This AssistBar(int initialX, int initialY) {
 		nodeSearch = null;
 		if (displayMenu != null) displayMenu.remove();
 		displayMenu = null;
+		if (windowMenu != null) windowMenu.remove();
+		windowMenu = null;
 		if (scriptEditor != null) scriptEditor.remove();
 		scriptEditor = null;
 		if (assistSetting != null) assistSetting.remove();

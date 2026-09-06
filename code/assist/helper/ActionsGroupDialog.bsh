@@ -13,6 +13,7 @@ ActionsGroupDialog() {
 	}
 	This actionPicker = ActionPicker();
 	This displayMenu = a11Y.assistBar.displayMenu;
+	This windowMenu = a11Y.assistBar.windowMenu;
 	Runnable displayMenuRun = new Runnable() {
 		run() {
 			displayMenu.show();
@@ -43,12 +44,24 @@ ActionsGroupDialog() {
 		}
 	};
 
+	Runnable windowMenuRun = new Runnable() {
+		run() {
+			windowMenu.show();
+		}
+	};
+
 	// title, description, Runnable, Main THread
 	Object[][] Groups = new Object[][] {
 		{
 			"Display",
 			"Select display and capture structure",
 			displayMenuRun,
+			false
+		},
+		{
+			"Window",
+			"Select window and capture structure",
+			windowMenuRun,
 			false
 		},
 		{
