@@ -533,7 +533,7 @@ ActionPicker() {
 	}
 
 	selectUtils() {
-		String[] selectedGroups = new String[] { "main" };
+		String[] selectedGroups = new String[] { "main", "config", "window" };
 		return selectActionsFlow(null, true, selectedGroups);
 	}
 

@@ -1,0 +1,7 @@
+/*
+ * Show debugging information on a toast
+ */
+showDebugToast(boolean state) {
+    A11yConfig.debugInfo = state;
+    return state;
+}

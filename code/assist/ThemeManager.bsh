@@ -30,6 +30,7 @@ import android.graphics.drawable.Drawable;
   ───────────────────────────────────────────────────────────────*/
 ThemeManager(Context ctx) {
 	ContextThemeWrapper THEME;
+	int lastThemeId = 0;
 	/* Wrap context with a theme */
 
 	getWrapperContext() {
@@ -62,7 +63,18 @@ ThemeManager(Context ctx) {
 		Resources res = ctx.getResources();
 		String pkg = ctx.getPackageName();
 		int themeId = res.getIdentifier(identifier, "style", pkg);
-		if (themeId != 0) ctx.setTheme(themeId);
+		if (themeId != 0) {
+			lastThemeId = themeId;
+			ctx.setTheme(themeId);
+		}
+	}
+
+	setThemeWithLast(Context ctx) {
+		ctx.setTheme(lastThemeId);
+	}
+
+	setTheme(int themeId) {
+		ctx.setTheme(themeId);
 	}
 
 	setThemeDark() {
@@ -164,7 +176,7 @@ ThemeManager(Context ctx) {
 			Context taskerContext = useCtx.createPackageContext(pkg, Context.CONTEXT_IGNORE_SECURITY);
 			int resId = taskerContext.getResources().getIdentifier(attrName, "drawable", pkg);
 			if (resId == 0) {
-				log("Resource not found: " + attrName);
+				tasker.log("Resource not found: " + attrName);
 				return null;
 			}
 			return taskerContext.getResources().getDrawable(resId);
@@ -208,12 +220,7 @@ ThemeManager(Context ctx) {
 		return colorInt;
 	}
 
-	int color(String attrName, boolean useFallback) {
-		if (useFallback) {
-			This a11Y = getA11yInstance();
-			return a11Y.materialColorFallback.color(attrName);
-		}
-		
+	int color(String attrName, boolean useFallback) {		
 		Context useCtx = getWrapperContext();
 		Resources res = useCtx.getResources();
 		int attrId = res.getIdentifier(attrName, "attr", useCtx.getPackageName());
@@ -240,6 +247,10 @@ ThemeManager(Context ctx) {
 
 	setAlpha(int color, int alpha) {
 		return (alpha << 24) | (color & 0x00ffffff);
+	}
+
+	dp(int value) {
+		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, ctx.getResources().getDisplayMetrics());
 	}
 
 	return this;

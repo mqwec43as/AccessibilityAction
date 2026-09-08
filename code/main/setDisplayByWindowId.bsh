@@ -10,7 +10,7 @@ import java.util.Iterator;
 setDisplayByWindowId(int windowId)
 **Set Display ID by Window ID**
 Scans all displays for a window matching the provided window ID,
-and saves its corresponding display ID to the global variable 'DISPLAY_ID'.
+and saves its corresponding display ID to the global variable 'A11yConfig.displayId'.
 
 Arguments:
 
@@ -41,7 +41,7 @@ public void setDisplayByWindowId(int windowId) {
 			}
 
 			if (window.getId() == windowId) {
-				DISPLAY_ID = displayId;
+				A11yConfig.displayId = displayId;
 				return;
 			}
 		}

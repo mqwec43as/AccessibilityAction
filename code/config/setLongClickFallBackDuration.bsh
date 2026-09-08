@@ -1,0 +1,7 @@
+/*
+ * Set long click fallback duration
+ */
+setLongClickFallBackDuration(long duration) {
+    A11yConfig.longClickFallBackDuration = duration;
+    return duration;
+}

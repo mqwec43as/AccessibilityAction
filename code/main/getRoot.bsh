@@ -32,7 +32,7 @@ AccessibilityNodeInfo getRoot(int displayId) {
 }
 
 AccessibilityNodeInfo getRoot() {
-	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
 	return getRoot(displayId);
 }
 

@@ -1,0 +1,7 @@
+/*
+ * Set debug mode
+ */
+setDebugMode(boolean debugState) {
+    A11yConfig.debugMe = debugState;
+    return debugState;
+}

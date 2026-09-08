@@ -1,0 +1,8 @@
+
+/*
+ * Resets the window filter
+ */
+resetWindowFilter() {
+    A11yConfig.filterWindowType = 0;
+    return 0;
+}

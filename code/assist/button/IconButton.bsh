@@ -1,0 +1,168 @@
+importCommands("assist");
+
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
+import android.view.GestureDetector;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.view.Display;
+
+import com.google.android.material.button.MaterialButton;
+import com.joaomgcd.taskerm.action.java.JavaCodeException;
+import android.accessibilityservice.AccessibilityService;
+import android.view.accessibility.AccessibilityWindowInfo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import bsh.This;
+
+IconButton(This assistBar) {
+
+	MaterialButton button;
+	This tm = assistBar.tm;
+	ContextThemeWrapper wrapper;
+	int padding = dp(4);
+	String id;
+	int backgroundColor = tm.color("colorPrimary");
+	int iconColor = tm.color("colorOnPrimary");
+	Drawable icon;
+
+	setId(String newId) {
+		if (id == null) id = newId;
+		return this;
+	}
+
+	getContext() {
+		return assistBar.getContext();
+	}
+
+	setIcon(Drawable icon) {
+		if (button == null) build();
+		button.setIcon(icon);
+		super.icon = icon;
+		return this;
+	}
+
+	setIcon(String resourceId) {
+		return setIcon(tm.attr(resourceId));
+	}
+
+	setTemporaryIcon(Drawable icon) {
+		if (button == null) build();
+		button.setIcon(icon);
+		return this;
+	}
+
+	setTemporaryIcon(String resourceId) {
+		return setTemporaryIcon(tm.attr(resourceId));
+	}
+
+	setTemporaryIconColor(int backgroundColor, int iconColor) {
+		if (button == null) build();
+		button.setSupportBackgroundTintList(android.content.res.ColorStateList.valueOf(backgroundColor));
+		button.setIconTint(android.content.res.ColorStateList.valueOf(iconColor));
+		return this;
+	}
+
+	resetIcon() {
+		if (button == null) build();
+		if (super.icon != null) button.setIcon(super.icon);
+		if (backgroundColor != null && iconColor != null) setIconColor(backgroundColor, iconColor);
+		else tasker.showToast("Not reset");
+		return this;
+	}
+
+	setIconColor(int newBackgroundColor, int newIconColor) {
+		if (button == null) build();
+		button.setSupportBackgroundTintList(android.content.res.ColorStateList.valueOf(newBackgroundColor));
+		button.setIconTint(android.content.res.ColorStateList.valueOf(newIconColor));
+	}
+
+	setColorState(boolean isActive) {
+		backgroundColor = tm.color("colorPrimary");
+		iconColor = tm.color("colorOnPrimary");
+		if (!isActive) {
+			backgroundColor = tm.color("colorSecondary");
+			iconColor = tm.color("colorOnSecondary");
+		}
+		setIconColor(backgroundColor, iconColor);
+	}
+
+	setTouchState(boolean isActive, boolean changeColor) {
+		button.setClickable(isActive);
+		if (changeColor) {
+			int stateBackgroundColor = backgroundColor;
+			int stateIconColor = iconColor;
+			if (!isActive) {
+				stateBackgroundColor = Color.TRANSPARENT;
+				stateIconColor = tm.color("colorOnSurface");
+			}
+			setIconColor(stateBackgroundColor, stateIconColor);
+		}
+	}
+
+	setTouchState(boolean isActive) {
+		setTouchState(isActive, true);
+	}
+
+	getContainer() {
+		return assistBar.container;
+	}
+
+	addToContainer() {
+		if (button == null) build();
+		getContainer().addView(button, 0);
+		assistBar.buttons.put(id, super);
+		assistBar.refreshSize();
+		return this;
+	}
+
+	removeFromContainer() {
+		if (button == null) return this;
+		getContainer().removeView(button);
+		return this;
+	}
+
+	getWrapperContext() {
+		return tm.wrapper("Widget.Material3.Button.FilledButton");
+	}
+
+	build() {
+		if (button != null) return this;
+		button = new MaterialButton(getWrapperContext());
+		button.setIconSize(dp(24));
+		button.setIconPadding(0);
+		button.setInsetTop(0);
+		button.setInsetBottom(0);
+		button.setMinimumWidth(0);
+		button.setMinimumHeight(0);
+		button.setWidth(dp(40));
+		button.setHeight(dp(40));
+		button.setPadding(0, 0, 0, 0);
+		button.setGravity(Gravity.CENTER);
+		button.setIconGravity(2);
+		int margin = padding;
+		boolean isFirst = (getContainer().getChildCount() == 0);
+		int rightMargin = isFirst ? 0 : margin;
+		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(40), -1);
+		lp.setMargins(0, 0, rightMargin, 0);
+		button.setLayoutParams(lp);
+		return button;
+	}
+
+	return this;
+}

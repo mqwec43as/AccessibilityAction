@@ -6,6 +6,11 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import android.graphics.drawable.Drawable;
+import java.util.concurrent.ConcurrentHashMap;
+import android.accessibilityservice.AccessibilityService.ScreenshotCallback;
+import android.accessibilityservice.AccessibilityService;
+import io.reactivex.subjects.SingleSubject;
+import java.util.concurrent.TimeUnit;
 
 /*───────────────────────────────────────────────────────────────
   StructureSnapshot(int displayId)
@@ -26,14 +31,133 @@ import android.graphics.drawable.Drawable;
   ───────────────────────────────────────────────────────────────*/
 This StructureSnapshot(int displayId) {
 	This helper = null;
-	Map bitmapMap = new HashMap();
+	Map bitmapMap = new ConcurrentHashMap();
+	This screenshotListener;
 
-	takeScreenshot() {
-		if (helper != null) {
-			helper.recycle();
+	This structureSnapshotListener;
+
+	final int NOT_AVAILABLE = 0;
+	final int TAKING_SCREENSHOT = 1;
+	final int TAKING_SCREENSHOT_COMPLETE = 2;
+	final int SCREENSHOT_RECYCLED = 3;
+
+	int sreentshotState = NOT_AVAILABLE;
+
+	boolean hasOnSuccess() {
+		if (structureSnapshotListener == null) {
+			return false;
 		}
-		helper = takeScreenshot(displayId);
-		return helper;
+		return structureSnapshotListener.namespace.getMethod("onSuccess", new Class[] { This.class }) != null;
+	}
+
+	boolean hasOnError() {
+		if (structureSnapshotListener == null) {
+			return false;
+		}
+		return structureSnapshotListener.namespace.getMethod("onError", new Class[] { int.class }) != null;
+	}
+
+	boolean hasListener() {
+		return structureSnapshotListener != null;
+	}
+
+	addListener(This listener) {
+		structureSnapshotListener = listener;
+	}
+
+	This screenshotListener() {
+		
+		onSuccess(This newHelper) {
+			helper = newHelper;
+			screenshotState = TAKING_SCREENSHOT_COMPLETE;
+			if (hasOnSuccess()) structureSnapshotListener.onSuccess(helper);
+		}
+
+		onError(int errorCode) {
+			screenshotState = NOT_AVAILABLE;
+			if (hasOnError()) structureSnapshotListener.onError(errorCode);
+			switch(errorCode) {
+				/*
+				 * TThe status of taking screenshot is success
+				 */
+				case AccessibilityService.TAKE_SCREENSHOT_SUCCESS:
+					break;
+				
+				/*
+				 * The status of taking screenshot is failure and the reason is internal error.
+				 */
+				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR:
+					break;
+				
+				/*
+				 * The status of taking screenshot is failure and the reason is no accessibility access.
+				 */
+				case AccessibilityService.ERROR_TAKE_SCREENSHOT_NO_ACCESSIBILITY_ACCESS:
+					break;
+				
+				/*
+				 * The status of taking screenshot is failure and the reason is that too little time has
+				 * elapsed since the last screenshot.
+				 */
+				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT:
+					break;
+
+				/*
+				 * The status of taking screenshot is failure and the reason is invalid display Id.
+				 */
+				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY:
+					break;
+
+				/*
+				 * The status of taking screenshot is failure and the reason is invalid accessibility window Id.
+				 */
+				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_WINDOW:
+					break;
+				
+				/*
+				 * The status of taking screenshot is failure and the reason is the window contains secure
+				 * content.
+				 * @see WindowManager.LayoutParams#FLAG_SECURE
+				 */
+				case AccessibilityService.ERROR_TAKE_SCREENSHOT_SECURE_WINDOW:
+					break;
+			}
+		}
+
+		return this;
+	}
+
+	screenshotListener = screenshotListener();
+
+	
+	void takeScreenshot(This newListener) {
+		if (helper != null) {
+			helper;
+			return;
+		}
+		addListener(newListener);
+		screenshotState = TAKING_SCREENSHOT;
+		takeScreenshot(displayId, screenshotListener);
+	}
+	/*
+	 * Triggers/updates full display screenshot
+	 ! Use Single by default and has to be ran on background thread
+	 */
+	void takeScreenshot() {
+		SingleSubject single = SingleSubject.create();
+		listener() {
+			onSuccess(This helper) {
+				single.onSuccess(helper);
+			}
+			
+			onError(int errorCode) {
+				single.onError(new RuntimeException("Screenshot failed with error code: " + errorCode));
+			}
+
+			return this;
+		}
+		takeScreenshot(listener());
+		single.timeout(2000, TimeUnit.MILLISECONDS).blockingGet();
 	}
 
 	getNodeBitmap(AccessibilityNodeInfo node) {
@@ -42,11 +166,12 @@ This StructureSnapshot(int displayId) {
 		}
 		if (helper == null) {
 			takeScreenshot();
+			return null;
 		}
 
 		Integer key = new Integer(node.hashCode());
 		if (bitmapMap.containsKey(key)) {
-			Bitmap cachedBmp = (Bitmap) bitmapMap.get(key);
+			Bitmap cachedBmp = bitmapMap.get(key);
 			if (cachedBmp != null && !cachedBmp.isRecycled()) {
 				return cachedBmp;
 			}
@@ -85,6 +210,19 @@ This StructureSnapshot(int displayId) {
 			}
 		}
 		bitmapMap.clear();
+		screenshotState = SCREENSHOT_RECYCLED;
+	}
+
+	isTakingScreenshot() {
+		return screenshotState == TAKING_SCREENSHOT;
+	}
+
+	isScreenshotRecycled() {
+		return screenshotState == SCREENSHOT_RECYCLED;
+	}
+
+	isScreenshotAvailable() {
+		return screenshotState == TAKING_SCREENSHOT_COMPLETE;
 	}
 
 	return this;

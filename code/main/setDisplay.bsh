@@ -1,7 +1,7 @@
 import android.view.accessibility.AccessibilityWindowInfo;
 
 setDisplay(int displayId) {
-	DISPLAY_ID = displayId;
+	A11yConfig.displayId = displayId;
 	return displayId;
 }
 
@@ -21,13 +21,13 @@ Arguments:
 ───────────────────────────────────────────────────────────────*/
 public int setDisplay(String displayName) {
 	if (displayName == null) {
-		DISPLAY_ID = 0;
+		A11yConfig.displayId = 0;
 		return 0;
 	}
 
 	DisplayManager displayManager = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
 	if (displayManager == null) {
-		DISPLAY_ID = 0;
+		A11yConfig.displayId = 0;
 		return 0;
 	}
 
@@ -40,10 +40,10 @@ public int setDisplay(String displayName) {
 			int displayId = disp.getDisplayId();
 
 			/* Inject variable directly into BeanShell namespace */
-			DISPLAY_ID = displayId;
+			A11yConfig.displayId = displayId;
 			return displayId;
 		}
 	}
-	DISPLAY_ID = 0;
+	A11yConfig.displayId = 0;
 	return 0;
 }

@@ -15,7 +15,7 @@ List getWindows(int displayId) {
 		return windows;
 	}
 	
-	int typeFlag = filterWindowType == void ? 0 : filterWindowType;
+	int typeFlag = A11yConfig == void ? 0 : A11yConfig.filterWindowType;
 	Pattern filterPackageNamePattern = filterWindowPackageName == void ? null : Pattern.compile(filterWindowPackageName);
 
 	if (typeFlag != 0) WindowInfo == void ? WindowInfo() : WindowInfo;
@@ -42,6 +42,6 @@ List getWindows(int displayId) {
 }
 
 List getWindows() {
-	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
 	return getWindows(displayId);
 }

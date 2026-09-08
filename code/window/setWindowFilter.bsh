@@ -1,0 +1,7 @@
+/* 
+ * Sets the window filter
+ */
+setWindowFilter(int windowType) {
+    A11yConfig.filterWindowType = windowType;
+    return windowType;
+}

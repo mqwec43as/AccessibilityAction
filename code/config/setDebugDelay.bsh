@@ -1,0 +1,8 @@
+
+/*
+ * Set debug highlight duration
+ */
+setDebugDelay(long duration) {
+    A11yConfig.debugDelay = duration;
+    return state;
+}

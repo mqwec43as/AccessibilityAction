@@ -1,0 +1,7 @@
+/*
+ * Include node information in logs
+ */
+setLogIncludeNode(boolean state) {
+    A11yConfig.logIncludeNode = state;
+    return state;
+}

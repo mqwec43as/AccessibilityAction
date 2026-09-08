@@ -1,0 +1,7 @@
+/*
+ * Set waiting nodes timeout
+ */
+setWaitTimeout(long duration) {
+    A11yConfig.waitNodesTimeout = duration;
+    return duration;
+}

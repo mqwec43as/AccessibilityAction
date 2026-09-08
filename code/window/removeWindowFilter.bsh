@@ -1,0 +1,7 @@
+/*
+ * Removes the window filter
+ */
+removeWindowFilter(int windowType) {
+    A11yConfig.filterWindowType = A11yConfig.filterWindowType & ~windowType;
+    return A11yConfig.filterWindowType;
+}

@@ -19,7 +19,7 @@ a11Y.set();
     
     log("Running script on display " + displayId + ":\n" + header + script , "INFO", TOP);
     This a11Y = getA11yInstance();
-	a11Y.executor.submit(new Runnable() {
+	a11Y.executeA11y(new Runnable() {
         run() {
             if (delayMs > 0) {
                 wait(delayMs);

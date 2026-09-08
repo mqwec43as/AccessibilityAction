@@ -25,6 +25,7 @@ NodeSearch(This structureOverlay) {
 		onSuccess(Map map) {
             This nodeBox = map.get("nodeBox");
             structure.unhide();
+            Thread.sleep(200);
             structure.activeHighlight(nodeBox);
 		}
 
@@ -51,12 +52,14 @@ NodeSearch(This structureOverlay) {
     This listDialog = ListDialog(config);
 
     loadList() {
+        boolean includeEmpty = a11Y.includeEmptyNodeinSearch;
         for (AccessibilityNodeInfo node: map.keySet()) {
 			This nodeBox = map.get(node);
             if (nodeBox.isHidden()) continue;
             String id = node.viewIdResourceName;
             String text = getText(node);
-            if (id == null && (text == null || text.isEmpty())) continue;
+            boolean empty = id == null && (text == null || text.isEmpty());
+            if (empty && !includeEmpty) continue;
 
             // Add title
 			Map item = new HashMap();
@@ -68,6 +71,7 @@ NodeSearch(This structureOverlay) {
             if (text != null && !text.isEmpty()) contents.add("Text: " + text);
             Point coor = getCoordinates(node);
             contents.add("Coor: " + coor.x + "," + coor.y);
+            contents.add("Depth: " + nodeBox.depth);
             String content = String.join("\n", contents);
 			item.put("subtitle", content);
             item.put("icon", structureOverlay.getNodeDrawable(node));

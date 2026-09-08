@@ -103,6 +103,7 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	This infoToast;
 	This infoDialog;
 	This simpleGesture;
+	int depth;
 
 	if (this.caller.nodeBoxColor != void) DEFAULT_COLOR = this.caller.nodeBoxColor;
 	if (this.caller.nodeBoxStrokeColor != void) DEFAULT_STROKE_COLOR = this.caller.nodeBoxStrokeColor;
@@ -115,6 +116,10 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 
 	getContext() {
 		return nodeContext;
+	}
+
+	setDepth(int newDepth) {
+		depth = newDepth;
 	}
 	
 	updateParams(boolean refreshNode) {
@@ -195,6 +200,7 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 
 	showInfo() {
 		infoToast = InfoToast(node, nodeContext, overlayType);
+		infoToast.addRow("depth", "Depth", depth.toString());
 	}
 
 	removeInfo() {

@@ -21,7 +21,7 @@ import java.util.concurrent.Callable;
 /*────────────────────────────────────────────────────────────────
 tap(double x, double y, long duration)
 Dispatches a tap gesture at the specified coordinates, adapting
-to the targeted display context from DISPLAY_ID.
+to the targeted display context from A11yConfig.displayId.
 
 Arguments:
 
@@ -57,7 +57,7 @@ public boolean tap(double x, double y, long duration) {
 			new GestureDescription.StrokeDescription(path, 0, duration, false);
 
 		GestureDescription gesture =
-			new GestureDescription.Builder().addStroke(stroke).setDisplayId(DISPLAY_ID).build();
+			new GestureDescription.Builder().addStroke(stroke).setDisplayId(A11yConfig.displayId).build();
 
 		HandlerThread handlerThread = new HandlerThread("TapThread");
 		handlerThread.start();

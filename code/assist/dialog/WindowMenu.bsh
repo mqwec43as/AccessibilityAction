@@ -23,10 +23,10 @@ WindowMenu() {
 	This config;
 	This listDialog;
 	This onClickListener;
-	List screenshots = new ArrayList();
 	This WindowInfo = a11Y.WindowInfo;
 	int allowed = WindowInfo.TYPE_SYSTEM | WindowInfo.TYPE_APPLICATION;
     long screenshotDelay = a11Y.screenshotDelay != void ? a11Y.screenshotDelay : 500;
+	Map snapshots = new HashMap();
 
 	loadList() {
 		windowList.clear();
@@ -39,6 +39,16 @@ WindowMenu() {
 		// Loop through all displays windows
 		List windows = new ArrayList();
 		for (int i = 0; i < allDisplaysWindows.size(); i++) {
+			int displayId = allDisplaysWindows.keyAt(i);
+			try {
+				This snapshot = StructureSnapshot(displayId);
+				snapshots.put(displayId, snapshot);
+				snapshot.takeScreenshot();
+				Thread.sleep(screenshotDelay);
+			} catch (e) {
+				log(e.getMessage(), "ERROR", TOP);
+				throw e;
+			}
 			windows.addAll(allDisplaysWindows.valueAt(i));
 		}
 
@@ -48,11 +58,11 @@ WindowMenu() {
 			String title = window.getTitle() == null ? "No Title" : window.getTitle().toString();
 			item.put("title", title);
 
-			int display = window.getDisplayId();
+			int displayId = window.getDisplayId();
 			int id = window.getId();
 			Rect rect = new Rect();
 			window.getBoundsInScreen(rect);
-			String description = "ID: " + id + "\nDisplay: " + display + "\nBounds: " + rect.toString();
+			String description = "ID: " + id + "\nDisplay: " + displayId + "\nBounds: " + rect.toString();
 
 			AccessibilityNodeInfo root = window.getRoot();
 			if (root != null) {
@@ -63,14 +73,12 @@ WindowMenu() {
 			boolean isApplication = WindowInfo.hasFlag(window, WindowInfo.TYPE_APPLICATION);
 			String packageName = window.getRoot() != null ? window.getRoot().getPackageName() : null;
 			boolean isSystemUi = WindowInfo.hasFlag(window, WindowInfo.TYPE_SYSTEM) && "com.android.systemui".equals(packageName);
-			if (isApplication || isSystemUi) {
+			This snapshot = snapshots.get(displayId);
+			
+			if (snapshot != null && root != null) {
 				try {
-					int index = i + 1;
-					This ss = takeScreenshot(window.getId(), window.getDisplayId(), null);
-					screenshots.add(ss);
-					Thread.sleep(screenshotDelay);
-					item.put("icon", ss.getDrawable());
-					tasker.showToast("Loading" + index);
+					Drawable drawable = snapshot.getNodeDrawable(root);
+					item.put("icon", drawable);
 				} catch (e) {
 					tasker.showToast(e.toString());
 				}
@@ -97,7 +105,6 @@ WindowMenu() {
 			if (TOP.onClickListener != null) {
 				Runnable runMe = new Runnable() {
 					run() {
-						log("Running onClickListener", "INFO", TOP);
 						try {
 							if (TOP.namespace.getVariable("onClickListener") != null) {
 								TOP.onClickListener.onClick(window);
@@ -127,18 +134,22 @@ WindowMenu() {
 		onAttach() {}
 
 		onDetach() {
-			for (This ss: screenshots) {
+			Set set = snapshots.keySet();
+			for (int displayId : set) {
 				try {
-					ss.recycle();
-				} catch (e) {}
+					This snapshot = snapshots.get(displayId);
+					snapshot.recycle();
+				} catch (e) {
+					log(e.getMessage(), "ERROR", TOP);
+				}
 			}
+			snapshots.clear();
 		}
 
 		return this;
 	}
 
 	setOnClickListener(This listener) {
-		log("Setting onClickListener", "INFO", TOP);
 		TOP.onClickListener = listener;
 	}
 

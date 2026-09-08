@@ -88,8 +88,10 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	}
 	
 	debugMe = oldDebugMe;
-
-	This parentBox = nodeBoxesMap.get(node.getParent());
+	
+	AccessibilityNodeInfo parent = node.getParent();
+	This parentBox;
+	if (parent != null) parentBox = nodeBoxesMap.get(parent);
 
 	public String getText(int maxLength) {
 		if (text == null || text.length() <= maxLength) {

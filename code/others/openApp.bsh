@@ -27,7 +27,7 @@ openApp(String packageName, String className) {
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
     try {
-        int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+        int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
         if (displayId != 0) {
             ActivityOptions options = ActivityOptions.makeBasic();
             options.setLaunchDisplayId(displayId);
@@ -66,7 +66,7 @@ openApp(String labelOrPackageName) {
     }
 
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+    int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
     try {
         if (displayId != 0) {
             ActivityOptions options = ActivityOptions.makeBasic();
@@ -116,7 +116,7 @@ openApp(String labelOrPackageName, boolean background) {
          * NOTE: This requires Android 5.0 (API 21).
          */
         ActivityOptions options = ActivityOptions.makeTaskLaunchBehind();
-        int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+        int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
         if (displayId != 0) options.setLaunchDisplayId(displayId);
         Bundle optionsBundle = options.toBundle();
         log("launchAppInBackground: Launching " + packageName + " in background.");

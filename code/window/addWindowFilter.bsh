@@ -1,0 +1,7 @@
+/*
+ * Adds the window filter
+ */
+addWindowFilter(int windowType) {
+    if (!hasWindowFilter(windowType)) A11yConfig.filterWindowType = A11yConfig.filterWindowType | windowType;
+    return A11yConfig.filterWindowType;
+}

@@ -34,7 +34,7 @@ import android.view.Display;
 /*────────────────────────────────────────────────────────────────
 gesture(Object[][] points, Paint paint)
 Dispatches a multi-step gesture trail using modern accessibility metrics,
-safely adapting to target displays if defined in DISPLAY_ID.
+safely adapting to target displays if defined in A11yConfig.displayId.
 
 Arguments:
 

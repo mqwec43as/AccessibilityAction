@@ -1,0 +1,99 @@
+import android.graphics.Bitmap;
+import android.graphics.Rect;
+import android.graphics.ColorSpace;
+import java.io.File;
+import java.io.FileOutputStream;
+import bsh.This;
+import android.graphics.drawable.BitmapDrawable;
+import android.content.Context;
+import com.joaomgcd.taskerm.action.java.JavaCodeException;
+
+This ScreenshotHelper(This takeScreenshot, Bitmap bitmap) {
+
+	Context getContext() {
+		return takeScreenshot.getContext();
+	}
+
+	Bitmap getBitmap() {
+		return bitmap;
+	}
+
+    BitmapDrawable getDrawable() {
+		return new BitmapDrawable(getContext().getResources(), bitmap);
+	}
+
+	Bitmap getBitmap(Rect targetBounds, boolean normalize) {
+		Bitmap returnBitmap = null;
+		int bitmapWidth = bitmap.getWidth();
+		int bitmapHeight = bitmap.getHeight();
+		int cropX = targetBounds.left;
+		int cropY = targetBounds.top;
+		int cropWidth = targetBounds.width();
+		int cropHeight = targetBounds.height();
+
+		if (normalize) {
+			cropX = Math.max(0, Math.min(cropX, bitmapWidth - 1));
+			cropY = Math.max(0, Math.min(cropY, bitmapHeight - 1));
+			int cropRight = Math.min(targetBounds.right, bitmapWidth);
+			int cropBottom = Math.min(targetBounds.bottom, bitmapHeight);
+			cropWidth = cropRight - cropX;
+			cropHeight = cropBottom - cropY;
+
+			if (cropWidth <= 0) cropWidth = 1;
+			if (cropHeight <= 0) cropHeight = 1;
+
+			if (cropX + cropWidth > bitmapWidth) {
+				cropWidth = bitmapWidth - cropX;
+			}
+			if (cropY + cropHeight > bitmapHeight) {
+				cropHeight = bitmapHeight - cropY;
+			}
+		}
+
+		try {
+			returnBitmap = Bitmap.createBitmap(bitmap, cropX, cropY, cropWidth, cropHeight);
+		} catch (Exception e) {
+			String message = "Error during cropping Original bitmap: " + bitmapWidth + "x" + bitmapHeight + " to " + cropWidth + "x" + cropHeight + "\n" + e.getMessage();
+			tasker.log(message);
+			throw new RuntimeException(message);
+		}
+		return returnBitmap;
+	}
+
+    Bitmap getBitmap(Rect targetBounds) {
+		return getBitmap(targetBounds, true);
+	}
+
+	void recycle() {
+		try {
+			takeScreenshot.recycle();
+		} catch (Exception e) {
+			tasker.log("Error during recycling: " + e.getMessage());
+		}
+	}
+
+    File saveTo(String path) {
+		FileOutputStream fos = null;
+		try {
+			File file = new File(path);
+			fos = new FileOutputStream(file);
+			bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+			tasker.log("Screenshot saved to: " + path);
+			return file;
+		} catch (e) {
+            String message = "Error during saving screenshot to: " + path + "\n" + e.getMessage();
+            tasker.log(message);
+            throw new JavaCodeException(message);
+        } finally {
+			if (fos != null) {
+				fos.close();
+			}
+		}
+	}
+
+    int getPixelColor(int x, int y) {
+		return bitmap.getPixel(x, y);
+	}
+
+	return this;
+}

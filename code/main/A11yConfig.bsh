@@ -1,0 +1,18 @@
+import bsh.This;
+
+This A11yConfig() {
+    This a11Y = getA11yInstance();
+    a11Y.config.setTo(this);
+    int filterWindowType = 0;
+    boolean includeAllWindows = false;
+    int displayId = 0;
+
+    refresh() {
+        a11Y.config.setTo(super);
+        filterWindowType = 0;
+        includeAllWindows = false;
+        displayId = 0;
+    }
+
+    return this;
+}

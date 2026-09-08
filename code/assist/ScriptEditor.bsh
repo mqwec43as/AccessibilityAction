@@ -78,23 +78,28 @@ ScriptEditor() {
 	a11Y.viewControl.addView(TOP);
 
 	Activity activity;
+	LinearLayout content;
 	TextInputEditText editText;
+	ChipGroup editGroup;
+	ChipGroup displayGroup;
 	FrameLayout baseRoot;
+	This displayInfos;
+	This tm;
 	boolean isRemoved;
 	boolean hasShown;
 	boolean isActionEdit;
 	String codeText;
 	int selectedDisplayId = a11Y.assistBar.selectedDisplayId;
 
-	isActionEdit() {
+	boolean isActionEdit() {
 		return getUsageEvents() { "className" }.equals("net.dinglisch.android.taskerm.ActionEdit");
 	}
 
-	isGenericAction() {
+	boolean isGenericAction() {
 		return getUsageEvents() { "className" }.equals("com.joaomgcd.taskerm.genericaction.ActivityGenericAction");
 	}
 
-	paste(String script, boolean append) {
+	void paste(String script, boolean append) {
 		if (isGenericAction()) {
 			remove();
 			wait(500);
@@ -117,8 +122,18 @@ ScriptEditor() {
 
 	}
 
+	void pasteText() {
+		Runnable pasteRun = new Runnable() {
+			run() {
+				String script = editText.getText().toString();
+				paste(script, true);
+			}
+		};
+		a11Y.execute(pasteRun);
+	}
 
-	copy() {
+
+	void copy() {
 		if (codeText != null) {
 			editText.setText(codeText);
 			return;
@@ -126,14 +141,14 @@ ScriptEditor() {
 		showToast("Not in Java code action" + getUsageEvents() { "className" });
 	}
 
-	remove() {
+	void remove() {
 		if (activity != null) {
 			activity.finish();
 		}
 		isRemoved = true;
 	}
 
-	getLines() {
+	String getLines() {
 		String fullText = editText.getText().toString();
 		int start = editText.getSelectionStart();
 		int end = editText.getSelectionEnd();
@@ -143,15 +158,15 @@ ScriptEditor() {
 		return fullText.substring(lineStart, lineEnd);
 	}
 
-	hasSetDisplay(String script) {
+	boolean hasSetDisplay(String script) {
 		return script.contains("setDisplay(");
 	}
 
-	hasA11y(String script) {
+	boolean hasA11y(String script) {
 		return script.contains("a11Y.set();");
 	}
 
-	appendHeader(String script) {
+	String appendHeader(String script) {
 		script = script.trim();
 		String header = "";
 		if (!hasA11y(script)) {
@@ -166,7 +181,7 @@ ScriptEditor() {
 		return script.trim();
 	}
 
-	sanitize(String script) {
+	String sanitize(String script) {
 		script = script.trim();
 		if (hasA11y(script)) {
 			script = script.replace("a11Y.set();", "");
@@ -174,39 +189,162 @@ ScriptEditor() {
 		return script.trim();
 	}
 
-	activityListener() {
+	void executeText() {
+		Runnable runAll = new Runnable() {
+			run() {
+				String script = editText.getText().toString();
+				remove();
+				runScript(script, 100, selectedDisplayId);
+			}
+		};
+		a11Y.executeA11y(runAll);
+	}
+
+	This activityListener() {
 		// ! Might need to remove later if Tasker allows Activity to not be excluded in recents
 		// Remove when activity is stopped
 		onStopped(ActivityLifecycleEvent event) {
 			event.activity.finish();
 		}
-		
+
 		return this;
 	}
-						
-	layout(Activity act) {
+
+
+	Chip addChip(ChipGroup group, String text, boolean checkAble, View.OnClickListener onClickListener) {
+		Chip chip = new Chip(activity);
+		chip.setText(text);
+		chip.setCheckable(checkAble);
+		chip.setOnClickListener(onClickListener);
+		group.addView(chip);
+		return chip;
+	}
+
+	Chip addEditChip(String text, boolean checkAble, View.OnClickListener onClickListener) {
+		return addChip(editGroup, text, checkAble, onClickListener);
+	}
+
+	Chip addDisplayChip(Display display) {
+		String name = display.getName();
+		View.OnClickListener onClickListener = new View.OnClickListener() {
+			onClick(View view) {
+				view.setChecked(true);
+				selectedDisplayId = display.getDisplayId();
+			}
+		};
+		return addChip(displayGroup, name, true, onClickListener);
+	}
+
+	addEditGroup() {
+		editGroup = new ChipGroup(activity);
+		int spacing = dp(-4);
+		editGroup.setChipSpacingVertical(spacing);
+		content.addView(editGroup);
+
+		// { Chip text, checkable, listener}
+		Object[][] editChips = new Object[][] {
+			{
+				"Run Line",
+				false,
+				new View.OnClickListener() {
+					onClick(View v) {
+						String code = getLines();
+						remove();
+						runScript(code, 100, selectedDisplayId);
+					}
+				}
+			},
+			{
+				"Set to code",
+				false,
+				new View.OnClickListener() {
+					onClick(View v) {
+						pasteText();
+					}
+				}
+			},
+			{
+				"Copy",
+				false,
+				new View.OnClickListener() {
+					onClick(View v) {
+						copy();
+					}
+				}
+			},
+			{
+				"Clear",
+				false,
+				new View.OnClickListener() {
+					onClick(View v) {
+						editText.setText("");
+					}
+				}
+			}
+		};
+
+		for (Object[] chip: editChips) {
+			addEditChip(chip[0], chip[1], chip[2]);
+		}
+	}
+
+	updateDisplayGroup() {
+		if (displayGroup == null) return;
+		
+		displayGroup.removeAllViews();
+		Display[] displays = context.getSystemService(Context.DISPLAY_SERVICE).getDisplays();
+		
+		if (displays.length > 1) {
+			for (Display display: displays) {
+				addDisplayChip(display);
+			}
+			displayGroup.setVisibility(View.VISIBLE);
+			log("Multiple displays detected", "INFO", TOP);
+		} else {
+			displayGroup.setVisibility(View.GONE);
+			log("Single display detected", "INFO", TOP);
+		}
+	}
+
+	addDisplayGroup() {
+		if (displayGroup == null) {
+			addSpacer(activity, content);
+			MaterialTextView runOnTitle = new MaterialTextView(activity);
+			runOnTitle.setText("Target Display");
+			runOnTitle.setTypeface(null, 1);
+			// runOnTitle.setTextSize(ENV.Settings.GROUP_TITLE_TEXT_SIZE);
+			runOnTitle.setTextColor(tm.color("colorPrimary"));
+			content.addView(runOnTitle);
+			displayGroup = new ChipGroup(activity);
+			displayGroup.setSingleSelection(true);
+			content.addView(displayGroup);
+			addSpacer(activity, content);
+		}
+		updateDisplayGroup();
+	}
+
+	void layout(Activity activity) {
+		TOP.activity = activity;
+		tm = ThemeManager(activity);
+		tm.setThemeDark();
+		
 		selectedDisplayId = a11Y.assistBar.selectedDisplayId;
-		activity = act;
+
 		This monitor = SimpleActivityMonitor(activity, activityListener());
 		float density = activity.getResources().getDisplayMetrics().density;
-		This displayInfos = DisplayInfos();
-		Display[] displays = displayInfos.displayManager.getDisplays();
+		displayInfos = DisplayInfos();
 		window = activity.getWindow();
 		window.requestFeature(Window.FEATURE_NO_TITLE);
 		window.setBackgroundDrawableResource(android.R.color.transparent);
-		window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS 
-            | WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS 
-            | WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-        
+		window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
+			WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS |
+			WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+
 		WindowManager.LayoutParams windParams = window.getAttributes();
 		windParams.gravity = Gravity.BOTTOM;
 		windParams.width = WindowManager.LayoutParams.MATCH_PARENT;
 		windParams.dimAmount = 0.5f;
 		window.setAttributes(windParams);
-
-		This tm = ThemeManager(activity);
-		tm.setThemeDark();
-
 		baseRoot = new FrameLayout(activity);
 
 		/* Apply requested shape to baseRoot */
@@ -236,7 +374,7 @@ ScriptEditor() {
 		ScrollView scroller = new ScrollView(activity);
 		scroller.setVerticalScrollBarEnabled(false);
 
-		LinearLayout content = new LinearLayout(activity);
+		content = new LinearLayout(activity);
 		content.setOrientation(LinearLayout.VERTICAL);
 		int p = (int)(20 * density);
 		// 		content.setPadding(p, p, p, p);
@@ -247,7 +385,6 @@ ScriptEditor() {
 		TextInputLayout inputLayout = new TextInputLayout(activity);
 
 		editText = new TextInputEditText(inputLayout.getContext());
-		This a11Y = getA11yInstance();
 		String initialText = "";
 		String startText = (a11Y.scriptEditor != void && a11Y.scriptEditor != null) ? a11Y.scriptEditor : initialText;
 
@@ -268,108 +405,14 @@ ScriptEditor() {
 		content.addView(inputLayout);
 		addSpacer(activity, content);
 
-		ChipGroup chipGroup = new ChipGroup(activity);
-		int spacing = (int) (-4 * density);
-		chipGroup.setChipSpacingVertical(spacing);
-		
-		Chip lineChip = new Chip(activity);
-		lineChip.setText("Run Line");
-		lineChip.setCheckable(false);
-		lineChip.setOnClickListener(new View.OnClickListener() {
-			onClick(View v) {
-				String code = getLines();
-				remove();
-				runScript(code, 100, selectedDisplayId);
-			}
-		});
-		chipGroup.addView(lineChip);
-
-		Chip setChip;
-		Chip copyChip;
-		if (isActionEdit) {
-			setChip = new Chip(activity);
-			setChip.setText("Set to code");
-			setChip.setCheckable(false);
-			setChip.setOnClickListener(new View.OnClickListener() {
-				onClick(View v) {
-					Runnable pasteRun = new Runnable() {
-						run() {
-							String script = editText.getText().toString();
-							paste(script, true);	
-						}
-					};
-					a11Y.execute(pasteRun);
-				}
-			});
-			chipGroup.addView(setChip);
-
-			copyChip = new Chip(activity);
-			copyChip.setText("Copy");
-			copyChip.setOnClickListener(new View.OnClickListener() {
-				onClick(View v) {
-					copy();
-				}
-			});
-			chipGroup.addView(copyChip);
-
-		} else {}
-
-		Chip clearChip = new Chip(activity);
-		clearChip.setText("Clear");
-		clearChip.setCheckable(false);
-		clearChip.setOnClickListener(new View.OnClickListener() {
-			onClick(View v) {
-				editText.setText("");
-			}
-		});
-		chipGroup.addView(clearChip);
-		content.addView(chipGroup);
-
-		ChipGroup displayGroup = new ChipGroup(activity);
-		displayGroup.setSingleSelection(true);
-		if (displays.length > 1) {
-			addSpacer(activity, content);
-			MaterialTextView runOnTitle = new MaterialTextView(activity);
-			runOnTitle.setText("Target Display");
-			runOnTitle.setTypeface(null, 1);
-			// runOnTitle.setTextSize(ENV.Settings.GROUP_TITLE_TEXT_SIZE);
-			runOnTitle.setTextColor(tm.color("colorPrimary"));
-			content.addView(runOnTitle);
-			for(Display display: displays) {
-				Chip displayChip = new Chip(activity);
-				String name = display.getName();
-				int id = display.getDisplayId();
-				displayChip.setText(name);
-				displayChip.setCheckable(true); 
-				if (selectedDisplayId == id) displayChip.setChecked(true);
-				displayChip.setOnClickListener(new View.OnClickListener() {
-					onClick(View v) {
-						displayChip.setChecked(true);
-						selectedDisplayId = id;
-					}
-				});
-				displayGroup.addView(displayChip);
-			}
-			content.addView(displayGroup);
-			log("Multiple displays detected", "INFO", TOP);
-		} else {
-			log("Single display detected", "INFO", TOP);
-		}
-		addSpacer(activity, content);
+		addEditGroup();
+		addDisplayGroup();
 
 		MaterialButton runAllBtn = new MaterialButton(activity);
 		runAllBtn.setText("RUN ALL");
 		runAllBtn.setOnClickListener(new View.OnClickListener() {
 			onClick(View v) {
-				Runnable runAll = new Runnable() {
-					run() {
-						String script = editText.getText().toString();
-						remove();
-						runScript(script, 100, selectedDisplayId);
-					}
-				};
-				a11Y.execute(runAll);
-				
+				executeText();
 			}
 		});
 		content.addView(runAllBtn);
@@ -398,7 +441,7 @@ ScriptEditor() {
 		}
 	};
 
-	show() {
+	void show() {
 		codeText = null;
 		isActionEdit = isActionEdit();
 		boolean oldDebugMe = debugMe;
@@ -423,7 +466,7 @@ ScriptEditor() {
 		}
 	}
 
-	toggle() {
+	void toggle() {
 		if (!hasShown) {
 			show();
 		} else {
@@ -431,26 +474,25 @@ ScriptEditor() {
 		}
 	}
 
-	isAdded() {
+	boolean isAdded() {
 		if (baseRoot == null) return false;
 		return baseRoot.getParent() != null && baseRoot.isAttachedToWindow();
 	}
 
-	isHidden() {
+	boolean isHidden() {
 		if (baseRoot == null) return false;
 		return baseRoot.getVisibility() == View.GONE && isAdded();
 	}
 
-	isShown() {
+	boolean isShown() {
 		if (baseRoot == null) return false;
 		return baseRoot.getVisibility() == View.VISIBLE && isAdded();
 	}
 
-	isRemoved() {
+	boolean isRemoved() {
 		if (baseRoot == null) return false;
 		return !isAdded();
 	}
-
 
 	return this;
 }

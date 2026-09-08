@@ -48,7 +48,7 @@ browseUrl(String url, String labelOrPackageName) {
 
 	/* Service context requires NEW_TASK flag to launch activities. */
 	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
 	if (displayId != 0) {
             ActivityOptions options = ActivityOptions.makeBasic();
             options.setLaunchDisplayId(displayId);

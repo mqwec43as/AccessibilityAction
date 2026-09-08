@@ -1,3 +1,5 @@
+importCommands("window");
+
 import java.util.Iterator;
 import android.view.accessibility.AccessibilityWindowInfo;
 
@@ -19,6 +21,6 @@ List getRoots(int displayId) {
 }
 
 List getRoots() {
-	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
 	return getRoots(displayId);
 }
