@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import com.joaomgcd.taskerm.action.java.ClassImplementation;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
@@ -47,9 +49,10 @@ import android.graphics.PorterDuff;
 import java.util.Collections;
 import java.util.Comparator;
 import com.joaomgcd.taskerm.genericaction.ActivityLifecycleEvent;
+
 /*───────────────────────────────────────────────────────────────
-  ListDialog Component
-  ───────────────────────────────────────────────────────────────*/
+ListDialog Component
+───────────────────────────────────────────────────────────────*/
 ListDialog(This config) {
 
 	Activity activity;
@@ -59,13 +62,15 @@ ListDialog(This config) {
 	ArrayList selectedItems = new ArrayList();
 	This monitor;
 
+	final ExecutorService iconExecutor = Executors.newFixedThreadPool(3);
+
 	String title = config.title == void ? null : config.title;
 	boolean showFilter = config.showFilter == void ? false : config.showFilter;
 	boolean isMulti = config.multiSelect == void ? false : config.multiSelect;
 	List preSelect = config.preSelect == void ? new ArrayList() : config.preSelect;
 	long timeout = config.timeout == void ? 0 : config.timeout;
 	int iconSize = config.iconSize == void ? 40 : config.iconSize;
-	float dimAmount = config.dimAmount == void ? 0.0f : config.dimAmount;
+	float dimAmount = config.dimAmount == void ? 0.0f: config.dimAmount;
 	int themeId = config.themeId == void ? 0 : config.themeId;
 	boolean sort = config.sort == void ? false : config.sort;
 
@@ -117,7 +122,7 @@ ListDialog(This config) {
 		onStopped(ActivityLifecycleEvent event) {
 			event.activity.finish();
 		}
-		
+
 		return this;
 	}
 
@@ -126,6 +131,10 @@ ListDialog(This config) {
 	remove() {
 		if (activity != null) {
 			activity.finish();
+		}
+
+		if (iconExecutor != null && !iconExecutor.isShutdown()) {
+			iconExecutor.shutdown();
 		}
 
 		isRemoved = true;
@@ -173,7 +182,7 @@ ListDialog(This config) {
 			window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
 			lp.dimAmount = dimAmount;
 		}
-		
+
 		window.setAttributes(lp);
 
 		This tm = ThemeManager(activityContext);
@@ -237,10 +246,10 @@ ListDialog(This config) {
 					boolean hasSubtitle = item.containsKey("subtitle");
 					boolean isTitleMatch = item.get("title").equals(pre.get("title"));
 					boolean isSubtitleMatch;
-					
+
 					if (hasSubtitle) isSubtitleMatch = item.get("subtitle").equals(pre.get("subtitle"));
 					if (!isTitleMatch && !isSubtitleMatch) continue;
-					
+
 					boolean isMatch;
 
 					if (hasTitle && hasSubtitle && isTitleMatch && isSubtitleMatch) {
@@ -248,7 +257,7 @@ ListDialog(This config) {
 					} else if (hasTitle && !hasSubtitle && isTitleMatch) {
 						isMatch = true;
 					}
-					
+
 					if (!selectedItems.contains(item) && isMatch) {
 						selectedItems.add(item);
 						break;
@@ -274,6 +283,8 @@ ListDialog(This config) {
 					Drawable iconDrawable = itemData.get("icon");
 					String iconPath = itemData.get("iconPath");
 					This iconThis = itemData.get("iconThis");
+					Object getIconObj = itemData.get("getIcon");
+					boolean hasGetIcon = getIconObj != null && getIconObj != void && (getIconObj instanceof Callable);
 					boolean hasIcon = iconDrawable != null && iconDrawable != void;
 					boolean hasIconPath = iconPath != null && !iconPath.equals("");
 
@@ -321,6 +332,8 @@ ListDialog(This config) {
 						subtitleTextView = (TextView) itemLayout.getChildAt(1);
 					}
 
+					iconView.setTag(itemData);
+
 					titleTextView.setText((String) itemData.get("title"));
 					subtitleTextView.setText(hasSub ? sub.toString() : "");
 					subtitleTextView.setVisibility(hasSub ? View.VISIBLE : View.GONE);
@@ -341,9 +354,48 @@ ListDialog(This config) {
 					if (hasIcon) {
 						try {
 							iconView.setImageDrawable((Drawable) iconDrawable);
+							iconView.setVisibility(View.VISIBLE);
 						} catch (Exception e) {
 							// iconView.setImageDrawable(null);
 							iconView.setVisibility(View.GONE);
+						}
+					} else if (hasGetIcon) {
+						iconView.setVisibility(View.VISIBLE);
+						Boolean isLoading = itemData.get("isLoadingIcon");
+						if (isLoading == null || !isLoading.booleanValue()) {
+							if (iconExecutor != null && !iconExecutor.isShutdown()) {
+								try {
+									itemData.put("isLoadingIcon", true);
+									final Callable iconCallable = (Callable) getIconObj;
+									iconExecutor.submit(new Runnable() {
+										run() {
+											try {
+												final Drawable loadedIcon = iconCallable.call();
+												if (loadedIcon != null) {
+													itemData.put("icon", loadedIcon);
+													if (activity != null) {
+														activity.runOnUiThread(new Runnable() {
+															run() {
+																if (iconView.getTag() == itemData) {
+																	iconView.setImageDrawable(loadedIcon);
+																	iconView.setVisibility(View.VISIBLE);
+																}
+															}
+														});
+													}
+												}
+											} catch (Exception e) {
+												/* Ignore icon retrieval errors */
+											} finally {
+												itemData.put("isLoadingIcon", false);
+											}
+										}
+									});
+								} catch (e) {
+									log(e.getMessage(), "ERROR", TOP);
+									itemData.put("isLoadingIcon", false);
+								}
+							}
 						}
 					} else if (hasIconPath) {
 						listener() {
@@ -355,8 +407,7 @@ ListDialog(This config) {
 							return this;
 						}
 						loadSvgIcon(activityContext, iconPath, listener());
-					}
-					else if ("app".equals(itemData.get("type")) && sub != null) {
+					} else if ("app".equals(itemData.get("type")) && sub != null) {
 						iconView.setVisibility(0);
 						Drawable dr = (Drawable) iconCache.get(sub.toString());
 						if (dr == null) {
@@ -394,6 +445,7 @@ ListDialog(This config) {
 				remove();
 			}
 		});
+
 		buttonsContainer.addView(cBtn);
 
 		if (isMulti) {
@@ -431,10 +483,24 @@ ListDialog(This config) {
 					adapter.notifyDataSetChanged();
 				} else {
 					remove();
+					clicked.put("longClick", false);
 					if (hasSuccess) config.onSuccess(clicked);
 				}
 			}
 		});
+
+		if (!isMulti) {
+			listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+				onItemLongClick(AdapterView p, View v, int pos, long id) {
+					remove();
+					Map clicked = filteredList.get(pos);
+					clicked.put("index", pos);
+					clicked.put("longClick", true);
+					if (hasSuccess) config.onSuccess(clicked);
+					return true;
+				}
+			});
+		}
 
 		if (filterInput != null) {
 			filterInput.addTextChangedListener(new TextWatcher() {
@@ -471,7 +537,6 @@ ListDialog(This config) {
 				if (hasDetach) config.onDetach();
 			}
 		});
-
 
 	}
 
@@ -517,4 +582,5 @@ ListDialog(This config) {
 	}
 
 	return this;
+
 }

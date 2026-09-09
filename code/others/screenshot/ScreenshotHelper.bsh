@@ -64,6 +64,10 @@ This ScreenshotHelper(This takeScreenshot, Bitmap bitmap) {
 		return getBitmap(targetBounds, true);
 	}
 
+	Drawable getDrawable(Rect targetBounds) {
+		return new BitmapDrawable(getContext().getResources(), getBitmap(targetBounds));
+	}
+
 	void recycle() {
 		try {
 			takeScreenshot.recycle();

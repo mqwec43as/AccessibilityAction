@@ -54,6 +54,7 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	This a11Y = getA11yInstance();
 	final int WINDOW_TYPE = ENV.Layout.TYPE_NODE_BOX;
 	a11Y.viewControl.addView(TOP);
+	int hashCode = node.hashCode();
 
 	setAlpha(int color, int alpha) {
 		return (alpha << 24) | (color & 0x00ffffff);

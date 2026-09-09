@@ -1,0 +1,7 @@
+/*
+ * Includes IME window WindowInfo.TYPE_INPUT_METHOD
+ */
+includeInputWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return addWindowFilter(WindowInfo.TYPE_INPUT_METHOD);
+}

@@ -97,7 +97,9 @@ DisplayMenu() {
 			for (This ss: screenshots) {
 				try {
 					ss.recycle();
-				} catch (e) {}
+				} catch (e) {
+					log(e.getMessage(), "ERROR", TOP);
+				}
 			}
 		}
 

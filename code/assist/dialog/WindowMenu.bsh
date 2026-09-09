@@ -9,6 +9,9 @@ import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.graphics.Color;
 import android.graphics.drawable.Drawable;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 
 /*───────────────────────────────────────────────────────────────
@@ -24,9 +27,8 @@ WindowMenu() {
 	This listDialog;
 	This onClickListener;
 	This WindowInfo = a11Y.WindowInfo;
-	int allowed = WindowInfo.TYPE_SYSTEM | WindowInfo.TYPE_APPLICATION;
     long screenshotDelay = a11Y.screenshotDelay != void ? a11Y.screenshotDelay : 500;
-	Map snapshots = new HashMap();
+	Map snapshots = new ConcurrentHashMap();
 
 	loadList() {
 		windowList.clear();
@@ -76,12 +78,13 @@ WindowMenu() {
 			This snapshot = snapshots.get(displayId);
 			
 			if (snapshot != null && root != null) {
-				try {
-					Drawable drawable = snapshot.getNodeDrawable(root);
-					item.put("icon", drawable);
-				} catch (e) {
-					tasker.showToast(e.toString());
-				}
+				int key = root.hashCode();
+				Callable getIcon = new Callable() {
+					call() {
+						return snapshot.getDrawable(key, rect);
+					}
+				};
+				item.put("getIcon", getIcon);
 			} else {
 				Drawable emptyDrawable = new ColorDrawable(Color.TRANSPARENT);
 				item.put("icon", emptyDrawable);

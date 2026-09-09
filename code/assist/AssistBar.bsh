@@ -61,6 +61,7 @@ public This AssistBar(int initialX, int initialY) {
 	final int OPENING_ACTIONS_GROUP = 7;
 
 	int state = ACTIVITY_NONE;
+	int mode = CAPTURE_MODE;
 
 	This AssistInfo = AssistInfo();
 	final This TOP = this;
@@ -80,7 +81,7 @@ public This AssistBar(int initialX, int initialY) {
 	int assistOverlayType = useA11y ?
 		WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY :
 		WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-	FrameLayout assistButton;
+	FrameLayout assistBar;
 	WindowManager.LayoutParams assistParams;
 	int screenheight;
 	DisplayMetrics displayMetrics;
@@ -122,7 +123,7 @@ public This AssistBar(int initialX, int initialY) {
 		screenheight = displayMetrics.heightPixels;
 
 		/* ROOT & CONTAINER SETUP */
-		assistButton = new FrameLayout(assistContext);
+		assistBar = new FrameLayout(assistContext);
 		container = new LinearLayout(assistContext);
 		container.setOrientation(LinearLayout.HORIZONTAL);
 
@@ -135,7 +136,7 @@ public This AssistBar(int initialX, int initialY) {
 
 		FrameLayout.LayoutParams containerParams = new FrameLayout.LayoutParams(-2, -2);
 		container.setLayoutParams(containerParams);
-		assistButton.addView(container);
+		assistBar.addView(container);
 
 		container.setOnHierarchyChangeListener(new ViewGroup.OnHierarchyChangeListener() {
 			public void onChildViewAdded(View parent, View child) {
@@ -180,10 +181,12 @@ public This AssistBar(int initialX, int initialY) {
 		}
 		switch (mode) {
 			case CAPTURE_MODE:
+				super.mode = CAPTURE_MODE;
 				handleBtn.resetIcon();
 				handleBtn.setTouchState(state);
 				break;
 			case DELETE_CAPTURE_MODE:
+				super.mode = DELETE_CAPTURE_MODE;
 				handleBtn.setTemporaryIcon(AssistInfo.DELETE_ICON);
 				handleBtn.setTouchState(state);
 				if (state) {
@@ -233,7 +236,7 @@ public This AssistBar(int initialX, int initialY) {
 
 		if (!isShown) return;
 		try {
-			windowManager.updateViewLayout(assistButton, (WindowManager.LayoutParams) assistParams);
+			windowManager.updateViewLayout(assistBar, (WindowManager.LayoutParams) assistParams);
 		} catch (e) {}
 	}
 
@@ -352,6 +355,20 @@ public This AssistBar(int initialX, int initialY) {
 		return;
 	}
 
+	isDialogsShowing() {
+		boolean settingShowing = assistSetting != null && assistSetting.isShown();
+		boolean filterShowing = filterSheet != null && filterSheet.isShown();
+		boolean nodeSearchShowing = nodeSearch != null && nodeSearch.isShown();
+		boolean scriptEditorShowing = scriptEditor != null && scriptEditor.isShown();
+		return settingShowing || filterShowing || nodeSearchShowing || scriptEditorShowing;
+	}
+
+	removeDialogs() {
+		if (assistSetting != null && assistSetting.isShown()) assistSetting.remove();
+		if (filterSheet != null && filterSheet.isShown()) filterSheet.remove();
+		if (nodeSearch != null && nodeSearch.isShown()) nodeSearch.remove();
+		if (scriptEditor != null && scriptEditor.isShown()) scriptEditor.remove();
+	}
 
 	/*────────────────────────────
 	  Search Utils
@@ -495,20 +512,26 @@ public This AssistBar(int initialX, int initialY) {
 
 	toggleStructure() {
 		try {
+			// Remove Any Dialogs
+			if (isDialogsShowing()) {
+				showToast("Press again after dialogs are closed");
+				assistBar.performHapticFeedback(HapticFeedbackConstants.REJECT);
+				removeDialogs();
+				return;
+			}
+
 			if (structureOverlay == null) {
 				log("Displaying Structure Overlay From Toggle because null", "INFO", this);
-				scriptEditor.remove();
 				displayStructure();
 			}
 
-			else if (structureOverlay.isShown()) {
+			else if (structureOverlay.isShown() || structureOverlay.isHidden() || mode == DELETE_CAPTURE_MODE) {
 				structureOverlay.remove();
 				log("Removing Structure Overlay From Toggle", "INFO", this);
 			}
 
 			else {
 				log("Displaying Structure Overlay From Toggle" + structureOverlay.isRemoved(), "INFO", this);
-				scriptEditor.remove();
 				displayStructure();
 			}
 
@@ -577,26 +600,14 @@ public This AssistBar(int initialX, int initialY) {
 		onScreenshotSuccess(This screenshotHelper) {
 			setHandleMode(DELETE_CAPTURE_MODE, false);
 			This searchBtn = getIconButton(AssistInfo.SEARCH_BUTTON);
-			Runnable takeScreenshot = new Runnable() {
-				run() {
-					// * Take screenshot here after the structure overlay is attached
-					structureOverlay.cacheScreenshot();
-					Runnable runMe = new Runnable() {
-						run() {
-							searchBtn.setTouchState(true);
-							if (structureOverlay.isShown()) {
-								setHandleMode(DELETE_CAPTURE_MODE, true);
-								super.state = ACTIVITY_NONE;
-							} else {
-								setHandleMode(CAPTURE_MODE, true);
-								screenshotHelper.recycle();
-							}
-						}
-					};
-					a11Y.post(runMe);
-				}
-			};
-			a11Y.execute(takeScreenshot);
+			searchBtn.setTouchState(true);
+			if (structureOverlay.isShown()) {
+				setHandleMode(DELETE_CAPTURE_MODE, true);
+				super.state = ACTIVITY_NONE;
+			} else {
+				setHandleMode(CAPTURE_MODE, true);
+				screenshotHelper.recycle();
+			}
 		}
 
 		return this;
@@ -657,7 +668,7 @@ public This AssistBar(int initialX, int initialY) {
 	────────────────────────────*/
 	handleListener() {
 		onLongPress() {
-			assistButton.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+			assistBar.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
 			Runnable runMe = new Runnable() {
 				run() {
 					removeStructure();
@@ -668,7 +679,7 @@ public This AssistBar(int initialX, int initialY) {
 			a11Y.execute(runMe);
 		}
 		onSingleTapConfirmed() {
-			assistButton.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
+			assistBar.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
 			toggleStructure();
 		}
 		onDoubleTap() {
@@ -683,7 +694,7 @@ public This AssistBar(int initialX, int initialY) {
 		assistParams.x = x;
 		assistParams.y = y;
 		try {
-			windowManager.updateViewLayout(assistButton, assistParams);
+			windowManager.updateViewLayout(assistBar, assistParams);
 		} catch (e) {}
 	}
 
@@ -691,7 +702,7 @@ public This AssistBar(int initialX, int initialY) {
 		switch (event.getAction()) {
 			case 0: // ACTION_DOWN
 				int[] loc = new int[2];
-				assistButton.getLocationOnScreen(loc);
+				assistBar.getLocationOnScreen(loc);
 				initialWinX = loc[0];
 				initialWinY = loc[1];
 				assistParams.x = initialWinX;
@@ -721,14 +732,14 @@ public This AssistBar(int initialX, int initialY) {
 			});
 		}
 
-		assistButton.setOnTouchListener(new View.OnTouchListener() {
+		assistBar.setOnTouchListener(new View.OnTouchListener() {
 			onTouch(View view, MotionEvent event) {
 				onMove(view, event);
 				return false;
 			}
 		});
 
-		assistButton.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+		assistBar.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {
 				try {
 					hasShownOnce = true;
@@ -755,35 +766,35 @@ public This AssistBar(int initialX, int initialY) {
 	}
 
 	isAdded() {
-		if (assistButton == null) return false;
-		return assistButton.getParent() != null && assistButton.isAttachedToWindow();
+		if (assistBar == null) return false;
+		return assistBar.getParent() != null && assistBar.isAttachedToWindow();
 	}
 
 	isHidden() {
-		if (assistButton == null) return false;
-		return assistButton.getVisibility() == View.GONE && isAdded();
+		if (assistBar == null) return false;
+		return assistBar.getVisibility() == View.GONE && isAdded();
 	}
 
 	isShown() {
-		if (assistButton == null) return false;
-		return assistButton.getVisibility() == View.VISIBLE && isAdded();
+		if (assistBar == null) return false;
+		return assistBar.getVisibility() == View.VISIBLE && isAdded();
 	}
 
 	isRemoved() {
-		if (assistButton == null) return false;
+		if (assistBar == null) return false;
 		return !isAdded();
 	}
 
 	remove() {
 		removeStructure();
 		stuctureOverlay = null;
-		if (isShown) windowManager.removeView(assistButton);
+		if (isShown()) windowManager.removeView(assistBar);
 		isShown = false;
 		a11Y.clean();
 	}
 
 	show() {
-		if (assistButton == null) {
+		if (assistBar == null) {
 			create();
 			addButtons();
 			addListenerAndGesture();
@@ -793,10 +804,10 @@ public This AssistBar(int initialX, int initialY) {
 				if (detector == null && handleGesture != null) {
 					detector = handleGesture.getDetector();
 				}
-				windowManager.addView(assistButton, assistParams);
+				windowManager.addView(assistBar, assistParams);
 			}
 		};
-		if (!isShown) mainHandler.post(displayOverlay);
+		if (!isShown()) mainHandler.post(displayOverlay);
 	}
 
 	return this;

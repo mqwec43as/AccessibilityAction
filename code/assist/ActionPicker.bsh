@@ -485,7 +485,7 @@ ActionPicker() {
 
 		boolean appended;
 		String text = "Stored to editor.";
-		if (actionPickerAddToEditor != void && actionPickerAddToEditor) {
+		if (a11Y.actionPickerAddToEditor != void && a11Y.actionPickerAddToEditor) {
 			if (a11Y.scriptEditor.length() > 0) a11Y.scriptEditor += "\n\n";
 			a11Y.scriptEditor += finalOverload.get("usage");
 			List notReplaced = (List) finalOverload.get("notReplacedParams");
@@ -496,7 +496,7 @@ ActionPicker() {
 				appended = true;
 				a11Y.lastActionPickerReminder = System.currentTimeMillis();
 			}
-		} else if (actionPickerAddToEditor != void && !actionPickerAddToEditor) {
+		} else if (a11Y.actionPickerAddToEditor != void && !a11Y.actionPickerAddToEditor) {
 			log("Copy to clipboard", "INFO", TOP);
 			setClipboard((String) finalOverload.get("usage"));
 			showToast("Copy to clipboard");

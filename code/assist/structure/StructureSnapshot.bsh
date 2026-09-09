@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
    - displayId → Logical display ID to capture
 
   Returns:
-   - This → Scripted helper object with screenshot and Map utilities.
+   - This → Scripted screenshotHelper object with screenshot and Map utilities.
 
   Helper:
    - takeScreenshot()                   → Triggers/updates full display screenshot.
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
    - recycle()                            → Recycles base screenshot and all mapped node Bitmaps.
   ───────────────────────────────────────────────────────────────*/
 This StructureSnapshot(int displayId) {
-	This helper = null;
+	This screenshotHelper = null;
 	Map bitmapMap = new ConcurrentHashMap();
 	This screenshotListener;
 
@@ -66,59 +66,59 @@ This StructureSnapshot(int displayId) {
 	}
 
 	This screenshotListener() {
-		
+
 		onSuccess(This newHelper) {
-			helper = newHelper;
+			screenshotHelper = newHelper;
 			screenshotState = TAKING_SCREENSHOT_COMPLETE;
-			if (hasOnSuccess()) structureSnapshotListener.onSuccess(helper);
+			if (hasOnSuccess()) structureSnapshotListener.onSuccess(screenshotHelper);
 		}
 
 		onError(int errorCode) {
 			screenshotState = NOT_AVAILABLE;
 			if (hasOnError()) structureSnapshotListener.onError(errorCode);
-			switch(errorCode) {
+			switch (errorCode) {
 				/*
 				 * TThe status of taking screenshot is success
 				 */
 				case AccessibilityService.TAKE_SCREENSHOT_SUCCESS:
 					break;
-				
-				/*
-				 * The status of taking screenshot is failure and the reason is internal error.
-				 */
+
+					/*
+					 * The status of taking screenshot is failure and the reason is internal error.
+					 */
 				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR:
 					break;
-				
-				/*
-				 * The status of taking screenshot is failure and the reason is no accessibility access.
-				 */
+
+					/*
+					 * The status of taking screenshot is failure and the reason is no accessibility access.
+					 */
 				case AccessibilityService.ERROR_TAKE_SCREENSHOT_NO_ACCESSIBILITY_ACCESS:
 					break;
-				
-				/*
-				 * The status of taking screenshot is failure and the reason is that too little time has
-				 * elapsed since the last screenshot.
-				 */
+
+					/*
+					 * The status of taking screenshot is failure and the reason is that too little time has
+					 * elapsed since the last screenshot.
+					 */
 				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT:
 					break;
 
-				/*
-				 * The status of taking screenshot is failure and the reason is invalid display Id.
-				 */
+					/*
+					 * The status of taking screenshot is failure and the reason is invalid display Id.
+					 */
 				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY:
 					break;
 
-				/*
-				 * The status of taking screenshot is failure and the reason is invalid accessibility window Id.
-				 */
+					/*
+					 * The status of taking screenshot is failure and the reason is invalid accessibility window Id.
+					 */
 				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_WINDOW:
 					break;
-				
-				/*
-				 * The status of taking screenshot is failure and the reason is the window contains secure
-				 * content.
-				 * @see WindowManager.LayoutParams#FLAG_SECURE
-				 */
+
+					/*
+					 * The status of taking screenshot is failure and the reason is the window contains secure
+					 * content.
+					 * @see WindowManager.LayoutParams#FLAG_SECURE
+					 */
 				case AccessibilityService.ERROR_TAKE_SCREENSHOT_SECURE_WINDOW:
 					break;
 			}
@@ -129,10 +129,10 @@ This StructureSnapshot(int displayId) {
 
 	screenshotListener = screenshotListener();
 
-	
+
 	void takeScreenshot(This newListener) {
-		if (helper != null) {
-			helper;
+		if (screenshotHelper != null) {
+			screenshotHelper;
 			return;
 		}
 		addListener(newListener);
@@ -146,10 +146,10 @@ This StructureSnapshot(int displayId) {
 	void takeScreenshot() {
 		SingleSubject single = SingleSubject.create();
 		listener() {
-			onSuccess(This helper) {
-				single.onSuccess(helper);
+			onSuccess(This screenshotHelper) {
+				single.onSuccess(screenshotHelper);
 			}
-			
+
 			onError(int errorCode) {
 				single.onError(new RuntimeException("Screenshot failed with error code: " + errorCode));
 			}
@@ -160,44 +160,83 @@ This StructureSnapshot(int displayId) {
 		single.timeout(2000, TimeUnit.MILLISECONDS).blockingGet();
 	}
 
-	getNodeBitmap(AccessibilityNodeInfo node) {
-		if (node == null) {
-			return null;
-		}
-		if (helper == null) {
+	getBitmap(int key, Rect targetBounds) {
+		if (screenshotHelper == null) {
 			takeScreenshot();
 			return null;
 		}
-
-		Integer key = new Integer(node.hashCode());
 		if (bitmapMap.containsKey(key)) {
 			Bitmap cachedBmp = bitmapMap.get(key);
 			if (cachedBmp != null && !cachedBmp.isRecycled()) {
 				return cachedBmp;
 			}
 		}
-
-		Rect bounds = new Rect();
-		node.getBoundsInScreen(bounds);
-		Bitmap bmp = helper.getBitmap(bounds);
+		Bitmap bmp = screenshotHelper.getBitmap(targetBounds);
 		if (bmp != null) {
 			bitmapMap.put(key, bmp);
 		}
 		return bmp;
 	}
 
-    getNodeDrawable(AccessibilityNodeInfo node) {
-        Bitmap bmp = getNodeBitmap(node);
-        if (bmp != null) {
-            return new BitmapDrawable(helper.getContext().getResources(), bmp);
-        }
-        return null;
-    }
+	getDrawable(int key, Rect targetBounds) {
+		Bitmap bmp = getBitmap(key, targetBounds);
+		if (bmp != null) {
+			return new BitmapDrawable(screenshotHelper.getContext().getResources(), bmp);
+		}
+		return null;
+	}
+
+	getNodeBitmap(AccessibilityNodeInfo node) {
+		if (node == null) {
+			return null;
+		}
+		if (screenshotHelper == null) {
+			takeScreenshot();
+			return null;
+		}
+
+		int key = node.hashCode();
+		Rect bounds = new Rect();
+		node.getBoundsInScreen(bounds);
+		Bitmap bmp = getBitmap(key, bounds);
+		return bmp;
+	}
+
+	getNodeDrawable(AccessibilityNodeInfo node) {
+		Bitmap bmp = getNodeBitmap(node);
+		if (bmp != null) {
+			return new BitmapDrawable(screenshotHelper.getContext().getResources(), bmp);
+		}
+		return null;
+	}
+
+	getNodeBoxBitmap(This nodebox) {
+		if (nodebox == null) {
+			return null;
+		}
+		if (screenshotHelper == null) {
+			takeScreenshot();
+			return null;
+		}
+
+		int key = nodebox.hashCode;
+		Rect bounds = nodebox.bounds;
+		Bitmap bmp = getBitmap(key, bounds);
+		return bmp;
+	}
+
+	getNodeBoxDrawable(This nodebox) {
+		Bitmap bmp = getNodeBoxBitmap(nodebox);
+		if (bmp != null) {
+			return new BitmapDrawable(screenshotHelper.getContext().getResources(), bmp);
+		}
+		return null;
+	}
 
 	recycle() {
-		if (helper != null) {
-			helper.recycle();
-			helper = null;
+		if (screenshotHelper != null) {
+			screenshotHelper.recycle();
+			screenshotHelper = null;
 		}
 		Iterator iterator = bitmapMap.values().iterator();
 		while (iterator.hasNext()) {

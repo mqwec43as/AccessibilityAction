@@ -1,6 +1,7 @@
 import android.util.SparseArray;
 import java.util.Iterator;
 import java.util.regex.Pattern;
+import android.view.accessibility.AccessibilityWindowInfo;
 
 /* ───────────────────────────────────────────────────────────────
  * Get all windows for a display
@@ -15,21 +16,16 @@ List getWindows(int displayId) {
 		return windows;
 	}
 	
-	int typeFlag = A11yConfig == void ? 0 : A11yConfig.filterWindowType;
+	if (WindowInfo == void) WindowInfo = WindowInfo();
+	
+	int typeFlag = A11yConfig == void ? WindowInfo.TYPE_NONE : A11yConfig.filterWindowType;
 	Pattern filterPackageNamePattern = filterWindowPackageName == void ? null : Pattern.compile(filterWindowPackageName);
 
-	if (typeFlag != 0) WindowInfo == void ? WindowInfo() : WindowInfo;
-	
 	List displayWindows = allDisplaysWindows.get(displayId);
 	if (displayWindows != null) {
-		if (typeFlag != 0) {
+		if (typeFlag != WindowInfo.TYPE_NONE) {
 			for(AccessibilityWindowInfo window: displayWindows) {
-				if (WindowInfo.hasFlag(window, typeFlag)) {
-					if (filterPackageNamePattern != null) {
-						String packageName = window.getRoot().getPackageName();
-						if (packageName == null) continue;
-						if (!filterPackageNamePattern.matcher(packageName).matches()) continue;
-					}
+				if (A11yConfig.IsWindowMatchFilter(window)) {
 					windows.add(window);
 				}				
 			}

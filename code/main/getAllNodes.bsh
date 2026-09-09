@@ -36,7 +36,7 @@ List getAllNodes(AccessibilityNodeInfo node) {
 
 List getAllNodes() {
 	List roots = new ArrayList();
-	if (A11yConfig != void && A11yConfig.includeAllWindows) {
+	if (A11yConfig != void && A11yConfig.hasWindowFilter()) {
 		roots.addAll(getRoots());
 	} else {
 		AccessibilityNodeInfo root = getRoot();

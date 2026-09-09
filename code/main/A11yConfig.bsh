@@ -1,17 +1,47 @@
 import bsh.This;
+import java.util.regex.Pattern;
+import android.view.accessibility.AccessibilityWindowInfo;
 
 This A11yConfig() {
     This a11Y = getA11yInstance();
     a11Y.config.setTo(this);
     int filterWindowType = 0;
-    boolean includeAllWindows = false;
     int displayId = 0;
+    Pattern filterPackageName;
 
     refresh() {
         a11Y.config.setTo(super);
         filterWindowType = 0;
-        includeAllWindows = false;
         displayId = 0;
+        filterPackageName = null;
+    }
+
+    hasWindowFilter() {
+        return filterWindowType != WindowInfo.TYPE_NONE;
+    }
+
+    setPackageNamePattern(String pattern) {
+        filterPackageName = pattern == null && pattern.isEmpty() ? null : Pattern.compile(pattern);
+    }
+
+    hasPackageNamePattern() {
+        return filterPackageName != null;
+    }
+
+    IsWindowMatchFilter(AccessibilityWindowInfo window) {
+        boolean isMatch = true;
+        
+        if (hasWindowFilter()) {
+            isMatch = WindowInfo.hasFlag(window, filterWindowType);
+        }
+
+        if (isMatch && hasPackageNamePattern()) {
+            String packageName = window.getRoot().getPackageName();
+            if (packageName == null) return false;
+            isMatch = filterPackageName.matcher(packageName).matches();
+        }
+
+        return isMatch;
     }
 
     return this;

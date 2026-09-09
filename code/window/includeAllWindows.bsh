@@ -1,0 +1,7 @@
+/*
+ * Includes all window types
+ */
+includeAllWindows() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return setWindowFilter(WindowInfo.TYPE_ALL_WINDOWS);
+}

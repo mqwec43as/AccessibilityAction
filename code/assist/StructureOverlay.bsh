@@ -114,7 +114,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 	}
 
 	int flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_FULLSCREEN;
-	
+
 	final FrameLayout rootLayout = new FrameLayout(context);
 	WindowManager.LayoutParams rootParams = new WindowManager.LayoutParams(
 		WindowManager.LayoutParams.MATCH_PARENT,
@@ -379,33 +379,34 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 			vibrate(nodeBox.view);
 			addHistory(nodeBox);
 			if (getA11yInstance().quickAddMode) {
-				This nodeData = SimilarNodes(root, map, nodeBox);
-				remove();
-				a11Y.execute(new Runnable() {
-					run() {
-						try {
-							getA11yInstance().set();
-							if (a11Y.assistBar == null) return;
-							if (a11Y.assistBar.actionPicker == null) return;
-							Map result = a11Y.assistBar.actionPicker.selectNodeActions(nodeData);
-							if (result != null) {
-								a11Y.selectedAction = result;
-							}
-						} catch (e) {
-							log(e.getMessage(), "ERROR", TOP);
-						}
-
-					}
-				});
+				openActionPicker(nodeBox);
 			} else {
 				activeHighlight(nodeBox);
 				nodeBox.showDialog();
 			}
-
 		}
 		return this;
 	}
 
+	openActionPicker(This nodeBox) {
+		This nodeData = SimilarNodes(root, map, nodeBox);
+		remove();
+		a11Y.execute(new Runnable() {
+			run() {
+				try {
+					getA11yInstance().set();
+					if (a11Y.assistBar == null) return;
+					if (a11Y.assistBar.actionPicker == null) return;
+					Map result = a11Y.assistBar.actionPicker.selectNodeActions(nodeData);
+					if (result != null) {
+						a11Y.selectedAction = result;
+					}
+				} catch (e) {
+					log(e.getMessage(), "ERROR", TOP);
+				}
+			}
+		});
+	}
 
 	createNodeList(This nodeListListener) {
 		Runnable showRun = new Runnable() {
@@ -459,10 +460,10 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 				if (nodeListListener != null) {
 					try {
 						nodeListListener.onListReady(nodeList);
-					} catch(e) {
+					} catch (e) {
 						log("onListReady ist not implemented: " + e.getMessage(), "ERROR", TOP);
 					}
-				}				
+				}
 			}
 		};
 		a11Y.execute(showRun);
@@ -477,7 +478,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 			root = (AccessibilityNodeInfo) getRoot(displayId);
 			nodeList.clear();
 		}
-		
+
 		long start = System.currentTimeMillis();
 
 		This listener() {
@@ -499,7 +500,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 							log("Calling onStructureReady", TOP);
 							TOP.listener.onStructureReady(TOP);
 						}
-						
+
 						// * Structure is Ready
 						super.state = STRUCTURE_AVAILABLE;
 					}

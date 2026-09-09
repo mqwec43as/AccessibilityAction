@@ -1,0 +1,6 @@
+/*
+ * Set window app filter with regex pattern
+ */
+setWindowAppFilter(String packageNameRegexPattern) {
+    A11yConfig.setPackageNamePattern(packageNameRegexPattern);
+}

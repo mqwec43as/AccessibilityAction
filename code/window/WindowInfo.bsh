@@ -3,6 +3,11 @@ import android.view.accessibility.AccessibilityWindowInfo;
 
 WindowInfo() {
     /*
+     * Window type: No window type.
+     */
+    public static final int TYPE_NONE = 0;
+
+    /*
      * Window type: This is an application window. Such a window shows UI for
      * interacting with an application.
      */
@@ -49,6 +54,11 @@ WindowInfo() {
      * Window type: A system window that has the function to control an associated window.
      */
     public static final int TYPE_WINDOW_CONTROL = 1 << AccessibilityWindowInfo.TYPE_WINDOW_CONTROL;
+
+    /*
+     * Window type: All window types
+     */
+    public static final int TYPE_ALL_WINDOWS = TYPE_APPLICATION | TYPE_INPUT_METHOD | TYPE_SYSTEM | TYPE_ACCESSIBILITY_OVERLAY | TYPE_SPLIT_SCREEN_DIVIDER | TYPE_MAGNIFICATION_OVERLAY | TYPE_WINDOW_CONTROL;
 
     boolean hasFlag(int sourceFlags, int checkFlags) {
         return (sourceFlags & checkFlags) != 0;

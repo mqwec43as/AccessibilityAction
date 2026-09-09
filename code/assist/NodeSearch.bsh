@@ -3,6 +3,7 @@ importCommands("assist.structure");
 import bsh.This;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.graphics.Point;
+import java.util.concurrent.Callable;
 
 /*───────────────────────────────────────────────────────────────
   NodeSearch()
@@ -21,28 +22,34 @@ NodeSearch(This structureOverlay) {
 		String title = "Nodes";
 		boolean showFilter = true;
 		long timeout = 150000;
-        This structure = TOP.structureOverlay;
-		onSuccess(Map map) {
+		
+        onSuccess(Map map) {
             This nodeBox = map.get("nodeBox");
-            structure.unhide();
-            Thread.sleep(200);
-            structure.activeHighlight(nodeBox);
+            boolean longClick = map.getOrDefault("longClick", false);
+            if (longClick) {
+                Thread.sleep(200);
+                structureOverlay.openActionPicker(nodeBox);
+            } else {
+                structureOverlay.unhide();
+                Thread.sleep(200);
+                structureOverlay.activeHighlight(nodeBox);
+            }
 		}
 
 		onCancel() {
-            structure.unhide();
+            structureOverlay.unhide();
         }
 
 		onTimeout() {
-            structure.unhide();
+            structureOverlay.unhide();
         }
 
         onAttach() {
-            structure.hide();
+            structureOverlay.hide();
         }
 
         onDetach() {
-            structure.unhide();
+            structureOverlay.unhide();
         }
         
 		return this;
@@ -74,7 +81,12 @@ NodeSearch(This structureOverlay) {
             contents.add("Depth: " + nodeBox.depth);
             String content = String.join("\n", contents);
 			item.put("subtitle", content);
-            item.put("icon", structureOverlay.getNodeDrawable(node));
+            Callable getIcon = new Callable() {
+                call() {
+                   return structureOverlay.structureSnapshot.getNodeBoxDrawable(nodeBox);
+                }
+            };
+            item.put("getIcon", getIcon);
             // Attach nodeBox
             item.put("nodeBox", nodeBox);
 

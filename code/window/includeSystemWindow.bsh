@@ -1,0 +1,7 @@
+/*
+ * Include all system windows WindowInfo.TYPE_SYSTEM
+ */
+includeSystemWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return addWindowFilter(WindowInfo.TYPE_SYSTEM);
+}
