@@ -68,6 +68,30 @@ WindowInfo() {
         int normalizedType = 1 << window.getType();
         return hasFlag(normalizedType, checkFlags);
     }
+
+    /*
+     * Get flag variable format e.g WindowInfo.TYPE_APPLICATION as Array
+     */
+    List getFlagStringList(int sourceFlags) {
+        
+        List flagList = new ArrayList();
+        if (sourceFlags == 0) return flagList;
+
+        if (hasFlag(sourceFlags, TYPE_APPLICATION)) flagList.add("WindowInfo.TYPE_APPLICATION");
+        if (hasFlag(sourceFlags, TYPE_INPUT_METHOD)) flagList.add("WindowInfo.TYPE_INPUT_METHOD");
+        if (hasFlag(sourceFlags, TYPE_SYSTEM)) flagList.add("WindowInfo.TYPE_SYSTEM");
+        if (hasFlag(sourceFlags, TYPE_ACCESSIBILITY_OVERLAY)) flagList.add("WindowInfo.TYPE_ACCESSIBILITY_OVERLAY");
+        if (hasFlag(sourceFlags, TYPE_SPLIT_SCREEN_DIVIDER)) flagList.add("WindowInfo.TYPE_SPLIT_SCREEN_DIVIDER");
+        if (hasFlag(sourceFlags, TYPE_MAGNIFICATION_OVERLAY)) flagList.add("WindowInfo.TYPE_MAGNIFICATION_OVERLAY");
+        if (hasFlag(sourceFlags, TYPE_WINDOW_CONTROL)) flagList.add("WindowInfo.TYPE_WINDOW_CONTROL");
+
+        if (sourceFlags == TYPE_ALL_WINDOWS) {
+            flagList.clear();
+            flagList.add("WindowInfo.TYPE_ALL_WINDOWS");
+        }
+
+        return flagList;
+    }
     
     return this;
 }

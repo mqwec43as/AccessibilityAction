@@ -45,7 +45,7 @@ AssistSetting() {
 	Activity activity;
 	FrameLayout baseRoot;
 	boolean isRemoved;
-	boolean isShown;
+	boolean isShowing;
 	boolean hasShownOnce;
 
 	save() {
@@ -264,12 +264,12 @@ AssistSetting() {
 		activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {
 				hasShownOnce = true;
-				isShown = true;
+				isShowing = true;
 				if (isRemoved) isRemoved = false;
 			}
 			onViewDetachedFromWindow(View v) {
 				isRemoved = true;
-				isShown = false;
+				isShowing = false;
 				activity.finish();
 				save();
 			}
@@ -287,15 +287,15 @@ AssistSetting() {
 	};
 
 	show() {
-		if (!isShown) {
+		if (!isShowing()) {
 			isRemoved = false;
-			isShown = true;
+			isShowing = true;
 			tasker.doWithActivity(uiLogic);
 		}
 	}
 
 	toggle() {
-		if (!isShown) {
+		if (!isShowing()) {
 			show();
 		} else {
 			remove();
@@ -312,7 +312,7 @@ AssistSetting() {
 		return baseRoot.getVisibility() == View.GONE && isAdded();
 	}
 
-	isShown() {
+	isShowing() {
 		if (baseRoot == null) return false;
 		return baseRoot.getVisibility() == View.VISIBLE && isAdded();
 	}

@@ -32,11 +32,15 @@ import com.google.android.material.floatingtoolbar.FloatingToolbarLayout;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.textview.MaterialTextView;
+import android.widget.CompoundButton;
 
 import android.content.Context;
 import bsh.This;
 
 import com.joaomgcd.taskerm.action.java.JavaCodeException;
+
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /*───────────────────────────────────────────────────────────────
   dp(int val)
@@ -80,6 +84,7 @@ ScriptEditor() {
 	Activity activity;
 	LinearLayout content;
 	TextInputEditText editText;
+	ChipGroup windowGroup;
 	ChipGroup editGroup;
 	ChipGroup displayGroup;
 	FrameLayout baseRoot;
@@ -90,6 +95,7 @@ ScriptEditor() {
 	boolean isActionEdit;
 	String codeText;
 	int selectedDisplayId = a11Y.assistBar.selectedDisplayId;
+	int selectedWindowFilter = a11Y.assistBar.selectedWindowFilter;
 
 	boolean isActionEdit() {
 		return getUsageEvents() { "className" }.equals("net.dinglisch.android.taskerm.ActionEdit");
@@ -141,13 +147,6 @@ ScriptEditor() {
 		showToast("Not in Java code action" + getUsageEvents() { "className" });
 	}
 
-	void remove() {
-		if (activity != null) {
-			activity.finish();
-		}
-		isRemoved = true;
-	}
-
 	String getLines() {
 		String fullText = editText.getText().toString();
 		int start = editText.getSelectionStart();
@@ -166,6 +165,18 @@ ScriptEditor() {
 		return script.contains("a11Y.set();");
 	}
 
+	boolean hasWindowFilter(String script) {
+		String[] filterMethods = { "addWindowFilter", "setWindowFilter", "include\\w+Window", "includeAllWindows" };
+		for (String method : filterMethods) {
+			Pattern pattern = Pattern.compile("\\b" + method + "\\(");
+			Matcher matcher = pattern.matcher(script);
+			if (matcher.find()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	String appendHeader(String script) {
 		script = script.trim();
 		String header = "";
@@ -175,6 +186,14 @@ ScriptEditor() {
 		if (!hasSetDisplay(script) && selectedDisplayId != 0) {
 			header += "setDisplay(" + selectedDisplayId + ");\n";
 		}
+
+		if (!hasWindowFilter(script) && selectedWindowFilter != 0) {
+			String windows = String.join(" | ", WindowInfo.getFlagStringList(selectedWindowFilter));
+			header += "addWindowFilter(" + windows + ");\n";
+		} else {
+			tasker.showToast("No filter");
+		}
+
 		if (header.length() > 0) {
 			script = header + script;
 		}
@@ -194,7 +213,7 @@ ScriptEditor() {
 			run() {
 				String script = editText.getText().toString();
 				remove();
-				runScript(script, 100, selectedDisplayId);
+				runScript(script, 100, selectedDisplayId, selectedWindowFilter);
 			}
 		};
 		a11Y.executeA11y(runAll);
@@ -208,6 +227,25 @@ ScriptEditor() {
 		}
 
 		return this;
+	}
+
+	addGroupTitle(String titleName, ChipGroup group) {
+		if (titleName == null || group == null) return;
+		MaterialTextView textView = new MaterialTextView(activity);
+		textView.setText(titleName);
+		textView.setTypeface(null, 1);
+		// textView.setTextSize(ENV.Settings.GROUP_TITLE_TEXT_SIZE);
+		textView.setTextColor(tm.color("colorPrimary"));
+		textView.setOnClickListener(new View.OnClickListener() {
+			onClick(View v) {
+				if (group.getVisibility() == View.VISIBLE) {
+					group.setVisibility(View.GONE);
+				} else {
+					group.setVisibility(View.VISIBLE);
+				}
+			}
+		});
+		content.addView(textView);
 	}
 
 
@@ -250,7 +288,7 @@ ScriptEditor() {
 					onClick(View v) {
 						String code = getLines();
 						remove();
-						runScript(code, 100, selectedDisplayId);
+						runScript(code, 100, selectedDisplayId, selectedWindowFilter);
 					}
 				}
 			},
@@ -288,12 +326,16 @@ ScriptEditor() {
 		}
 	}
 
+	getDisplays() {
+		return context.getSystemService(Context.DISPLAY_SERVICE).getDisplays();
+	}
+
 	updateDisplayGroup() {
 		if (displayGroup == null) return;
-		
+
 		displayGroup.removeAllViews();
-		Display[] displays = context.getSystemService(Context.DISPLAY_SERVICE).getDisplays();
-		
+		Display[] displays = getDisplays();
+
 		if (displays.length > 1) {
 			for (Display display: displays) {
 				addDisplayChip(display);
@@ -307,15 +349,11 @@ ScriptEditor() {
 	}
 
 	addDisplayGroup() {
-		if (displayGroup == null) {
+		Display[] displays = getDisplays();
+		if (displayGroup == null && displays.length > 1) {
 			addSpacer(activity, content);
-			MaterialTextView runOnTitle = new MaterialTextView(activity);
-			runOnTitle.setText("Target Display");
-			runOnTitle.setTypeface(null, 1);
-			// runOnTitle.setTextSize(ENV.Settings.GROUP_TITLE_TEXT_SIZE);
-			runOnTitle.setTextColor(tm.color("colorPrimary"));
-			content.addView(runOnTitle);
 			displayGroup = new ChipGroup(activity);
+			addGroupTitle("Target Display", displayGroup);
 			displayGroup.setSingleSelection(true);
 			content.addView(displayGroup);
 			addSpacer(activity, content);
@@ -323,12 +361,99 @@ ScriptEditor() {
 		updateDisplayGroup();
 	}
 
+	updateWindowGroup() {
+		return tasker.showToast("Window Filter updated: " + selectedWindowFilter);
+		for (int i = 0; i < windowGroup.getChildCount(); i++) {
+			Chip chip = windowGroup.getChildAt(i);
+			int flag = chip.getTag();
+			boolean hasFlag = WindowInfo.hasFlag(selectedWindowFilter, flag);
+			chip.setChecked(hasFlag);
+		}
+	}
+
+	Chip addWindowChip(String flagName, boolean isInitialChecked, int flag) {
+		Chip chip = new Chip(activity);
+		chip.setText(flagName);
+		chip.setCheckable(true);
+		chip.setChecked(isInitialChecked);
+		chip.setTag(flag);
+
+		chip.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+			onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if (isChecked) {
+					selectedWindowFilter = selectedWindowFilter | flag;
+				} else {
+					selectedWindowFilter = selectedWindowFilter & ~flag;
+				}
+				updateWindowGroup();
+			}
+		});
+
+		windowGroup.addView(chip);
+		return chip;
+	}
+
+	addWindowGroup() {
+		addSpacer(activity, content);
+		windowGroup = new ChipGroup(activity);
+		addGroupTitle("Target Window", windowGroup);
+		int spacing = dp(-4);
+		windowGroup.setChipSpacingVertical(spacing);
+		content.addView(windowGroup);
+
+		// { Chip text, checkable, flag}
+		Object[][] editChips = new Object[][] {
+			{
+				"App",
+				false,
+				WindowInfo.TYPE_APPLICATION
+			},
+			{
+				"Input",
+				false,
+				WindowInfo.TYPE_INPUT_METHOD
+			},
+			{
+				"System",
+				false,
+				WindowInfo.TYPE_SYSTEM
+			},
+			{
+				"Accessibility",
+				false,
+				WindowInfo.TYPE_ACCESSIBILITY_OVERLAY
+			},
+			{
+				"Split screen divider",
+				false,
+				WindowInfo.TYPE_SPLIT_SCREEN_DIVIDER
+			},
+			{
+				"Magnification",
+				false,
+				WindowInfo.TYPE_MAGNIFICATION_OVERLAY
+			},
+			{
+				"Window Control",
+				false,
+				WindowInfo.TYPE_WINDOW_CONTROL
+			}
+		};
+
+		for (Object[] chip: editChips) {
+			addWindowChip(chip[0], chip[1], chip[2]);
+		}
+	}
+
+
+
 	void layout(Activity activity) {
 		TOP.activity = activity;
 		tm = ThemeManager(activity);
 		tm.setThemeDark();
-		
+
 		selectedDisplayId = a11Y.assistBar.selectedDisplayId;
+		selectedWindowFilter = a11Y.assistBar.selectedWindowFilter;
 
 		This monitor = SimpleActivityMonitor(activity, activityListener());
 		float density = activity.getResources().getDisplayMetrics().density;
@@ -406,6 +531,7 @@ ScriptEditor() {
 		addSpacer(activity, content);
 
 		addEditGroup();
+		addWindowGroup();
 		addDisplayGroup();
 
 		MaterialButton runAllBtn = new MaterialButton(activity);
@@ -459,15 +585,22 @@ ScriptEditor() {
 			}
 		}
 		debugMe = oldDebugMe;
-		if (!hasShown) {
+		if (!isShowing()) {
 			isRemoved = false;
 			hasShown = true;
 			tasker.doWithActivity(uiLogic);
 		}
 	}
 
+	void remove() {
+		if (activity != null) {
+			activity.finish();
+		}
+		isRemoved = true;
+	}
+
 	void toggle() {
-		if (!hasShown) {
+		if (!isShowing()) {
 			show();
 		} else {
 			remove();
@@ -484,7 +617,7 @@ ScriptEditor() {
 		return baseRoot.getVisibility() == View.GONE && isAdded();
 	}
 
-	boolean isShown() {
+	boolean isShowing() {
 		if (baseRoot == null) return false;
 		return baseRoot.getVisibility() == View.VISIBLE && isAdded();
 	}

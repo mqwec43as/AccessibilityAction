@@ -301,7 +301,7 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 		return root.getVisibility() == View.GONE && isAdded();
 	}
 
-	isShown() {
+	isShowing() {
 		return root.getVisibility() == View.VISIBLE && isAdded();
 	}
 

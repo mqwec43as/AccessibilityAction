@@ -88,9 +88,10 @@ public This AssistBar(int initialX, int initialY) {
 	LinearLayout container;
 	Handler mainHandler = new Handler(Looper.getMainLooper());
 	boolean isRemoved;
-	boolean isShown;
+	boolean isShowing;
 	boolean hasShownOnce;
 	int selectedDisplayId;
+	int selectedWindowFilter;
 
 	// Instances
 	This structureOverlay;
@@ -101,6 +102,7 @@ public This AssistBar(int initialX, int initialY) {
 	This scriptEditor;
 	This assistSetting;
 	This actionPicker;
+	This actionsGroupDialog;
 
 	// Buttons and Handle
 	GestureDetector detector;
@@ -234,7 +236,7 @@ public This AssistBar(int initialX, int initialY) {
 		assistParams.height = measuredHeight;
 		assistParams.width = measuredWidth;
 
-		if (!isShown) return;
+		if (!isShowing()) return;
 		try {
 			windowManager.updateViewLayout(assistBar, (WindowManager.LayoutParams) assistParams);
 		} catch (e) {}
@@ -277,6 +279,18 @@ public This AssistBar(int initialX, int initialY) {
 					true,
 					true,
 					null
+			},
+			{
+				AssistInfo.ACTIONS_GROUP_BUTTON,
+				tm.attr(AssistInfo.ACTIONS_GROUP_ICON),
+				false,
+				true,
+				new View.OnClickListener() {
+					onClick(View view) {
+						view.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
+						toggleActionsGroup();
+					}
+				}
 			},
 			{
 				AssistInfo.SCRIPT_BUTTON,
@@ -356,18 +370,11 @@ public This AssistBar(int initialX, int initialY) {
 	}
 
 	isDialogsShowing() {
-		boolean settingShowing = assistSetting != null && assistSetting.isShown();
-		boolean filterShowing = filterSheet != null && filterSheet.isShown();
-		boolean nodeSearchShowing = nodeSearch != null && nodeSearch.isShown();
-		boolean scriptEditorShowing = scriptEditor != null && scriptEditor.isShown();
-		return settingShowing || filterShowing || nodeSearchShowing || scriptEditorShowing;
+		return a11Y.viewControl.isAnyVisible(ENV.Layout.TYPE_ALL_WINDOWS);
 	}
 
 	removeDialogs() {
-		if (assistSetting != null && assistSetting.isShown()) assistSetting.remove();
-		if (filterSheet != null && filterSheet.isShown()) filterSheet.remove();
-		if (nodeSearch != null && nodeSearch.isShown()) nodeSearch.remove();
-		if (scriptEditor != null && scriptEditor.isShown()) scriptEditor.remove();
+		a11Y.viewControl.remove(ENV.Layout.TYPE_ALL_WINDOWS);
 	}
 
 	/*────────────────────────────
@@ -376,9 +383,8 @@ public This AssistBar(int initialX, int initialY) {
 	showSearch() {
 		if (filterSheet != null) filterSheet.remove();
 		nodeSearch = NodeSearch(structureOverlay);
-		structureOverlay.hide();
 		A11yConfig.refresh();
-		nodeSearch.show();
+		a11Y.viewControl.show(ENV.Layout.TYPE_NODE_SEARCH);
 		super.state = OPENING_NODE_SEARCH;
 	}
 
@@ -387,7 +393,7 @@ public This AssistBar(int initialX, int initialY) {
 			run() {
 				try {
 					if (nodeSearch != null) {
-						if (structureOverlay != null && structureOverlay.isShown()) {
+						if (structureOverlay != null && structureOverlay.isShowing()) {
 							showSearch();
 						} else {
 							nodeSearch.remove();
@@ -406,19 +412,13 @@ public This AssistBar(int initialX, int initialY) {
 	}
 
 	toggleScriptEditor() {
-		if (assistSetting != null) assistSetting.remove();
-		if (structureOverlay != null) structureOverlay.remove();
-		if (scriptEditor != null) {
-			scriptEditor.toggle();
-			super.state = OPENING_SCRIPT_EDITOR;
-		}
+		a11Y.viewControl.show(ENV.Layout.TYPE_SCRIPT_EDITOR);
+		super.state = OPENING_SCRIPT_EDITOR;
 	}
 
 	toggleSetting() {
-		if (assistSetting != null) {
-			assistSetting.toggle();
-			super.state = OPENING_SETTINGS;
-		}
+		a11Y.viewControl.toggle(ENV.Layout.TYPE_SETTINGS);
+		super.state = OPENING_SETTINGS;
 	}
 
 	toggleFilter() {
@@ -432,6 +432,12 @@ public This AssistBar(int initialX, int initialY) {
 		if (filterSheet != null) filterSheet.toggle();
 		if (nodeSearch != null) nodeSearch.remove();
 		super.state = OPENING_FILTER;
+	}
+
+	toggleActionsGroup() {
+		removeStructure();
+		a11Y.viewControl.toggle(ENV.Layout.TYPE_ACTIONS_GROUP_DIALOGS);
+		super.state = OPENING_ACTIONS_GROUP;
 	}
 
 	isSystemWindow() {
@@ -525,7 +531,7 @@ public This AssistBar(int initialX, int initialY) {
 				displayStructure();
 			}
 
-			else if (structureOverlay.isShown() || structureOverlay.isHidden() || mode == DELETE_CAPTURE_MODE) {
+			else if (structureOverlay.isShowing() || structureOverlay.isHidden() || mode == DELETE_CAPTURE_MODE) {
 				structureOverlay.remove();
 				log("Removing Structure Overlay From Toggle", "INFO", this);
 			}
@@ -538,6 +544,15 @@ public This AssistBar(int initialX, int initialY) {
 		} catch (e) {
 			tasker.showToast(e.getMessage());
 		}
+	}
+
+	toggleDisplayMenu() {
+		Runnable runMe = new Runnable() {
+			run() {
+				a11Y.viewControl.toggle(ENV.Layout.TYPE_DISPLAY_MENU);
+			}
+		};
+		a11Y.execute(runMe);
 	}
 
 	/*────────────────────────────
@@ -601,7 +616,7 @@ public This AssistBar(int initialX, int initialY) {
 			setHandleMode(DELETE_CAPTURE_MODE, false);
 			This searchBtn = getIconButton(AssistInfo.SEARCH_BUTTON);
 			searchBtn.setTouchState(true);
-			if (structureOverlay.isShown()) {
+			if (structureOverlay.isShowing()) {
 				setHandleMode(DELETE_CAPTURE_MODE, true);
 				super.state = ACTIVITY_NONE;
 			} else {
@@ -646,6 +661,7 @@ public This AssistBar(int initialX, int initialY) {
 		if (scriptEditor == null) scriptEditor = ScriptEditor();
 		if (assistSetting == null) assistSetting = AssistSetting();
 		if (actionPicker == null) actionPicker = ActionPicker();
+		if (actionsGroupDialog == null) actionsGroupDialog = ActionsGroupDialog();
 	}
 
 	clearResources() {
@@ -661,6 +677,8 @@ public This AssistBar(int initialX, int initialY) {
 		scriptEditor = null;
 		if (assistSetting != null) assistSetting.remove();
 		assistSetting = null;
+		if (actionsGroupDialog != null) actionsGroupDialog.remove();
+		actionsGroupDialog = null;
 	}
 
 	/*────────────────────────────
@@ -669,14 +687,7 @@ public This AssistBar(int initialX, int initialY) {
 	handleListener() {
 		onLongPress() {
 			assistBar.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-			Runnable runMe = new Runnable() {
-				run() {
-					removeStructure();
-					ActionsGroupDialog();
-					super.state = OPENING_ACTIONS_GROUP;
-				}
-			};
-			a11Y.execute(runMe);
+			toggleDisplayMenu();
 		}
 		onSingleTapConfirmed() {
 			assistBar.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
@@ -743,7 +754,7 @@ public This AssistBar(int initialX, int initialY) {
 			onViewAttachedToWindow(View v) {
 				try {
 					hasShownOnce = true;
-					isShown = true;
+					isShowing = true;
 					if (isRemoved) isRemoved = false;
 					refreshSize();
 					setupResources();
@@ -754,7 +765,7 @@ public This AssistBar(int initialX, int initialY) {
 			}
 			onViewDetachedFromWindow(View v) {
 				// try {
-				isShown = false;
+				isShowing = false;
 				isRemoved = true;
 				clearResources();
 				a11Y.clean();
@@ -775,7 +786,7 @@ public This AssistBar(int initialX, int initialY) {
 		return assistBar.getVisibility() == View.GONE && isAdded();
 	}
 
-	isShown() {
+	isShowing() {
 		if (assistBar == null) return false;
 		return assistBar.getVisibility() == View.VISIBLE && isAdded();
 	}
@@ -788,8 +799,8 @@ public This AssistBar(int initialX, int initialY) {
 	remove() {
 		removeStructure();
 		stuctureOverlay = null;
-		if (isShown()) windowManager.removeView(assistBar);
-		isShown = false;
+		if (isShowing()) windowManager.removeView(assistBar);
+		isShowing = false;
 		a11Y.clean();
 	}
 
@@ -807,7 +818,7 @@ public This AssistBar(int initialX, int initialY) {
 				windowManager.addView(assistBar, assistParams);
 			}
 		};
-		if (!isShown()) mainHandler.post(displayOverlay);
+		if (!isShowing()) mainHandler.post(displayOverlay);
 	}
 
 	return this;

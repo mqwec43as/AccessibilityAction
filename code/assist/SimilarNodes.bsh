@@ -148,7 +148,6 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	}
 
 	highlightAll() {
-		highlightClass();
 		highlightParent();
 		highlightText();
 		highlightId();

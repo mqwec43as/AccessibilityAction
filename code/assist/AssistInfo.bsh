@@ -2,6 +2,7 @@ bsh.This;
 
 AssistInfo() {
     final String HANDLE_BUTTON = "handle";
+    final String ACTIONS_GROUP_BUTTON = "actionsGroupBtn";
     final String SCRIPT_BUTTON = "scriptBtn";
     final String SETTING_BUTTON = "settingBtn";
     final String FILTER_BUTTON = "filterBtn";
@@ -9,6 +10,7 @@ AssistInfo() {
     final String CLOSE_BUTTON = "closeBtn";
 
     final String HANDLE_ICON = "mw_image_filter_center_focus";
+    final String ACTIONS_GROUP_ICON = "mw_navigation_more_vert";
     final String SCRIPT_ICON = "mw_action_code";
     final String SETTING_ICON = "mw_action_settings";
     final String FILTER_ICON = "mw_content_filter_list";

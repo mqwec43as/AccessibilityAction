@@ -36,12 +36,10 @@ a11Y() {
 			}
 		} catch (Exception e) {
 			log(e.getMessage(), "ERROR");
+			String appName = context.getApplicationContext().getApplicationInfo().loadLabel(context.getPackageManager());
 			String packageName = context.getPackageName();
-			String appName = context.getApplicationContext()
-				.getApplicationInfo()
-				.loadLabel(packageName)
-				.toString();
-			tasker.showToast("Unable to clear existing a11Y instance:\n" + e.getMessage(), "Please Restart " + appName);
+			tasker.showToast("Unable to clear existing a11Y instance:\n in package " + packageName + "\n" + e.getMessage(), "Please Restart " + appName);
+			throw e;
 			return;
 		}
 	}
@@ -192,11 +190,11 @@ a11Y() {
 	}
 
 	showAssist() {
-		if (!assistBar.isShown) assistBar.show();
+		if (!assistBar.isShowing()) assistBar.show();
 	}
 
 	removeAssist() {
-		if (assistBar.isShown) assistBar.remove();
+		if (assistBar.isShowing()) assistBar.remove();
 	}
 
 	update() {
@@ -333,14 +331,21 @@ This a11Y = a11Y();
 a11Y.setEnvPath(ENV_PATH);
 a11Y.setEnv(ENV);
 
+setVariable(String name, Object value) {
+	if (name != null && value != null) {
+		a11Y.namespace.setVariable(name, value, false);
+		this.caller.namespace.setVariable(name, value, false);
+	}
+}
+
 This viewControl = ViewControl();
-a11Y.namespace.setVariable("viewControl", viewControl, false);
+setVariable("viewControl", viewControl);
 
 This config = Config(ENV_PATH + "/config.java");
 config.load();
 config.setTo(a11Y);
+setVariable("config", config);
 
-a11Y.namespace.setVariable("config", config, false);
 a11Y.set();
 
 This inspector = MethodInspector(this);
@@ -348,34 +353,26 @@ inspector.read();
 a11Y.inspector = inspector;
 tasker.setJavaVariable("a11Y", a11Y);
 
-This a11yController = A11yController();
-a11Y.namespace.setVariable("a11yController", a11yController, false);
-
+setVariable("a11yController", A11yController());
 This a11E = a11E();
 tasker.setJavaVariable("a11E", a11E);
 
-This NodeInfo = NodeInfo();
-a11Y.namespace.setVariable("NodeInfo", NodeInfo, false);
-
-This WindowInfo = WindowInfo();
-a11Y.namespace.setVariable("WindowInfo", WindowInfo, false);
+setVariable("NodeInfo", NodeInfo());
+setVariable("WindowInfo", WindowInfo());
+setVariable("packageManager", PackageManager());
 
 This updateManager = UpdateManager();
 updateManager.namespace.setVariable("directoryPath", ENV_PATH, false);
-a11Y.namespace.setVariable("updateManager", updateManager, false);
-
-This packageManager = PackageManager();
-a11Y.namespace.setVariable("packageManager", packageManager, false);
+setVariable("updateManager", updateManager);
 
 // Limit following methods and scripted objects to Tasker app
 if (!ENV.HAS_MATERIAL_LIB) return;
 
-This assistBar = AssistBar(0.8, 0.8);
-a11Y.namespace.setVariable("assistBar", assistBar, false);
+setVariable("assistBar", AssistBar(0.8, 0.8));
 
 if (!ENV.HAS_MATERIAL_COLOR && ENV.HAS_MATERIAL_COLOR_FALLBACK) {
 	This mcf = MaterialColorFallback();
-	a11Y.namespace.setVariable("materialColorFallback", mcf, false);
+	setVariable("materialColorFallback", mcf);
 	mcf.load();
 	log("Using fallback material color.");
 	tasker.showToast("Can't find material color via ThemeManager.color(String). Will try to use a fallback that doesn't match the theme.\n\nAccessibility actions still can be used.", "Assist & Debug features may not work.");

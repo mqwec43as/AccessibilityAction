@@ -307,7 +307,7 @@ FloatingSheet(This config) {
 		return baseRoot.getVisibility() == View.GONE && isAdded();
 	}
 
-	isShown() {
+	isShowing() {
 		return baseRoot.getVisibility() == View.VISIBLE && isAdded();
 	}
 

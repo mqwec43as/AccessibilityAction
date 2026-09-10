@@ -181,9 +181,9 @@ WindowMenu() {
 		return listDialog.isHidden();
 	}
 
-	isShown() {
+	isShowing() {
 		if (listDialog == null) return false;
-		return listDialog.isShown();
+		return listDialog.isShowing();
 	}
 
 	isRemoved() {

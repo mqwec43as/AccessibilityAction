@@ -2,21 +2,25 @@ import bsh.This;
 
 ActionsGroupDialog() {
 	final This TOP = this;
-	long defaultTimeout = 60000;
 	final This a11Y = getA11yInstance();
-	This dialogInstance;
+	final int WINDOW_TYPE = ENV.Layout.TYPE_ACTIONS_GROUP_DIALOGS;
+	a11Y.viewControl.addView(TOP);
+
+	This listDialog;
 	This dialogConfig;
 
 	if (a11Y.assistBar == void) {
 		showToast("AssistBar not found");
 		return;
 	}
+	
 	This actionPicker = ActionPicker();
 	This displayMenu = a11Y.assistBar.displayMenu;
 	This windowMenu = a11Y.assistBar.windowMenu;
+	
 	Runnable displayMenuRun = new Runnable() {
 		run() {
-			displayMenu.show();
+			a11Y.viewControl.show(ENV.Layout.TYPE_DISPLAY_MENU);
 		}
 	};
 
@@ -90,10 +94,10 @@ ActionsGroupDialog() {
 		}
 	};
 
+
 	dialog(This THIS) {
 		String title = "Select Action";
 		boolean showFilter = true;
-		long timeout = defaultTimeout;
 		boolean showFilter;
 		List itemList = new ArrayList();
 
@@ -107,11 +111,18 @@ ActionsGroupDialog() {
 		}
 
 		onSuccess(Map map) {
-			THIS.selectedAction = map;
+			boolean useMain = map.get("useMain");
+			Runnable runMe = map.get("run");
+			if (useMain) {
+				a11Y.post(runMe);
+				return;
+			} else {
+				a11Y.execute(runMe);
+			}
 		}
 
 		onAttach() {
-			a11Y.addOverlay(dialogInstance);
+			a11Y.addOverlay(listDialog);
 		}
 		onCancel() {}
 
@@ -120,16 +131,10 @@ ActionsGroupDialog() {
 	}
 
 	dialogConfig = dialog(this);
-	dialogInstance = ListDialog(dialogConfig);
-	if (dialogInstance.show() && selectedAction != void) {
-		boolean useMain = selectedAction.get("useMain");
-		Runnable runMe = selectedAction.get("run");
-		if (useMain) {
-			a11Y.post(runMe);
-			return;
-		} else {
-			a11Y.execute(runMe);
-		}
-	}
-	return;
+	listDialog = ListDialog(dialogConfig);
+
+	// * Make listDialog methods available here.
+	bind(this, listDialog.namespace);
+
+	return this;
 }

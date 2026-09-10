@@ -6,7 +6,7 @@ import bsh.This;
   **Executes Script**
   Runs the provided BeanShell script on a background thread.
  ───────────────────────────────────────────────────────────────*/
-public void runScript(String script, long delayMs, int displayId) {
+public void runScript(String script, long delayMs, int displayId, int windowFilter) {
     final This TOP = this;
 	String header ="""
 import bsh.This;
@@ -15,6 +15,10 @@ a11Y.set();
 """;
     
     header += "\nsetDisplay(" + displayId + ");\n";
+    
+    if (windowFilter != 0) {
+        header += "addWindowFilter(" + windowFilter + ");\n";
+    }
     
     
     log("Running script on display " + displayId + ":\n" + header + script , "INFO", TOP);

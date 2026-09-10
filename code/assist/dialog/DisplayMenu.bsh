@@ -10,7 +10,7 @@ import android.graphics.Point;
 DisplayMenu() {
 	final This TOP = this;
 	This a11Y = getA11yInstance();
-	final int WINDOW_TYPE = ENV.Layout.TYPE_NODE_SEARCH;
+	final int WINDOW_TYPE = ENV.Layout.TYPE_DISPLAY_MENU;
 	a11Y.viewControl.addView(TOP);
 	List displayList = new ArrayList();
 	This displayInfos;
@@ -136,9 +136,9 @@ DisplayMenu() {
 		return listDialog.isHidden();
 	}
 
-	isShown() {
+	isShowing() {
 		if (listDialog == null) return false;
-		return listDialog.isShown();
+		return listDialog.isShowing();
 	}
 
 	isRemoved() {

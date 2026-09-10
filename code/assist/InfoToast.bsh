@@ -68,7 +68,7 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	boolean isRemoved;
-	boolean isShown;
+	boolean isShowing;
 
 	/* Row storage */
 	final Map rows = new HashMap();
@@ -245,12 +245,12 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	container.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 		onViewAttachedToWindow(View v) {
 			isRemoved = false;
-			isShown = true;
+			isShowing = true;
 			a11Y.addOverlay(TOP);
 		}
 		onViewDetachedFromWindow(View v) {
 			isRemoved = true;
-			isShown = false;
+			isShowing = false;
 			a11Y.removeOverlay(TOP);
 		}
 	});

@@ -97,7 +97,7 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 
 	WindowManager WINDOW_MANAGER;
 	boolean isRemoved;
-	boolean isShown;
+	boolean isShowing;
 	int DEFAULT_COLOR = Color.TRANSPARENT;
 	int DEFAULT_STROKE_COLOR = setAlpha(Color.GREEN, 100);
 	int DEFAULT_STROKE_WIDTH = 1;
@@ -177,7 +177,7 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 		return view.getParent() == null;
 	}
 
-	isShown() {
+	isShowing() {
 		return view.getVisibility() == View.VISIBLE && !isRemoved();
 	}
 
@@ -253,13 +253,13 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 		onViewAttachedToWindow(View v) {
 			isRemoved = false;
-			isShown = true;
+			isShowing = true;
 			a11Y.addOverlay(TOP);
 		}
 
 		onViewDetachedFromWindow(View v) {
 			isRemoved = true;
-			isShown = false;
+			isShowing = false;
 			a11Y.removeOverlay(TOP);
 			removeDialogAndInfo();
 		}
@@ -307,7 +307,7 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 		}
 
 		params = currentParams;
-		if (isShown && !isRemoved) {
+		if (isShowing && !isRemoved) {
 			getWindowManager().updateViewLayout(view, params);
 		}
 	}

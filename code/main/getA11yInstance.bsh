@@ -1,6 +1,8 @@
 import bsh.This;
-
+/*
+ * Returns the current a11Y instance
+ */
 This getA11yInstance() {
-    This a11Y = tasker.getJavaVariable("a11Y");
+    This a11Y = a11Y != void && a11Y != null ? a11Y :  tasker.getJavaVariable("a11Y");
     return a11Y;
 }

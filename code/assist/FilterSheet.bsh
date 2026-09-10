@@ -25,28 +25,31 @@ FilterSheet(This structure) {
 	final int WINDOW_TYPE = ENV.Layout.TYPE_FILTER_SHEET;
 	a11Y.viewControl.addView(TOP);
 	This structureHelper = StructureHelper(structure);
+
+	List groups = NodeInfo.getGroupNames();
+	int filteredFlags = 0;
+	List filteredFlagsList = new ArrayList();
+	Context activityContext;
+
+	addFlag(String flagName) {
+		filteredFlags = filteredFlags | NodeInfo.getConstant(flagName);
+		filteredFlagsList.add(flagName);
+	}
+
+	removeFlag(String flagName) {
+		filteredFlags = filteredFlags & ~NodeInfo.getConstant(flagName);
+		filteredFlagsList.remove(flagName);
+	}
+
 	config() {
-		maxHeight = 0.30f;
+		
+		float maxHeight = 0.35f;
 
-		List groups = NodeInfo.getGroupNames();
-		int filteredFlags = 0;
-		List filteredFlagsList = new ArrayList();
-
-		addFlag(String flagName) {
-			filteredFlags = filteredFlags | NodeInfo.getConstant(flagName);
-			filteredFlagsList.add(flagName);
-		}
-
-		removeFlag(String flagName) {
-			filteredFlags = filteredFlags & ~NodeInfo.getConstant(flagName);
-			filteredFlagsList.remove(flagName);
-		}
-
-		getViewList(Context ctx) {
+		getViewList(Context activityContext) {
 			List views = new ArrayList();
-			float density = ctx.getResources().getDisplayMetrics().density;
+			float density = activityContext.getResources().getDisplayMetrics().density;
 			
-			LinearLayout filterContainer = new LinearLayout(ctx);
+			LinearLayout filterContainer = new LinearLayout(activityContext);
 			filterContainer.setOrientation(LinearLayout.VERTICAL);
 			
 			LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(-1, -2);
@@ -57,7 +60,7 @@ FilterSheet(This structure) {
 
 			createFilteredTextView() {
 
-				MaterialTextView filteredFlagsView = new MaterialTextView(ctx);
+				MaterialTextView filteredFlagsView = new MaterialTextView(activityContext);
 				filteredFlagsView.setTextSize(12);
 				LinearLayout.LayoutParams filteredFlagsParams = new LinearLayout.LayoutParams(-1, -2);
 				filteredFlagsView.setLayoutParams(filteredFlagsParams);
@@ -69,23 +72,36 @@ FilterSheet(This structure) {
 			}
 
 			for (int i = 0; i < groups.size(); i++) {
-				String groupName = (String) groups.get(i);				
-				MaterialTextView titleView = new MaterialTextView(ctx);
+				String groupName = (String) groups.get(i);	
+
+				MaterialTextView titleView = new MaterialTextView(activityContext);
 				titleView.setText(groupName);
-				titleView.setTextSize(16);
+				titleView.setTextSize(18);
 				titleView.setTypeface(null, 1); /* BOLD */
+
 				MaterialTextView filteredFlagsView = createFilteredTextView();
 				LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(-1, -2);
 				titleParams.setMargins(dp(16), dp(12), dp(16), dp(4));
 				titleView.setLayoutParams(titleParams);
 				views.add(titleView);
 
-				ChipGroup chipGroup = new ChipGroup(ctx);
+				ChipGroup chipGroup = new ChipGroup(activityContext);
 				chipGroup.setSingleLine(false);
 				LinearLayout.LayoutParams groupParams = new LinearLayout.LayoutParams(-1, -2);
 				groupParams.setMargins(dp(16), 0, dp(16), dp(12));
 				chipGroup.setLayoutParams(groupParams);
 				chipGroup.setChipSpacingVertical(0);
+
+				titleView.setOnClickListener(new View.OnClickListener() {
+					onClick(View view) {
+						if (chipGroup.getVisibility() == View.GONE) {
+							chipGroup.setVisibility(View.VISIBLE);
+						} else {
+							chipGroup.setVisibility(View.GONE);
+						}
+						return true;
+					}
+				});
 
 				// ChipGroup may fail
 				try {
@@ -123,7 +139,7 @@ FilterSheet(This structure) {
 				for (int j = 0; j < flagNames.size(); j++) {
 					final String flagName = (String) flagNames.get(j);
 
-					Chip chip = new Chip(ctx);
+					Chip chip = new Chip(activityContext);
 					chip.setText(flagName);
 					chip.setCheckable(true);
 
@@ -155,33 +171,8 @@ FilterSheet(This structure) {
 	This config = config();
 	This floatingSheet = FloatingSheet(config);
 	
-	show() {
-		floatingSheet.show();
-	}
-	
-	remove() {
-		floatingSheet.remove();
-	}
-
-	toggle() {
-		floatingSheet.toggle();
-	}
-	
-	isAdded() {
-		return floatingSheet.isAdded();
-	}
-
-	isHidden() {
-		return floatingSheet.isHidden();
-	}
-
-	isShown() {
-		return floatingSheet.isShown();
-	}
-
-	isRemoved() {
-		return floatingSheet.isRemoved();
-	}
+	// * Make sheet methods available here.
+	bind(this, floatingSheet.namespace);
 
 	return this;
 }

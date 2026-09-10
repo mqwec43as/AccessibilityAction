@@ -57,6 +57,9 @@ NodeSearch(This structureOverlay) {
 
     This config = config(this);
     This listDialog = ListDialog(config);
+    
+    // * Make listDialog methods available here.
+    bind(this, listDialog.namespace);
 
     loadList() {
         boolean includeEmpty = a11Y.includeEmptyNodeinSearch;
@@ -93,34 +96,6 @@ NodeSearch(This structureOverlay) {
 			itemList.add(item);
 		}
     }
-
-    show() {
-        listDialog.show();
-    }
-
-    remove() {
-        listDialog.remove();
-    }
-
-    toggle() {
-        listDialog.toggle();
-    }
-
-    isAdded() {
-		return listDialog.isAdded();
-	}
-
-	isHidden() {
-		return listDialog.isHidden();
-	}
-
-	isShown() {
-		return listDialog.isShown();
-	}
-
-	isRemoved() {
-		return listDialog.isRemoved();
-	}
 
     loadList();
 	return this;

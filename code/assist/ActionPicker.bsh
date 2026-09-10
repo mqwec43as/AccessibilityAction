@@ -9,6 +9,10 @@ import java.util.Arrays;
 import java.util.TreeSet;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
+import android.hardware.display.DisplayManager;
+import android.content.Context;
+import android.view.Display;
+
 /*
  * Requires SimilarNodes which consist of node details
  * Will prompt a series of dialog to select an action
@@ -418,8 +422,9 @@ ActionPicker() {
 			onSuccess(Map map) {
 				if (map.equals(runCode)) {
 					int displayId = a11Y.assistBar.selectedDisplayId;
+					int windowFilter = a11Y.assistBar.selectedWindowFilter;
 					log("Running code now on display " + displayId, "INFO", TOP);
-					runScript(text, 500, displayId);
+					runScript(text, 500, displayId, windowFilter);
 				}
 			}
 
