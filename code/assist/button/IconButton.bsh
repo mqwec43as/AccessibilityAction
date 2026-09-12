@@ -31,18 +31,18 @@ import java.util.List;
 import bsh.This;
 
 IconButton(This assistBar) {
-
+	This AssistInfo = assistBar.AssistInfo;
 	MaterialButton button;
 	This tm = assistBar.tm;
 	ContextThemeWrapper wrapper;
 	int padding = dp(4);
-	String id;
+	int id = AssistInfo.HAS_NO_ID;
 	int backgroundColor = tm.color("colorPrimary");
 	int iconColor = tm.color("colorOnPrimary");
 	Drawable icon;
 
-	setId(String newId) {
-		if (id == null) id = newId;
+	setId(int newId) {
+		if (id == AssistInfo.HAS_NO_ID) id = newId;
 		return this;
 	}
 
@@ -127,6 +127,7 @@ IconButton(This assistBar) {
 		if (button == null) build();
 		getContainer().addView(button, 0);
 		assistBar.buttons.put(id, super);
+		log("Added button to container with id " + id + " and keys " + assistBar.buttons.keySet(), "INFO");
 		assistBar.refreshSize();
 		return this;
 	}
@@ -134,6 +135,19 @@ IconButton(This assistBar) {
 	removeFromContainer() {
 		if (button == null) return this;
 		getContainer().removeView(button);
+		assistBar.refreshSize();
+		return this;
+	}
+
+	hide() {
+		if (button == null) return this;
+		button.setVisibility(View.GONE);
+		return this;
+	}
+
+	unhide() {
+		if (button == null) return this;
+		button.setVisibility(View.VISIBLE);
 		return this;
 	}
 

@@ -406,9 +406,10 @@ ActionPicker() {
 	  executeDalog(String text)
 	  **Executes code**
 	 ───────────────────────────────────────────────────────────────*/
-	public void executeDialog(String text) {
+	public void executeDialog(String text, int displayId, int windowFilter) {
 		This a11Y = getA11yInstance();
 		long defaultTimeout = 5000;
+		
 		execute(This THIS) {
 			String title = "Run now";
 			boolean showFilter;
@@ -421,8 +422,6 @@ ActionPicker() {
 
 			onSuccess(Map map) {
 				if (map.equals(runCode)) {
-					int displayId = a11Y.assistBar.selectedDisplayId;
-					int windowFilter = a11Y.assistBar.selectedWindowFilter;
 					log("Running code now on display " + displayId, "INFO", TOP);
 					runScript(text, 500, displayId, windowFilter);
 				}
@@ -511,7 +510,7 @@ ActionPicker() {
 		List notReplaced = (List) finalOverload.get("notReplacedParams");
 		if (notReplaced.isEmpty()) {
 			String code = (String) finalOverload.get("usage");
-			executeDialog(code);
+			executeDialog(code, nodeData.displayId, nodeData.windowType);
 		}
 
 		return finalOverload;

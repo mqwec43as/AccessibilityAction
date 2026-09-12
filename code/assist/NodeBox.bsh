@@ -31,6 +31,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import java.lang.reflect.Field;
 import android.view.Surface;
 import android.content.res.Configuration;
+import android.view.accessibility.AccessibilityWindowInfo;
 
 /*────────────────────────────────────────────────────────────────
 NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node)
@@ -66,6 +67,11 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	Runnable displayOverlay;
 	
 	int properties = NodeInfo.getProperties(node);
+	
+	AccessibilityWindowInfo window = node.getWindow();
+	int type = window.getType();
+	int windowType = 1 << type;
+	int displayId = window.getDisplayId();
 
 	// Has viewIdResourceName
 	if (NodeInfo != void) {
@@ -95,11 +101,15 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 		return result;
 	}
 
+	int getDefaultColor() {
+		return type == AccessibilityWindowInfo.TYPE_APPLICATION ? Color.GREEN : 0xFFFF5E00;
+	}
+
 	WindowManager WINDOW_MANAGER;
 	boolean isRemoved;
 	boolean isShowing;
 	int DEFAULT_COLOR = Color.TRANSPARENT;
-	int DEFAULT_STROKE_COLOR = setAlpha(Color.GREEN, 100);
+	int DEFAULT_STROKE_COLOR = setAlpha(getDefaultColor(), 100);
 	int DEFAULT_STROKE_WIDTH = 1;
 	This infoToast;
 	This infoDialog;

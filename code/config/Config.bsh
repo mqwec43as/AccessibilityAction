@@ -25,6 +25,7 @@ Config(String filePath) {
 
         // --- Assist ---
         { "Assist", "actionPickerAddToEditor", true, "Action picker append to editor or copy to clipboard", true },
+		{ "Assist", "captureAllWindowsAsDefault", false, "Capture all windows instead of default window", true },
         { "Assist", "includeAllMethods", false, "Include all methods for quick mode", true },
 		{ "Assist", "includeEmptyNodeinSearch", false, "Include node without text and id in search", true },
         { "Assist", "quickAddMode", true, "Long press a box enter quick mode instead of opening copy dialog", true },

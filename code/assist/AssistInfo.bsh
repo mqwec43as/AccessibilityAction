@@ -1,13 +1,19 @@
 bsh.This;
 
 AssistInfo() {
-    final String HANDLE_BUTTON = "handle";
-    final String ACTIONS_GROUP_BUTTON = "actionsGroupBtn";
-    final String SCRIPT_BUTTON = "scriptBtn";
-    final String SETTING_BUTTON = "settingBtn";
-    final String FILTER_BUTTON = "filterBtn";
-    final String SEARCH_BUTTON = "searchBtn";
-    final String CLOSE_BUTTON = "closeBtn";
+    
+    final String ASSIST_BAR_TITLE = "A11y: Assist Bar";
+    final String STRUCTURE_TITLE = "A11y: Structure Overlay";
+    
+    final int HAS_NO_ID = 0;
+    final int HANDLE_BUTTON = 1 << 0;
+    final int ACTIONS_GROUP_BUTTON = 1 << 1;
+    final int SCRIPT_BUTTON = 1 << 2;
+    final int SETTING_BUTTON = 1 << 3;
+    final int FILTER_BUTTON = 1 << 4;
+    final int SEARCH_BUTTON = 1 << 5;
+    final int CLOSE_BUTTON = 1 << 6;
+    final int INFO_BUTTON = 1 << 7;
 
     final String HANDLE_ICON = "mw_image_filter_center_focus";
     final String ACTIONS_GROUP_ICON = "mw_navigation_more_vert";
@@ -17,7 +23,7 @@ AssistInfo() {
     final String SEARCH_ICON = "mw_action_search";
     final String CLOSE_ICON = "mw_navigation_close";
     final String DELETE_ICON = "mw_action_delete_forever";
-
+    final String INFO_ICON = "mw_action_info_outline";
 
     return this;
 }

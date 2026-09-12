@@ -66,6 +66,7 @@ public This AssistBar(int initialX, int initialY) {
 	This AssistInfo = AssistInfo();
 	final This TOP = this;
 	This a11Y = getA11yInstance();
+	This buttonManager = AssistButtonManager(this);
 	final int WINDOW_TYPE = ENV.Layout.TYPE_ASSIST_BAR;
 	a11Y.viewControl.addView(TOP);
 
@@ -159,6 +160,7 @@ public This AssistBar(int initialX, int initialY) {
 			WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR,
 			PixelFormat.TRANSLUCENT
 		);
+		assistParams.title = AssistInfo.ASSIST_BAR_TITLE;
 		assistParams.gravity = Gravity.TOP | Gravity.LEFT;
 		assistParams.x = initialX;
 		assistParams.y = initialY;
@@ -207,8 +209,6 @@ public This AssistBar(int initialX, int initialY) {
 	}
 
 	removeStructure() {
-		This searchBtn = getIconButton(AssistInfo.SEARCH_BUTTON);
-		searchBtn.setTouchState(false);
 		if (structureOverlay != null && !structureOverlay.isRemoved()) {
 			structureOverlay.remove();
 		}
@@ -242,27 +242,11 @@ public This AssistBar(int initialX, int initialY) {
 		} catch (e) {}
 	}
 
-	addButton(String name, Drawable drawable, boolean isActive, boolean displayFirst, View.OnClickListener onClickListener) {
-		This iconButton = IconButton(TOP);
-		iconButton.setId(name);
-		MaterialButton button = iconButton.build();
-		iconButton.setIcon(drawable);
-		iconButton.setColorState(isActive);
-		iconButton.addToContainer();
-		if (!displayFirst) {
-			iconButton.removeFromContainer();
-		}
-		if (onClickListener != null) {
-			button.setOnClickListener(onClickListener);
-		}
-		return button;
-	}
-
-	getIconButton(String id) {
+	getIconButton(int id) {
 		return buttons.get(id);
 	}
 
-	getButton(String id) {
+	getButton(int id) {
 		This iconButton = buttons.get(id);
 		if (iconButton == null) {
 			throw new NullPointerException("No button with id " + id);
@@ -317,6 +301,18 @@ public This AssistBar(int initialX, int initialY) {
 				}
 			},
 			{
+				AssistInfo.SEARCH_BUTTON,
+				tm.attr(AssistInfo.SEARCH_ICON),
+				false,
+				false,
+				new View.OnClickListener() {
+					onClick(View view) {
+						view.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
+						toggleSearch();
+					}
+				}
+			},
+			{
 				AssistInfo.FILTER_BUTTON,
 				tm.attr(AssistInfo.FILTER_ICON),
 				false,
@@ -329,14 +325,13 @@ public This AssistBar(int initialX, int initialY) {
 				}
 			},
 			{
-				AssistInfo.SEARCH_BUTTON,
-				tm.attr(AssistInfo.SEARCH_ICON),
+				AssistInfo.INFO_BUTTON,
+				tm.attr(AssistInfo.INFO_ICON),
 				false,
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
-						view.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
-						toggleSearch();
+						tasker.showToast("Info not set yet");
 					}
 				}
 			},
@@ -355,16 +350,16 @@ public This AssistBar(int initialX, int initialY) {
 		};
 
 		for (Object[] button: buttonsConfig) {
-			String name = button[0];
+			int id = button[0];
 			Drawable drawable = button[1];
 			boolean isActive = button[2];
 			boolean displayFirst = button[3];
 			View.OnClickListener onClickListener = button[4];
-			MaterialButton button = addButton(name, drawable, isActive, displayFirst, onClickListener);
+			MaterialButton button = buttonManager.addButton(id, drawable, isActive, displayFirst, onClickListener);
 		}
 
 		This closeIcon = getIconButton(AssistInfo.CLOSE_BUTTON);
-		closeIcon.setIconColor(tm.color("colorErrorContainer"), tm.color("colorOnErrorContainer"));
+		if (closeIcon != null) closeIcon.setIconColor(tm.color("colorErrorContainer"), tm.color("colorOnErrorContainer"));
 
 		return;
 	}
@@ -472,8 +467,8 @@ public This AssistBar(int initialX, int initialY) {
 					removeStructure();
 					setHandleMode(CAPTURE_MODE, true);
 					log(e.getMessage(), "ERROR", TOP);
-					tasker.showToast("Failed to display structure overlay");
-					throw new JavaCodeException(e.getMessage());
+					tasker.showToast(e.getMessage(), "Failed to display structure overlay");
+					show();
 				}
 			}
 		};
@@ -568,35 +563,35 @@ public This AssistBar(int initialX, int initialY) {
 		refreshSize();
 	}
 
-	public void replaceButton(String currentButton, String newButton) {
-		MaterialButton currentBtn = getButton(currentButton);
-		MaterialButton newBtn = getButton(newButton);
-		replaceView(currentBtn, newBtn);
-	}
-
 	public void switchLayout(boolean isStructureShown) {
+		int whenShown = AssistInfo.SCRIPT_BUTTON | AssistInfo.SETTING_BUTTON | AssistInfo.ACTIONS_GROUP_BUTTON | AssistInfo.CLOSE_BUTTON ;
+		int whenNot = AssistInfo.FILTER_BUTTON | AssistInfo.SEARCH_BUTTON | AssistInfo.INFO_BUTTON;
 		if (isStructureShown) {
-			replaceButton(AssistInfo.SCRIPT_BUTTON, AssistInfo.SEARCH_BUTTON);
-			replaceButton(AssistInfo.SETTING_BUTTON, AssistInfo.FILTER_BUTTON);
+			buttonManager.hideButtons(whenShown);
+			buttonManager.unhideButtons(whenNot);
 		} else {
-			replaceButton(AssistInfo.SEARCH_BUTTON, AssistInfo.SCRIPT_BUTTON);
-			replaceButton(AssistInfo.FILTER_BUTTON, AssistInfo.SETTING_BUTTON);
+			buttonManager.unhideButtons(whenShown);
+			buttonManager.hideButtons(whenNot);
 		}
 	}
 
 	// Listener for Structure Overlay to switch layout
 	createStructureOverlayListener() {
+		This screenshotHelper;
+
 		onViewAttachedToWindow(View view) {
+			setHandleMode(DELETE_CAPTURE_MODE, false);
+			buttonManager.setButtonsTouchState(AssistInfo.SEARCH_BUTTON | AssistInfo.FILTER_BUTTON, false);
 			TOP.switchLayout(true);
 			structureOverlay.takeScreenshot();
 		}
 
 		onViewDetachedFromWindow(View view) {
 			setHandleMode(CAPTURE_MODE, true);
-			This searchBtn = getIconButton(AssistInfo.SEARCH_BUTTON);
-			searchBtn.setTouchState(false);
+			buttonManager.setButtonsTouchState(AssistInfo.SEARCH_BUTTON | AssistInfo.FILTER_BUTTON, false);
+			switchLayout(false);
 			log("Reset layout then remove structure overlay with node search & filter", TOP);
-			TOP.switchLayout(false);
+			if (screenshotHelper != null) screenshotHelper.recycle();
 			try {
 				filterSheet.remove();
 				filterSheet = null;
@@ -609,19 +604,24 @@ public This AssistBar(int initialX, int initialY) {
 
 		onStructureReady(This structureOverlay) {
 			log("Switching layout to use structure overlay", TOP);
-			super.state = STRUCTURE_CAPTURED;
-		}
-
-		onScreenshotSuccess(This screenshotHelper) {
-			setHandleMode(DELETE_CAPTURE_MODE, false);
-			This searchBtn = getIconButton(AssistInfo.SEARCH_BUTTON);
-			searchBtn.setTouchState(true);
 			if (structureOverlay.isShowing()) {
 				setHandleMode(DELETE_CAPTURE_MODE, true);
+				buttonManager.setButtonsTouchState(AssistInfo.FILTER_BUTTON, true);
 				super.state = ACTIVITY_NONE;
 			} else {
 				setHandleMode(CAPTURE_MODE, true);
 				screenshotHelper.recycle();
+			}
+			super.state = STRUCTURE_CAPTURED;
+		}
+
+		onScreenshotSuccess(This screenshotHelper) {
+			buttonManager.setButtonsTouchState(AssistInfo.SEARCH_BUTTON, true);
+			// searchBtn.setTouchState(true);
+			if (!structureOverlay.isShowing()) {
+				setHandleMode(CAPTURE_MODE, true);
+				screenshotHelper.recycle();
+				super.state = ACTIVITY_NONE;
 			}
 		}
 
