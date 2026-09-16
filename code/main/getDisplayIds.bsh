@@ -30,12 +30,7 @@ int id = ((Integer) displays.get(i)).intValue();
 public ArrayList getDisplayIds() {
 	ArrayList displayIds = new ArrayList();
 
-	AccessibilityService service = getService();
-	if (service == null) {
-		return displayIds;
-	}
-
-	SparseArray allDisplaysWindows = service.getWindowsOnAllDisplays();
+	SparseArray allDisplaysWindows = getService().getWindowsOnAllDisplays();
 	if (allDisplaysWindows == null) {
 		return displayIds;
 	}

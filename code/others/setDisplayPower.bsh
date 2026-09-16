@@ -10,7 +10,9 @@ setDisplayPower(int displayId, int mode) {
     try {
 		tasker.getClass().getMethod("isAdbWifiAvailable");
 		hasShellRun = true;
-	} catch (e) {}
+	} catch (e) {
+        log(e.getMessage(), "ERROR", TOP);
+    }
     boolean hasShizuku;
     boolean result;
     // * Try Shizuku at first via requestDisplayPower

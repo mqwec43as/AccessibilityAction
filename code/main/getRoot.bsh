@@ -21,9 +21,8 @@ Example:
 AccessibilityNodeInfo root = getRoot();
 ───────────────────────────────────────────────────────────────*/
 AccessibilityNodeInfo getRoot(int displayId) {
-	AccessibilityService service = getService();
 	if (displayId == 0) {
-		return service.getRootInActiveWindow();
+		return getService().getRootInActiveWindow();
 	} else {
 		AccessibilityWindowInfo focusedWindow = getFocusedWindow(displayId);
 		if (focusedWindow != null) return focusedWindow.getRoot();

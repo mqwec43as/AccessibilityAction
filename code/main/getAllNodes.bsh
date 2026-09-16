@@ -17,16 +17,11 @@ import java.util.ArrayList;
  *   nodes = getAllNodes();
  *───────────────────────────────────────────────────────────────*/
 List getAllNodes(AccessibilityNodeInfo node) {
-	AccessibilityService service = getService();
-	if (service == null) {
-		log("Accessibility service not active!");
-		return new ArrayList();
-	}
 	if (node == null) {
 		log("No nodes found.");
 		return new ArrayList();
 	}
-	List nodes = service.getChildrenRecursive(node);
+	List nodes = getService().getChildrenRecursive(node);
 	if (nodes == null) {
 		log("No nodes found.");
 		return new ArrayList();

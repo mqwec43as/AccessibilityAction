@@ -26,13 +26,7 @@ public int setDisplayByPackageName(String packageName) {
 		return 0;
 	}
 
-	AccessibilityService service = getService();
-	if (service == null) {
-		A11yConfig.displayId = 0;
-		return 0;
-	}
-
-	SparseArray allDisplaysWindows = service.getWindowsOnAllDisplays();
+	SparseArray allDisplaysWindows = getService().getWindowsOnAllDisplays();
 	if (allDisplaysWindows == null) {
 		A11yConfig.displayId = 0;
 		return 0;

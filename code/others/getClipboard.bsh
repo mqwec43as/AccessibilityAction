@@ -1,3 +1,5 @@
+importCommands("main");
+
 import android.os.IBinder;
 import android.os.Build;
 import android.content.ClipData;
@@ -12,6 +14,7 @@ import android.accessibilityservice.AccessibilityService;
 import io.reactivex.subjects.SingleSubject;
 import java.util.concurrent.TimeUnit;
 import com.joaomgcd.taskerm.action.java.JavaCodeException;
+import android.content.IClipboard;
 
 /*───────────────────────────────────────────────────────────────
 getClipboard()
@@ -33,30 +36,25 @@ public String getClipboard() {
 	try {
 		IBinder rawBinder = (IBinder) tasker.getShizukuService("clipboard");
 		if (rawBinder != null) {
-			Class stub = Class.forName("android.content.IClipboard$Stub");
-			Object service = stub.getMethod("asInterface", new Class[] { IBinder.class }).invoke(null, new Object[] { rawBinder });
+			IClipboard clipboard = IClipboard.Stub.asInterface(rawBinder);
 
 			String pkg = "com.android.shell";
-			Integer userId = Integer.valueOf(0);
-			int sdk = Build.VERSION.SDK_INT;
-			Class cls = service.getClass();
-			Class SI = Integer.TYPE;
-			Class SS = String.class;
+			Integer userId = 0;
 			ClipData clipData = null;
 
-			if (sdk >= 34) {
-				clipData = (ClipData) cls.getMethod("getPrimaryClip", new Class[] { SS, SS, SI, SI }).invoke(service, new Object[] { pkg, null, userId, 0 });
-			} else if (sdk < 33) {
-				if (sdk >= 29) {
-					clipData = (ClipData) cls.getMethod("getPrimaryClip", new Class[] { SS, SI }).invoke(service, new Object[] { pkg, userId });
+			if (Build.VERSION.SDK_INT >= 34) {
+				clipData = clipboard.getPrimaryClip(pkg, null, userId, 0);
+			} else if (Build.VERSION.SDK_INT < 33) {
+				if (Build.VERSION.SDK_INT >= 29) {
+					clipData = clipboard.getPrimaryClip(pkg, userId);
 				} else {
-					clipData = (ClipData) cls.getMethod("getPrimaryClip", new Class[] { SS }).invoke(service, new Object[] { pkg });
+					clipData = clipboard.getPrimaryClip(pkg);
 				}
 			} else {
 				try {
-					clipData = (ClipData) cls.getMethod("getPrimaryClip", new Class[] { SS, SS, SI }).invoke(service, new Object[] { pkg, null, userId });
+					clipData = clipboard.getPrimaryClip(pkg, null, userId);
 				} catch (Exception e) {
-					clipData = (ClipData) cls.getMethod("getPrimaryClip", new Class[] { SS, SI }).invoke(service, new Object[] { pkg, userId });
+					clipData = clipboard.getPrimaryClip(pkg, userId);
 				}
 			}
 
@@ -75,7 +73,7 @@ public String getClipboard() {
 	   ────────────────────────────────────────────────────────── */
 	SingleSubject resultSignal = SingleSubject.create();
 
-	Context clipboardContext = (Context) tasker.getAccessibilityService();
+	Context clipboardContext = getService();
 	int windowType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
 
 	if (clipboardContext == null || clipboardContext == void) {
@@ -84,8 +82,8 @@ public String getClipboard() {
 		windowType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
 	}
 
-	WindowManager windowManager = (WindowManager) clipboardContext.getSystemService(Context.WINDOW_SERVICE);
-	ClipboardManager clipboardManager = (ClipboardManager) clipboardContext.getSystemService(Context.CLIPBOARD_SERVICE);
+	WindowManager windowManager = clipboardContext.getSystemService(Context.WINDOW_SERVICE);
+	ClipboardManager clipboardManager = clipboardContext.getSystemService(Context.CLIPBOARD_SERVICE);
 	Handler handler = new Handler(Looper.getMainLooper());
 
 	WindowManager.LayoutParams params = new WindowManager.LayoutParams(

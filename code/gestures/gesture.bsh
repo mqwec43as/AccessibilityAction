@@ -47,7 +47,6 @@ Returns:
 ──────────────────────────────────────────────────────────────── */
 public boolean gesture(Object[][] points, Paint paint) {
 	if (points == null || points.length == 0) return false;
-	AccessibilityService service = getService();
 
 	AccessibilityNodeInfo root = getRoot();
 	if (root == null) {
@@ -174,7 +173,7 @@ public boolean gesture(Object[][] points, Paint paint) {
 				GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
 				gestureBuilder.addStroke(currentStroke);
 				gestureBuilder.setDisplayId(targetDisplayId);
-				service.dispatchGesture(gestureBuilder.build(), callback, a11yHandler);
+				getService().dispatchGesture(gestureBuilder.build(), callback, a11yHandler);
 
 				stepSignal.blockingAwait();
 

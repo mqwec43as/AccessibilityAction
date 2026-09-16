@@ -32,6 +32,5 @@ screen(boolean turnOn) {
 		return;
 	}
 
-	AccessibilityService as = getService();
-	as.performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN);
+	getService().performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN);
 }

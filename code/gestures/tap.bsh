@@ -34,7 +34,6 @@ Returns:
 * boolean → True if gesture dispatched successfully, false otherwise.
 ──────────────────────────────────────────────────────────────── */
 public boolean tap(double x, double y, long duration) {
-	AccessibilityService service = (AccessibilityService) getService();
 
 	try {
 		Context windowContext = getContext(true);
@@ -78,7 +77,7 @@ public boolean tap(double x, double y, long duration) {
 			}
 		);
 
-		service.dispatchGesture(gesture, callback, handler);
+		getService().dispatchGesture(gesture, callback, handler);
 
 		signal.blockingAwait();
 		handlerThread.quitSafely();

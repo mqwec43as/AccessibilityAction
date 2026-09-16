@@ -1,6 +1,3 @@
-import android.accessibilityservice.AccessibilityService;
-
 back() {
-	AccessibilityService svc = getService();
-	svc.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+	getService().performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
 }

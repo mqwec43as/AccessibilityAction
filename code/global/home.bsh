@@ -1,6 +1,3 @@
-import android.accessibilityservice.AccessibilityService;
-
 home() {
-	AccessibilityService svc = getService();
-	svc.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+	getService().performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 }

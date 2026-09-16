@@ -15,7 +15,9 @@ setDisplayPowerViaShell(int mode) {
 	try {
 		tasker.getClass().getMethod("isAdbWifiAvailable");
 		hasUpdated = true;
-	} catch (e) {}
+	} catch (e) {
+		log(e.getMessage(), "ERROR", TOP);
+	}
 	if (!hasUpdated) return false;
 	if (tasker.isRootAvailable()) {
 		result = tasker.runShellRoot(command, timeout);

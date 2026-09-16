@@ -48,8 +48,9 @@ public This takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo no
 	}
 
 	final This TOP = this;
-	AccessibilityService service = tasker.getAccessibilityService();
-	if (service == null) {
+	Context context = getService();
+
+	if (context == null) {
 		throw new JavaCodeException("Accessibility Service is not running. Please enable it first.");
 	}
 
@@ -59,8 +60,6 @@ public This takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo no
 		}
 		windowId = node.getWindowId();
 	}
-
-	Context context = service;
 
 	SingleSubject signal = SingleSubject.create();
 	Executor executor = context.getMainExecutor();
@@ -147,9 +146,9 @@ public This takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo no
 	};
 
 	if (windowId > -1) {
-		service.takeScreenshotOfWindow(windowId, executor, callback);
+		getService().takeScreenshotOfWindow(windowId, executor, callback);
 	} else {
-		service.takeScreenshot(displayId, executor, callback);
+		getService().takeScreenshot(displayId, executor, callback);
 	}
 
 	if (useCallback) {

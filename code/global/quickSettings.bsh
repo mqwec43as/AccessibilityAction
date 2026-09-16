@@ -1,6 +1,3 @@
-import android.accessibilityservice.AccessibilityService;
-
 quickSettings() {
-	AccessibilityService svc = getService();
-	svc.performGlobalAction(AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS);
+	getService().performGlobalAction(AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS);
 }

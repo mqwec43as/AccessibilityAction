@@ -20,8 +20,7 @@ Example:
 setDisplayByWindowId(1234);
 ───────────────────────────────────────────────────────────────*/
 public void setDisplayByWindowId(int windowId) {
-	AccessibilityService service = getService();
-	SparseArray allDisplaysWindows = service.getWindowsOnAllDisplays();
+	SparseArray allDisplaysWindows = getService().getWindowsOnAllDisplays();
 	if (allDisplaysWindows == null) {
 		return;
 	}
@@ -35,7 +34,7 @@ public void setDisplayByWindowId(int windowId) {
 
 		Iterator iterator = windows.iterator();
 		while (iterator.hasNext()) {
-			AccessibilityWindowInfo window = (AccessibilityWindowInfo) iterator.next();
+			AccessibilityWindowInfo window = iterator.next();
 			if (window == null) {
 				continue;
 			}
