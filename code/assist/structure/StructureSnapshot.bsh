@@ -70,7 +70,7 @@ This StructureSnapshot(int displayId) {
 		onSuccess(This newHelper) {
 			screenshotHelper = newHelper;
 			screenshotState = TAKING_SCREENSHOT_COMPLETE;
-			if (hasOnSuccess()) structureSnapshotListener.onSuccess(screenshotHelper);
+			if (hasOnSuccess()) structureSnapshotListener.onSuccess(super);
 		}
 
 		onError(int errorCode) {
@@ -139,38 +139,55 @@ This StructureSnapshot(int displayId) {
 		screenshotState = TAKING_SCREENSHOT;
 		takeScreenshot(displayId, screenshotListener);
 	}
+	
 	/*
 	 * Triggers/updates full display screenshot
 	 ! Use Single by default and has to be ran on background thread
 	 */
-	void takeScreenshot() {
-		SingleSubject single = SingleSubject.create();
-		listener() {
-			onSuccess(This screenshotHelper) {
-				single.onSuccess(screenshotHelper);
-			}
+	// void takeScreenshot() {
+	// 	SingleSubject single = SingleSubject.create();
+	// 	listener() {
+	// 		onSuccess(This screenshotHelper) {
+	// 			single.onSuccess(screenshotHelper);
+	// 		}
 
-			onError(int errorCode) {
-				single.onError(new RuntimeException("Screenshot failed with error code: " + errorCode));
-			}
+	// 		onError(int errorCode) {
+	// 			single.onError(new RuntimeException("Screenshot failed with error code: " + errorCode));
+	// 		}
 
-			return this;
-		}
-		takeScreenshot(listener());
-		single.timeout(2000, TimeUnit.MILLISECONDS).blockingGet();
-	}
+	// 		return this;
+	// 	}
+	// 	takeScreenshot(listener());
+	// 	single.timeout(2000, TimeUnit.MILLISECONDS).blockingGet();
+	// }
 
 	getBitmap(int key, Rect targetBounds) {
+
 		if (screenshotHelper == null) {
 			takeScreenshot();
 			return null;
 		}
+
 		if (bitmapMap.containsKey(key)) {
 			Bitmap cachedBmp = bitmapMap.get(key);
-			if (cachedBmp != null && !cachedBmp.isRecycled()) {
-				return cachedBmp;
+			if (cachedBmp != null) {
+				if (!cachedBmp.isRecycled()) {
+					return cachedBmp;
+				} else {
+					log("Bitmap is recycled for " + key, "ERROR");
+					return null;
+				}
+			} else {
+				log("Bitmap is null for " + key, "ERROR");
+				return;
 			}
+		} 
+
+		if (screenshotHelper.isRecycled()) {
+			log("Screenshot is recycled can't get bitmap", "ERROR", TOP);
+			return null;
 		}
+
 		Bitmap bmp = screenshotHelper.getBitmap(targetBounds);
 		if (bmp != null) {
 			bitmapMap.put(key, bmp);
@@ -257,6 +274,9 @@ This StructureSnapshot(int displayId) {
 	}
 
 	isScreenshotRecycled() {
+		if (screenshotHelper != null ) {
+			return screenshotHelper.isRecycled();
+		}
 		return screenshotState == SCREENSHOT_RECYCLED;
 	}
 

@@ -54,7 +54,6 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	a11Y.viewControl.addView(TOP);
 	
 	WindowManager windowManager = (WindowManager) overlayContext.getSystemService(Context.WINDOW_SERVICE);
-	final Handler mainHandler = new Handler(Looper.getMainLooper());
 
 	boolean useA11y = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY == overlayType ? true : false;
 	
@@ -66,9 +65,6 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 		}
 		return result;
 	}
-
-	boolean isRemoved;
-	boolean isShowing;
 
 	/* Row storage */
 	final Map rows = new HashMap();
@@ -110,7 +106,7 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 
 	/*──────────── ROW SYSTEM ────────────*/
 	addRow(String key, String label, String value, int maxLines, int color) {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				TextView rowText = (TextView) rows.get(key);
 				// Add directly
@@ -145,7 +141,7 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	updateRow(String key, String value) {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				TextView rowText = (TextView) rows.get(key);
 				if (rowText != null) {
@@ -160,7 +156,7 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	removeRow(String key) {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				TextView rowText = (TextView) rows.get(key);
 				if (rowText != null) {
@@ -173,7 +169,7 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	clearRows() {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				container.removeAllViews();
 				rows.clear();
@@ -244,23 +240,15 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 
 	container.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 		onViewAttachedToWindow(View v) {
-			isRemoved = false;
-			isShowing = true;
 			a11Y.addOverlay(TOP);
 		}
 		onViewDetachedFromWindow(View v) {
-			isRemoved = true;
-			isShowing = false;
 			a11Y.removeOverlay(TOP);
 		}
 	});
 
-	isRemoved() {
-		return isRemoved;
-	}
-
 	remove() {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				try {
 					windowManager.removeView(container);
@@ -270,11 +258,31 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	show() {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				windowManager.addView(container, params);
 			}
 		});
+	}
+
+	isAdded() {
+		if (container == null) return false;
+		return container.getParent() != null && view.isAttachedToWindow();
+	}
+
+	isHidden() {
+		if (container == null) return false;
+		return container.getVisibility() == View.GONE && isAdded();
+	}
+
+	isShowing() {
+		if (container == null) return false;
+		return container.getVisibility() == View.VISIBLE && isAdded();
+	}
+
+	isRemoved() {
+		if (container == null) return false;
+		return !isAdded();
 	}
 
 	show();

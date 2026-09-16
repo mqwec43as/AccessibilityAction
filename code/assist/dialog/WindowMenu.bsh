@@ -30,6 +30,9 @@ WindowMenu() {
     long screenshotDelay = a11Y.screenshotDelay != void ? a11Y.screenshotDelay : 500;
 	Map snapshots = new ConcurrentHashMap();
 
+	boolean useOverlay = false;
+	boolean useAccessibility = true;
+
 	loadList() {
 		windowList.clear();
 		Thread.sleep(200);
@@ -100,7 +103,6 @@ WindowMenu() {
 	config(This THIS) {
 		List itemList = TOP.windowList;
 		String title = "Window Menu";
-		long timeout = 30000;
 		boolean showFilter = true;
 		int iconSize = 200;
 		onSuccess(Map map) {

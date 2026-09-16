@@ -2,16 +2,28 @@ String ENV_PATH = new File(getSourceFileInfo()).getParentFile().getAbsolutePath(
 LOG_FILE = ENV_PATH + "/log.txt";
 
 addClassPath(ENV_PATH);
+importCommands("main");
+importCommands("window");
+importCommands("gestures");
+importCommands("actions");
+importCommands("others");
+importCommands("assist");
+importCommands("helper");
 importCommands("lib");
 importCommands("lib.file");
-importCommands("main");
+importCommands("assist.helper");
+importCommands("assist.dialog");
+importCommands("event");
+importCommands("global");
 importCommands("config");
 
 import bsh.This;
+import bsh.NameSpace;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.*;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import android.view.accessibility.AccessibilityNodeInfo;
 import java.lang.reflect.Field;
@@ -45,6 +57,12 @@ a11Y() {
 	}
 
 	final This TOP = this;
+	final String[] constants = new String[] {
+		"AssistInfo",
+		"WindowInfo",
+		"NodeInfo",
+		"ENV",
+	};
 
 	// Variables
 	List assistOverlays = new ArrayList();
@@ -92,7 +110,7 @@ a11Y() {
 		Executors.defaultThreadFactory() /* Thread factory */
 	);
 
-	reload() {
+	void reload() {
 		Runnable reloadTask = new Runnable() {
 			run() {
 				try {
@@ -105,56 +123,64 @@ a11Y() {
 		execute(reloadTask);
 	}
 
-	debug() {
+	void debug() {
 		debugMe = true;
 	}
 
-	setConfigTo(This THIS) {
+	void setConfigTo(This THIS) {
 		config.setTo(TOP, THIS);
 	}
 
-	set(This THIS) {
+	This set(This THIS) {
 		if (ENV_PATH == null) {
 			throw new JavaCodeException("ENV_PATH is null");
 		}
 		config.setTo(TOP, THIS);
-		if (ENV != null) THIS.namespace.setVariable("ENV", ENV, false);
-		if (NodeInfo != null) THIS.namespace.setVariable("NodeInfo", NodeInfo, false);
-		if (WindowInfo != null) THIS.namespace.setVariable("WindowInfo", WindowInfo, false);
+		setConstant(THIS);
 		this.interpreter.source(ENV_PATH + "/import.java");
 		return THIS;
 	}
 
-	set() {
+	void set() {
 		set(this.caller);
 	}
+	
+	void setConstant(This THIS) {
+		NameSpace callerNamespace = THIS.namespace;
+		for (String constant: constants) {
+			if (callerNamespace.getVariable(constant) == void) {
+				Object value = TOP.namespace.getVariable(constant);
+				callerNamespace.setTypedVariable(constant, value.getClass(), value, true);
+			}
+		};
+	}
 
-	setEnvPath(String path) {
+	void setEnvPath(String path) {
 		ENV_PATH = path;
 		LOG_FILE = path + "/log.txt";
 	}
 
-	setEnv(This env) {
+	void setEnv(This env) {
 		ENV = env;
 	}
 
-	resetEnv() {
+	void resetEnv() {
 		ENV_PATH = null;
 	}
 
-	reset() {
+	void reset() {
 		config.setTo(TOP);
 	}
 
-	addOverlay(This overlay) {
+	void addOverlay(This overlay) {
 		assistOverlays.add(overlay);
 	};
 
-	removeOverlay(This overlay) {
+	void removeOverlay(This overlay) {
 		assistOverlays.remove(overlay);
 	}
 
-	clean() {
+	void clean() {
 		if (assistOverlays.isEmpty()) return;
 		for (This overlay: assistOverlays) {
 			try { overlay.remove(); } catch (e) {}
@@ -162,42 +188,40 @@ a11Y() {
 		assistOverlays.clear();
 	}
 
-	addEvent(String eventId, This eventListener) {
-		This a11E = tasker.getJavaVariable("a11E");
+	void addEvent(String eventId, This eventListener) {
 		if (a11E != null) a11E.add(eventId, eventListener);
 	}
 
-	removeEvent(String eventId) {
-		This a11E = tasker.getJavaVariable("a11E");
+	void removeEvent(String eventId) {
 		if (a11E != null) a11E.remove(eventId);
 	}
 
-	removeEvents() {
-		This a11E = tasker.getJavaVariable("a11E");
+	void removeEvents() {
 		if (a11E != null) a11E.removeEvents();
 	}
 
-	getEvents() {
-		This a11E = tasker.getJavaVariable("a11E");
+	List getEvents() {
 		if (a11E != null) {
 			Set keyset = a11E.listeners.keySet();
 			return new ArrayList(keyset);
 		}
+		
+		return new ArrayList();
 	}
 
 	if (old != null) {
 		if (old.scriptEditor != void) scriptEditor = old.scriptEditor;
 	}
 
-	showAssist() {
+	void showAssist() {
 		if (!assistBar.isShowing()) assistBar.show();
 	}
 
-	removeAssist() {
+	void removeAssist() {
 		if (assistBar.isShowing()) assistBar.remove();
 	}
 
-	update() {
+	void update() {
 		if (updateManager != null) {
 			if (updatePreRelease) {
 				updateManager.updatePreRelease();
@@ -211,40 +235,38 @@ a11Y() {
 
 	}
 
-	updatePreRelease() {
+	void updatePreRelease() {
 		if (updateManager != null) {
 			updateManager.updatePreRelease();
 			reload();
 		}
 	}
 
-	muteEvents() {
-		This a11E = tasker.getJavaVariable("a11E");
+	void muteEvents() {
 		a11E.mute();
 	}
 
-	unmuteEvents() {
-		This a11E = tasker.getJavaVariable("a11E");
+	void unmuteEvents() {
 		a11E.unmute();
 	}
 
-	execute(Runnable postRun) {
+	void execute(Runnable postRun) {
 		executor.submit(postRun);
 	}
 
-	executeA11y(Runnable postRun) {
+	void executeA11y(Runnable postRun) {
 		a11yExecutor.submit(postRun);
 	}
 
-	submit(Runnable postRun) {
+	FutureTask submit(Runnable postRun) {
 		return executor.submit(postRun);
 	}
 
-	submitA11y(Runnable postRun) {
+	FutureTask submitA11y(Runnable postRun) {
 		return a11yExecutor.submit(postRun);
 	}
 
-	run(String fileName) {
+	void run(String fileName) {
 		Runnable runMe = new Runnable() {
 			run() {
 				try {
@@ -278,7 +300,7 @@ a11Y() {
 		execute(runMe);
 	}
 
-	testDisplay() {
+	void testDisplay() {
 		if (displayInfos == null) {
 			set();
 			displayInfos = DisplayInfos();
@@ -286,11 +308,15 @@ a11Y() {
 		displayInfos.show(6000);
 	}
 
-	post(Runnable runMe) {
-		mainHandler.post(runMe);
+	void post(Runnable postRun) {
+		mainHandler.post(postRun);
 	}
 
-	remove(boolean clearA11Y) {
+	void postDelayed(Runnable postRun, long delay) {
+		mainHandler.postDelayed(postRun, delay);
+	}
+
+	void remove(boolean clearGlobalVariable) {
 		log("Removing a11Y", TOP);
 		clean();
 		removeAssist();
@@ -298,30 +324,31 @@ a11Y() {
 		executor.shutdownNow();
 		a11yExecutor.shutdownNow();
 		tasker.setJavaVariable("a11E", null);
-		if (clearA11Y) tasker.setJavaVariable("a11Y", null);
+		if (clearGlobalVariable) tasker.setJavaVariable("a11Y", null);
 	}
 
-	remove() {
+	void remove() {
 		remove(true);
 	}
 
-	checkService() {
+	boolean checkService() {
 		return tasker.getAccessibilityService() != null;
 	}
 
-	enableService() {
+	void enableService() {
 		if (a11yController == null) a11yController = A11yController();
 		String packageName = context.getPackageName();
 		a11yController.enableService(packageName);
 	}
 
-	disableService() {
+	void disableService() {
 		if (a11yController == null) a11yController = A11yController();
 		String packageName = context.getPackageName();
 		a11yController.disableService(packageName);
 	}
 
 	long startTime = System.currentTimeMillis();
+	
 	return this;
 
 };
@@ -345,6 +372,10 @@ This config = Config(ENV_PATH + "/config.java");
 config.load();
 config.setTo(a11Y);
 setVariable("config", config);
+setVariable("NodeInfo", NodeInfo());
+setVariable("WindowInfo", WindowInfo());
+setVariable("AssistInfo", AssistInfo());
+setVariable("packageManager", PackageManager());
 
 a11Y.set();
 
@@ -357,9 +388,6 @@ setVariable("a11yController", A11yController());
 This a11E = a11E();
 tasker.setJavaVariable("a11E", a11E);
 
-setVariable("NodeInfo", NodeInfo());
-setVariable("WindowInfo", WindowInfo());
-setVariable("packageManager", PackageManager());
 
 This updateManager = UpdateManager();
 updateManager.namespace.setVariable("directoryPath", ENV_PATH, false);

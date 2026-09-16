@@ -44,9 +44,6 @@ AssistSetting() {
 
 	Activity activity;
 	FrameLayout baseRoot;
-	boolean isRemoved;
-	boolean isShowing;
-	boolean hasShownOnce;
 
 	save() {
 		// Save config to file
@@ -60,7 +57,6 @@ AssistSetting() {
 		if (activity != null) {
 			activity.finish();
 		}
-		isRemoved = true;
 		save();
 	}
 
@@ -263,13 +259,10 @@ AssistSetting() {
 
 		activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {
-				hasShownOnce = true;
-				isShowing = true;
-				if (isRemoved) isRemoved = false;
+
 			}
+
 			onViewDetachedFromWindow(View v) {
-				isRemoved = true;
-				isShowing = false;
 				activity.finish();
 				save();
 			}
@@ -288,8 +281,6 @@ AssistSetting() {
 
 	show() {
 		if (!isShowing()) {
-			isRemoved = false;
-			isShowing = true;
 			tasker.doWithActivity(uiLogic);
 		}
 	}

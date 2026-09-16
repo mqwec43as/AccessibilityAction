@@ -100,7 +100,9 @@ This NodeInfo(AccessibilityNodeInfo node) {
 		propertiesField = AccessibilityNodeInfo.class.getDeclaredField("mBooleanProperties");
 		propertiesField.setAccessible(true);
 		hasPropertyField = true;
-	} catch (e) {}
+	} catch (e) {
+		log(e.getMessage(), "ERROR", TOP);
+	}
 
 	getConstantNames() {
 		List names = Arrays.asList(map.keySet().toArray());

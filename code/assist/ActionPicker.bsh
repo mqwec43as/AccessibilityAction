@@ -25,6 +25,7 @@ ActionPicker() {
 	// parameter from top variable
 	if (includeAllMethods == void) includeAllMethods = false;
 	This a11Y = getA11yInstance();
+	a11Y.setConstant(TOP);
 	This inspector = a11Y.inspector; // instance of MethodInspector
 	DisplayManager displayManager = context.getSystemService(Context.DISPLAY_SERVICE);
 	int displayId = a11Y.assistBar.selectedDisplayId != void ? a11Y.assistBar.selectedDisplayId : 0;
@@ -104,9 +105,12 @@ ActionPicker() {
 		dialog(This THIS) {
 			String title = "Select Action";
 			boolean showFilter;
+			// ! Will block main thread because using SingleSubject.blockingGet();
 			long timeout = defaultTimeout;
 			List itemList = new ArrayList(THIS.actionList);
 			if (itemList.size() > indexMinFilter) showFilter = true;
+			boolean useOverlay = false;
+			boolean useAccessibility = true;
 			// On success, will update top variable selectedAction
 			onSuccess(Map map) {
 				THIS.selectedAction = (String) map.get("methodName");
@@ -201,7 +205,12 @@ ActionPicker() {
 		keyDialog(This THIS) {
 			String title = "Select Pattern";
 			boolean showFilter;
+			// ! Will block main thread because using SingleSubject.blockingGet();
 			long timeout = defaultTimeout;
+			
+			boolean useOverlay = false;
+			boolean useAccessibility = true;
+			
 			List itemList = new ArrayList(THIS.patternList);
 
 			onSuccess(Map map) {
@@ -294,7 +303,9 @@ ActionPicker() {
 									break;
 
 							}
-						} catch (e) {}
+						} catch (e) {
+							log(e.getMessage(), "ERROR", TOP);
+						}
 
 					} else {
 						switch (param) {
@@ -381,7 +392,12 @@ ActionPicker() {
 		overload(This THIS) {
 			String title = "Select Method";
 			boolean showFilter;
+			// ! Will block main thread because using SingleSubject.blockingGet();
 			long timeout = defaultTimeout;
+			
+			boolean useOverlay = false;
+			boolean useAccessibility = true;
+			
 			List itemList = new ArrayList(THIS.overloadList);
 			if (itemList.size() > indexMinFilter) showFilter = true;
 			onSuccess(Map map) {
@@ -413,7 +429,12 @@ ActionPicker() {
 		execute(This THIS) {
 			String title = "Run now";
 			boolean showFilter;
+			// ! Will block main thread because using SingleSubject.blockingGet();
 			long timeout = defaultTimeout;
+
+			boolean useOverlay = false;
+			boolean useAccessibility = true;
+
 			List itemList = new ArrayList();
 			Map runCode = new HashMap();
 			runCode.put("title", "Run code now");
@@ -506,11 +527,18 @@ ActionPicker() {
 			showToast("Copy to clipboard");
 		}
 
-		if (appended) showToast(text);
+		a11Y.assistBar.selectedWindowFilter = a11Y.assistBar.selectedWindowFilter | nodeData.windowType;
+
+		if (appended) {
+			showToast(text);
+		}
+		
 		List notReplaced = (List) finalOverload.get("notReplacedParams");
 		if (notReplaced.isEmpty()) {
 			String code = (String) finalOverload.get("usage");
 			executeDialog(code, nodeData.displayId, nodeData.windowType);
+		} else {
+			tasker.showToast(notReplaced.toString() + " are not set yet.");
 		}
 
 		return finalOverload;

@@ -90,12 +90,8 @@ ScriptEditor() {
 	FrameLayout baseRoot;
 	This displayInfos;
 	This tm;
-	boolean isRemoved;
-	boolean hasShown;
 	boolean isActionEdit;
 	String codeText;
-	int selectedDisplayId = a11Y.assistBar.selectedDisplayId;
-	int selectedWindowFilter = a11Y.assistBar.selectedWindowFilter;
 
 	boolean isActionEdit() {
 		return getUsageEvents() { "className" }.equals("net.dinglisch.android.taskerm.ActionEdit");
@@ -167,7 +163,7 @@ ScriptEditor() {
 
 	boolean hasWindowFilter(String script) {
 		String[] filterMethods = { "addWindowFilter", "setWindowFilter", "include\\w+Window", "includeAllWindows" };
-		for (String method : filterMethods) {
+		for (String method: filterMethods) {
 			Pattern pattern = Pattern.compile("\\b" + method + "\\(");
 			Matcher matcher = pattern.matcher(script);
 			if (matcher.find()) {
@@ -183,12 +179,12 @@ ScriptEditor() {
 		if (!hasA11y(script)) {
 			header += "a11Y.set();\n";
 		}
-		if (!hasSetDisplay(script) && selectedDisplayId != 0) {
-			header += "setDisplay(" + selectedDisplayId + ");\n";
+		if (!hasSetDisplay(script) && a11Y.assistBar.selectedDisplayId != 0) {
+			header += "setDisplay(" + a11Y.assistBar.selectedDisplayId + ");\n";
 		}
 
-		if (!hasWindowFilter(script) && selectedWindowFilter != 0) {
-			String windows = String.join(" | ", WindowInfo.getFlagStringList(selectedWindowFilter));
+		if (!hasWindowFilter(script) && a11Y.assistBar.selectedWindowFilter != 0) {
+			String windows = String.join(" | ", WindowInfo.getFlagStringList(a11Y.assistBar.selectedWindowFilter));
 			header += "addWindowFilter(" + windows + ");\n";
 		} else {
 			tasker.showToast("No filter");
@@ -213,7 +209,7 @@ ScriptEditor() {
 			run() {
 				String script = editText.getText().toString();
 				remove();
-				runScript(script, 100, selectedDisplayId, selectedWindowFilter);
+				runScript(script, 100, a11Y.assistBar.selectedDisplayId, a11Y.assistBar.selectedWindowFilter);
 			}
 		};
 		a11Y.executeA11y(runAll);
@@ -267,7 +263,7 @@ ScriptEditor() {
 		View.OnClickListener onClickListener = new View.OnClickListener() {
 			onClick(View view) {
 				view.setChecked(true);
-				selectedDisplayId = display.getDisplayId();
+				a11Y.assistBar.selectedDisplayId = display.getDisplayId();
 			}
 		};
 		return addChip(displayGroup, name, true, onClickListener);
@@ -288,7 +284,7 @@ ScriptEditor() {
 					onClick(View v) {
 						String code = getLines();
 						remove();
-						runScript(code, 100, selectedDisplayId, selectedWindowFilter);
+						runScript(code, 100, a11Y.assistBar.selectedDisplayId, a11Y.assistBar.selectedWindowFilter);
 					}
 				}
 			},
@@ -360,30 +356,37 @@ ScriptEditor() {
 		}
 		updateDisplayGroup();
 	}
+	
+	boolean isUpdatingWindowGroup = false;
 
 	updateWindowGroup() {
-		return tasker.showToast("Window Filter updated: " + selectedWindowFilter);
+		isUpdatingWindowGroup = true;
+		int initialFlags = a11Y.assistBar.selectedWindowFilter;
 		for (int i = 0; i < windowGroup.getChildCount(); i++) {
 			Chip chip = windowGroup.getChildAt(i);
 			int flag = chip.getTag();
-			boolean hasFlag = WindowInfo.hasFlag(selectedWindowFilter, flag);
+			boolean hasFlag = WindowInfo.hasFlag(initialFlags, flag);
+			if (flag == WindowInfo.TYPE_ALL_WINDOWS) {
+				hasFlag = initialFlags == WindowInfo.TYPE_ALL_WINDOWS;
+			}
 			chip.setChecked(hasFlag);
 		}
+		isUpdatingWindowGroup = false;
 	}
 
-	Chip addWindowChip(String flagName, boolean isInitialChecked, int flag) {
+	Chip addWindowChip(String flagName, int flag) {
 		Chip chip = new Chip(activity);
 		chip.setText(flagName);
 		chip.setCheckable(true);
-		chip.setChecked(isInitialChecked);
 		chip.setTag(flag);
 
 		chip.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if (isUpdatingWindowGroup) return;
 				if (isChecked) {
-					selectedWindowFilter = selectedWindowFilter | flag;
+					a11Y.assistBar.selectedWindowFilter = a11Y.assistBar.selectedWindowFilter | flag;
 				} else {
-					selectedWindowFilter = selectedWindowFilter & ~flag;
+					a11Y.assistBar.selectedWindowFilter = a11Y.assistBar.selectedWindowFilter & ~flag;
 				}
 				updateWindowGroup();
 			}
@@ -404,45 +407,44 @@ ScriptEditor() {
 		// { Chip text, checkable, flag}
 		Object[][] editChips = new Object[][] {
 			{
+				"All",
+				WindowInfo.TYPE_ALL_WINDOWS
+			},
+			{
 				"App",
-				false,
 				WindowInfo.TYPE_APPLICATION
 			},
 			{
 				"Input",
-				false,
 				WindowInfo.TYPE_INPUT_METHOD
 			},
 			{
 				"System",
-				false,
 				WindowInfo.TYPE_SYSTEM
 			},
 			{
 				"Accessibility",
-				false,
 				WindowInfo.TYPE_ACCESSIBILITY_OVERLAY
 			},
 			{
 				"Split screen divider",
-				false,
 				WindowInfo.TYPE_SPLIT_SCREEN_DIVIDER
 			},
 			{
 				"Magnification",
-				false,
 				WindowInfo.TYPE_MAGNIFICATION_OVERLAY
 			},
 			{
 				"Window Control",
-				false,
 				WindowInfo.TYPE_WINDOW_CONTROL
 			}
 		};
 
+		int initialFlags = a11Y.assistBar.selectedWindowFilter;
 		for (Object[] chip: editChips) {
-			addWindowChip(chip[0], chip[1], chip[2]);
+			addWindowChip(chip[0], chip[1]);
 		}
+		updateWindowGroup();
 	}
 
 
@@ -451,9 +453,6 @@ ScriptEditor() {
 		TOP.activity = activity;
 		tm = ThemeManager(activity);
 		tm.setThemeDark();
-
-		selectedDisplayId = a11Y.assistBar.selectedDisplayId;
-		selectedWindowFilter = a11Y.assistBar.selectedWindowFilter;
 
 		This monitor = SimpleActivityMonitor(activity, activityListener());
 		float density = activity.getResources().getDisplayMetrics().density;
@@ -548,13 +547,9 @@ ScriptEditor() {
 		activity.setContentView(baseRoot);
 
 		activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-			onViewAttachedToWindow(View v) {
-				isRemoved = false;
-				hasShown = true;
-			}
+			onViewAttachedToWindow(View v) {}
+
 			onViewDetachedFromWindow(View v) {
-				isRemoved = true;
-				hasShown = false;
 				activity.finish();
 			}
 		});
@@ -586,8 +581,6 @@ ScriptEditor() {
 		}
 		debugMe = oldDebugMe;
 		if (!isShowing()) {
-			isRemoved = false;
-			hasShown = true;
 			tasker.doWithActivity(uiLogic);
 		}
 	}
@@ -596,7 +589,6 @@ ScriptEditor() {
 		if (activity != null) {
 			activity.finish();
 		}
-		isRemoved = true;
 	}
 
 	void toggle() {

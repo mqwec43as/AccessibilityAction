@@ -17,11 +17,13 @@ NodeSearch(This structureOverlay) {
     Map map = structureOverlay.map;
     List itemList = new ArrayList();
     int iconSize = dp(48);
+
 	config(This THIS) {
         List itemList = TOP.itemList;
 		String title = "Nodes";
 		boolean showFilter = true;
-		long timeout = 150000;
+        boolean useOverlay = false;
+	    boolean useAccessibility = true;
 		
         onSuccess(Map map) {
             This nodeBox = map.get("nodeBox");

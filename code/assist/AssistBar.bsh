@@ -87,10 +87,6 @@ public This AssistBar(int initialX, int initialY) {
 	int screenheight;
 	DisplayMetrics displayMetrics;
 	LinearLayout container;
-	Handler mainHandler = new Handler(Looper.getMainLooper());
-	boolean isRemoved;
-	boolean isShowing;
-	boolean hasShownOnce;
 	int selectedDisplayId;
 	int selectedWindowFilter;
 
@@ -239,7 +235,9 @@ public This AssistBar(int initialX, int initialY) {
 		if (!isShowing()) return;
 		try {
 			windowManager.updateViewLayout(assistBar, (WindowManager.LayoutParams) assistParams);
-		} catch (e) {}
+		} catch (e) {
+			log(e.getMessage(), "ERROR", TOP);
+		}
 	}
 
 	getIconButton(int id) {
@@ -379,8 +377,14 @@ public This AssistBar(int initialX, int initialY) {
 		if (filterSheet != null) filterSheet.remove();
 		nodeSearch = NodeSearch(structureOverlay);
 		A11yConfig.refresh();
-		a11Y.viewControl.show(ENV.Layout.TYPE_NODE_SEARCH);
-		super.state = OPENING_NODE_SEARCH;
+		Runnable post = new Runnable() {
+			run() {
+				log("Showing Node Search", "INFO", TOP);
+				a11Y.viewControl.show(ENV.Layout.TYPE_NODE_SEARCH);
+				super.state = OPENING_NODE_SEARCH;
+			}
+		};
+		a11Y.post(post);
 	}
 
 	toggleSearch() {
@@ -389,21 +393,31 @@ public This AssistBar(int initialX, int initialY) {
 				try {
 					if (nodeSearch != null) {
 						if (structureOverlay != null && structureOverlay.isShowing()) {
-							showSearch();
+							if (structureOverlay.structureSnapshot.isScreenshotRecycled()) {
+								tasker.showToast("Screenshot recycled");
+							} else {
+								log("Showing Node Search when structure overlay is showing", "INFO", TOP);
+								showSearch();
+							}
 						} else {
+							log("Removing Node Search when structure overlay is not showing", "INFO", TOP);
 							nodeSearch.remove();
 							nodeSearch = null;
 							structureOverlay.unhide();
 						}
 					} else {
+						log("Showing Node Search when null", "INFO", TOP);
 						showSearch();
 					}
 				} catch (e) {
-					tasker.showToast(e.getMessage());
+					tasker.showToast(e.getMessage(), "Error showing search");
+					log(e.getMessage(), "ERROR", TOP);
+					a11Y.lastError = e;
+					throw e;
 				}
 			}
 		};
-		runMe(runMe);
+		a11Y.execute(runMe);
 	}
 
 	toggleScriptEditor() {
@@ -444,6 +458,7 @@ public This AssistBar(int initialX, int initialY) {
 	displayStructure(AccessibilityWindowInfo window) {
 		setHandleMode(CAPTURE_MODE, false);
 		super.state = CAPTURING_STRUCTURE;
+
 		if (window == null) {
 			setHandleMode(CAPTURE_MODE, true);
 			removeStructure();
@@ -451,6 +466,7 @@ public This AssistBar(int initialX, int initialY) {
 			throw new NullPointerException("Window is null");
 			return;
 		}
+
 		Runnable displayMe = new Runnable() {
 			run() {
 				try {
@@ -472,6 +488,7 @@ public This AssistBar(int initialX, int initialY) {
 				}
 			}
 		};
+
 		a11Y.post(displayMe);
 	}
 
@@ -537,7 +554,8 @@ public This AssistBar(int initialX, int initialY) {
 			}
 
 		} catch (e) {
-			tasker.showToast(e.getMessage());
+			tasker.showToast(e.getMessage(), "Failed to toggle structure overlay");
+			log(e.getMessage(), "ERROR", TOP);
 		}
 	}
 
@@ -564,20 +582,20 @@ public This AssistBar(int initialX, int initialY) {
 	}
 
 	public void switchLayout(boolean isStructureShown) {
-		int whenShown = AssistInfo.SCRIPT_BUTTON | AssistInfo.SETTING_BUTTON | AssistInfo.ACTIONS_GROUP_BUTTON | AssistInfo.CLOSE_BUTTON ;
-		int whenNot = AssistInfo.FILTER_BUTTON | AssistInfo.SEARCH_BUTTON | AssistInfo.INFO_BUTTON;
+		int whenShown = AssistInfo.SCRIPT_BUTTON | AssistInfo.SETTING_BUTTON | AssistInfo.ACTIONS_GROUP_BUTTON ;
+		int whenNot = AssistInfo.FILTER_BUTTON | AssistInfo.SEARCH_BUTTON | AssistInfo.INFO_BUTTON ;
 		if (isStructureShown) {
 			buttonManager.hideButtons(whenShown);
 			buttonManager.unhideButtons(whenNot);
 		} else {
-			buttonManager.unhideButtons(whenShown);
 			buttonManager.hideButtons(whenNot);
+			buttonManager.unhideButtons(whenShown);
 		}
 	}
 
 	// Listener for Structure Overlay to switch layout
 	createStructureOverlayListener() {
-		This screenshotHelper;
+		This structureSnapshot;
 
 		onViewAttachedToWindow(View view) {
 			setHandleMode(DELETE_CAPTURE_MODE, false);
@@ -591,38 +609,30 @@ public This AssistBar(int initialX, int initialY) {
 			buttonManager.setButtonsTouchState(AssistInfo.SEARCH_BUTTON | AssistInfo.FILTER_BUTTON, false);
 			switchLayout(false);
 			log("Reset layout then remove structure overlay with node search & filter", TOP);
-			if (screenshotHelper != null) screenshotHelper.recycle();
 			try {
-				filterSheet.remove();
+				if (filterSheet != null) filterSheet.remove();
 				filterSheet = null;
-				nodeSearch.remove();
+				if (filterSheet != null) nodeSearch.remove();
 				nodeSearch = null;
 			} catch (e) {
-
+				log(e.getMessage(), "ERROR", TOP);
 			}
 		}
 
 		onStructureReady(This structureOverlay) {
-			log("Switching layout to use structure overlay", TOP);
-			if (structureOverlay.isShowing()) {
-				setHandleMode(DELETE_CAPTURE_MODE, true);
-				buttonManager.setButtonsTouchState(AssistInfo.FILTER_BUTTON, true);
-				super.state = ACTIVITY_NONE;
-			} else {
+			log("Structure overlay ready", TOP);
+			buttonManager.setButtonsTouchState(AssistInfo.FILTER_BUTTON | AssistInfo.SEARCH_BUTTON, true);
+			if (structureOverlay.isRemoved()) {
 				setHandleMode(CAPTURE_MODE, true);
-				screenshotHelper.recycle();
+			} else {
+				setHandleMode(DELETE_CAPTURE_MODE, true);
+				super.state = ACTIVITY_NONE;
 			}
 			super.state = STRUCTURE_CAPTURED;
 		}
 
-		onScreenshotSuccess(This screenshotHelper) {
-			buttonManager.setButtonsTouchState(AssistInfo.SEARCH_BUTTON, true);
-			// searchBtn.setTouchState(true);
-			if (!structureOverlay.isShowing()) {
-				setHandleMode(CAPTURE_MODE, true);
-				screenshotHelper.recycle();
-				super.state = ACTIVITY_NONE;
-			}
+		onScreenshotSuccess(This structureSnapshot) {
+			log("Screenshot success", "INFO", TOP);
 		}
 
 		return this;
@@ -706,7 +716,9 @@ public This AssistBar(int initialX, int initialY) {
 		assistParams.y = y;
 		try {
 			windowManager.updateViewLayout(assistBar, assistParams);
-		} catch (e) {}
+		} catch (e) {
+			log(e.getMessage(), "ERROR", TOP);
+		}
 	}
 
 	onMove(View view, MotionEvent event) {
@@ -753,9 +765,6 @@ public This AssistBar(int initialX, int initialY) {
 		assistBar.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {
 				try {
-					hasShownOnce = true;
-					isShowing = true;
-					if (isRemoved) isRemoved = false;
 					refreshSize();
 					setupResources();
 				} catch (e) {
@@ -764,14 +773,8 @@ public This AssistBar(int initialX, int initialY) {
 
 			}
 			onViewDetachedFromWindow(View v) {
-				// try {
-				isShowing = false;
-				isRemoved = true;
 				clearResources();
 				a11Y.clean();
-				// } catch (e) {
-				// 	log(e.getMessage(), "ERROR", TOP, true);
-				// }
 			}
 		});
 	}
@@ -800,7 +803,6 @@ public This AssistBar(int initialX, int initialY) {
 		removeStructure();
 		stuctureOverlay = null;
 		if (isShowing()) windowManager.removeView(assistBar);
-		isShowing = false;
 		a11Y.clean();
 	}
 
@@ -818,7 +820,7 @@ public This AssistBar(int initialX, int initialY) {
 				windowManager.addView(assistBar, assistParams);
 			}
 		};
-		if (!isShowing()) mainHandler.post(displayOverlay);
+		if (!isShowing()) a11Y.post(displayOverlay);
 	}
 
 	return this;

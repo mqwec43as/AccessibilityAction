@@ -68,6 +68,10 @@ This ScreenshotHelper(This takeScreenshot, Bitmap bitmap) {
 		return new BitmapDrawable(getContext().getResources(), getBitmap(targetBounds));
 	}
 
+	boolean isRecycled() {
+		return getBitmap().isRecycled();
+	}
+
 	void recycle() {
 		try {
 			takeScreenshot.recycle();

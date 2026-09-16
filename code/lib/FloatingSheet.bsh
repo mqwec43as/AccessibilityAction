@@ -56,12 +56,9 @@ FloatingSheet(This config) {
 	if (ENV == void || ENV == null) ENV = Environment();
 	ENV.checkMaterialLib(this);
 
-	Handler mainHandler = new Handler(Looper.getMainLooper());
 	Context ctx = getContext(true, 0);
 	Object a11yService = getService();
 	WindowManager windowManager = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
-	boolean isRemoved = true;
-	boolean hasShown = false;
 	FrameLayout baseRoot = null;
 	WindowManager.LayoutParams wmParams = null;
 	int maxHeightPx = 0;
@@ -77,12 +74,10 @@ FloatingSheet(This config) {
 	int initialWinY;
 
 	remove() {
-		if (baseRoot != null && windowManager != null && !isRemoved) {
+		if (baseRoot != null && windowManager != null && !isRemoved()) {
 			try {
 				windowManager.removeView(baseRoot);
 			} catch (Throwable e) {}
-			isRemoved = true;
-			hasShown = false;
 		}
 	}
 
@@ -248,10 +243,7 @@ FloatingSheet(This config) {
 	// }
 
 	show() {
-		if (!hasShown) {
-			// layout();
-			isRemoved = false;
-			hasShown = true;
+		if (!isShowing()) {
 
 			wmParams = new WindowManager.LayoutParams();
 			wmParams.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
@@ -261,13 +253,13 @@ FloatingSheet(This config) {
 			wmParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
 			wmParams.gravity = Gravity.TOP;
 			wmParams.y = 0;
-			mainHandler.post(new Runnable() {
+			a11Y.post(new Runnable() {
 				run() {
 					try {
 						windowManager.addView(baseRoot, wmParams);
 
 						/* After layout, move to bottom */
-						mainHandler.post(new Runnable() {
+						a11Y.post(new Runnable() {
 							run() {
 								int screenHeight = ctx.getResources().getDisplayMetrics().heightPixels;
 								int sheetHeight = baseRoot.getHeight();
@@ -292,7 +284,7 @@ FloatingSheet(This config) {
 	}
 
 	toggle() {
-		if (!hasShown) {
+		if (!isShowing()) {
 			show();
 		} else {
 			remove();

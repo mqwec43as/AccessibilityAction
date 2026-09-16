@@ -134,12 +134,11 @@ public Chip createPropertyChip(Context ctx, String value, boolean isActive) {
   ───────────────────────────────────────────────────────────────*/
 
 public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overlayType) {
-	
+
 	if (ENV == void || ENV == null) ENV = Environment();
 	ENV.checkMaterialLib(this);
 
 	final WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
-	final Handler mainHandler = new Handler(Looper.getMainLooper());
 
 	final This TOP = this;
 	This a11Y = getA11yInstance();
@@ -252,8 +251,14 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 
 	/* Logic Definitions */
 	remove() {
-		mainHandler.post(new Runnable() {
-			run() { try { wm.removeView(root); } catch (e) {} }
+		a11Y.post(new Runnable() {
+			run() {
+				try {
+					wm.removeView(root);
+				} catch (e) {
+					log(e.getMessage(), "ERROR", TOP);
+				}
+			}
 		});
 	}
 
@@ -286,7 +291,7 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 		}
 	});
 
-	mainHandler.post(new Runnable() {
+	a11Y.post(new Runnable() {
 		run() {
 			rootGesture.listen();
 			wm.addView(root, params);

@@ -101,6 +101,9 @@ ActionsGroupDialog() {
 		boolean showFilter;
 		List itemList = new ArrayList();
 
+		boolean useOverlay = false;
+		boolean useAccessibility = true;
+
 		for (int i = 0; i < Groups.length; i++) {
 			Map map = new HashMap();
 			map.put("title", Groups[i][0]);

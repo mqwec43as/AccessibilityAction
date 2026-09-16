@@ -48,6 +48,7 @@ DisplayMenu() {
 				item.put("icon", ss.getDrawable());
 			} catch(e) {
 				tasker.showToast(e.toString());
+				log(e.getMessage(), "ERROR", TOP);
 			}
 			displayList.add(item);
 		}
@@ -57,9 +58,12 @@ DisplayMenu() {
 	config(This THIS) {
 		List itemList = TOP.displayList;
 		String title = "Display Menu";
-		long timeout = 30000;
 		int iconSize = 240;
 		boolean showFilter;
+
+		boolean useOverlay = false;
+		boolean useAccessibility = true;
+
 		onSuccess(Map map) {
 			Display display = map.get("display");
 			if (TOP.onClickListener != null) {

@@ -86,8 +86,6 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 	a11Y.viewControl.addView(TOP);
 	// Always uses accessibility service for non main screen
 	// if (displayId > 0) useA11y = true;
-	boolean isRemoved;
-	boolean isShowing;
 	boolean hasShownOnce;
 
 	boolean nodeBoxTouchable = true;
@@ -109,7 +107,6 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 	final Object accessibilityService = getService();
 	Context context = getContext(useA11y, displayId);
 	final WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-	Handler mainHandler = new Handler(Looper.getMainLooper());
 
 	int overlayType = useA11y ?
 		WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY :
@@ -170,7 +167,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 	}
 
 	post(Runnable run) {
-		mainHandler.post(run);
+		a11Y.post(run);
 	}
 
 
@@ -339,6 +336,15 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 		}
 	}
 
+	recycleScreenshot() {
+		log("Recycling screenshot", TOP);
+		if (structureSnapshot == null) {
+			log("No screenshot to recycle", TOP);
+			return;
+		}
+		structureSnapshot.recycle();
+	}
+
 	getNodeBitmap(AccessibilityNodeInfo node) {
 		return structureSnapshot.getNodeBitmap(node);
 	}
@@ -494,6 +500,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 		super.state = CAPTURING_STRUCTURE;
 		// Reset everything
 		log("Showing", TOP);
+		
 		if (hasShownOnce) {
 			log("Already shown once, refreshing the node list", TOP);
 			root = (AccessibilityNodeInfo) getRoot(displayId);
@@ -666,7 +673,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 		}
 
 		rootParams = currentParams;
-		if (isShowing && !isRemoved) {
+		if (isShowing() && !isRemoved()) {
 			/* Use the instance windowManager and the updated params */
 			windowManager.updateViewLayout(rootLayout, rootParams);
 		}
@@ -679,8 +686,6 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 		public void onViewAttachedToWindow(View view) {
 			log("StructureOverlay attached", TOP);
 			hasShownOnce = true;
-			isShowing = true;
-			if (isRemoved) isRemoved = false;
 			if (a11Y.structureOverlay == void) a11Y.namespace.setVariable("structureOverlay", TOP, false);
 			a11Y.addOverlay(TOP);
 			if (TOP.listener != null) {
@@ -695,11 +700,10 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 
 		public void onViewDetachedFromWindow(View view) {
 			log("StructureOverlay detached", TOP);
-			isRemoved = true;
-			isShowing = false;
 			a11Y.removeOverlay(this);
 			a11Y.namespace.unsetVariable("structureOverlay");
 			removeActiveHighlight();
+			recycleScreenshot();
 			if (TOP.listener != null) {
 				try {
 					TOP.listener.onViewDetachedFromWindow(view);

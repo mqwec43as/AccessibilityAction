@@ -38,7 +38,6 @@ DisplayInfos() {
 	}
 
 	Display[] displays = displayManager.getDisplays();
-	Handler mainHandler = new Handler(Looper.getMainLooper());
 
 	This DisplayInfo(Display display) {
 		String name = display.getName();
@@ -48,8 +47,7 @@ DisplayInfos() {
 		if (windowManager == null) {
 			continue;
 		}
-		boolean isRemoved;
-		boolean isShowing;
+		
 		/* Create parent container view holding both separate children */
 		LinearLayout view = new LinearLayout(displayContext);
 		view.setOrientation(LinearLayout.VERTICAL);
@@ -100,13 +98,14 @@ DisplayInfos() {
 		params.format = PixelFormat.TRANSLUCENT;
 		params.gravity = Gravity.CENTER;
 		params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+		params.title = this.namespace.name + ": " + name + " #" + id;
 
 		show() {
 			if (!isShowing()) windowManager.addView(view, params);
 		}
 
 		remove() {
-			if (!isRemoved) {
+			if (!isRemoved()) {
 				windowManager.removeView(view);
 			}
 		}
@@ -141,14 +140,10 @@ DisplayInfos() {
 
 		view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {
-				isRemoved = false;
-				isShowing = true;
 				a11Y.addOverlay(this);
 			}
 
 			onViewDetachedFromWindow(View v) {
-				isRemoved = true;
-				isShowing = false;
 				a11Y.removeOverlay(this);
 			}
 		});
@@ -193,7 +188,7 @@ DisplayInfos() {
 
 	show(long timeout) {
 		show();
-		a11Y.mainHandler.postDelayed(new Runnable() {
+		a11Y.postDelayed(new Runnable() {
 			 run() { 
 				remove(); 
 			} 

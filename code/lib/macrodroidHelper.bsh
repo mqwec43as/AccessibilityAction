@@ -40,6 +40,12 @@ macrodroidHelper() {
 	int intentTimeout = 30000;
 	final This TOP = this;
 
+	set() {
+		This CALLER = this.caller;
+		CALLER.namespace.setVariable("tasker", TOP, false);
+		CALLER.namespace.setVariable("context", getContext(), false);
+	}
+
 	getContext() {
 		return com.arlosoft.macrodroid.AppContext.getContext();
 	}
@@ -319,10 +325,19 @@ macrodroidHelper() {
 		return null;
 	}
 
-	set() {
-		This CALLER = this.caller;
-		CALLER.namespace.setVariable("tasker", TOP, false);
-		CALLER.namespace.setVariable("context", getContext(), false);
+	/*───────────────────────────────────────────────────────────────
+	  Privileged Shell
+	  ───────────────────────────────────────────────────────────────*/
+	boolean isRootAvailable() {
+		return false;
+	}
+
+	boolean isShizukuAvailable() {
+		return false;
+	}
+
+	boolean isAdbWifiAvailable() {
+		return false;
 	}
 
 	return this;
