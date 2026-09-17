@@ -144,22 +144,22 @@ This StructureSnapshot(int displayId) {
 	 * Triggers/updates full display screenshot
 	 ! Use Single by default and has to be ran on background thread
 	 */
-	// void takeScreenshot() {
-	// 	SingleSubject single = SingleSubject.create();
-	// 	listener() {
-	// 		onSuccess(This screenshotHelper) {
-	// 			single.onSuccess(screenshotHelper);
-	// 		}
+	void takeScreenshot() {
+		SingleSubject single = SingleSubject.create();
+		listener() {
+			onSuccess(This screenshotHelper) {
+				single.onSuccess(screenshotHelper);
+			}
 
-	// 		onError(int errorCode) {
-	// 			single.onError(new RuntimeException("Screenshot failed with error code: " + errorCode));
-	// 		}
+			onError(int errorCode) {
+				single.onError(new RuntimeException("Screenshot failed with error code: " + errorCode));
+			}
 
-	// 		return this;
-	// 	}
-	// 	takeScreenshot(listener());
-	// 	single.timeout(2000, TimeUnit.MILLISECONDS).blockingGet();
-	// }
+			return this;
+		}
+		takeScreenshot(listener());
+		single.timeout(2000, TimeUnit.MILLISECONDS).blockingGet();
+	}
 
 	getBitmap(int key, Rect targetBounds) {
 

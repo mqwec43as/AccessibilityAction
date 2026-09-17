@@ -48,7 +48,18 @@ WindowMenu() {
 			try {
 				This snapshot = StructureSnapshot(displayId);
 				snapshots.put(displayId, snapshot);
-				snapshot.takeScreenshot();
+				listener() {
+					onSuccess(This screenshotHelper) {
+						log("Screenshot complete for display " + displayId, "INFO", TOP);
+					}
+
+					onError(int errorCode) {
+						log("Screenshot failed with error code: " + errorCode, "ERROR", TOP);
+					}
+					
+					return this;
+				}
+				snapshot.takeScreenshot(listener());
 				Thread.sleep(screenshotDelay);
 			} catch (e) {
 				log(e.getMessage(), "ERROR", TOP);

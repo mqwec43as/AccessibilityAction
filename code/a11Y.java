@@ -251,11 +251,11 @@ a11Y() {
 	}
 
 	void execute(Runnable postRun) {
-		executor.submit(postRun);
+		executor.execute(postRun);
 	}
 
 	void executeA11y(Runnable postRun) {
-		a11yExecutor.submit(postRun);
+		a11yExecutor.execute(postRun);
 	}
 
 	FutureTask submit(Runnable postRun) {
