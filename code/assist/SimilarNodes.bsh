@@ -55,7 +55,7 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	List textNodes = new ArrayList();
 
 	AccessibilityWindowInfo window = node.getWindow();
-	int windowType = 1 << nodeBox.windowType;
+	int windowType = nodeBox.windowType;
 	int displayId = nodeBox.displayId;
 
 	String id = node.getViewIdResourceName();

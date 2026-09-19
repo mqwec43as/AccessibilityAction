@@ -31,6 +31,7 @@ import java.util.List;
 import android.view.HapticFeedbackConstants;
 
 import bsh.This;
+import android.os.Looper;
 
 /*───────────────────────────────────────────────────────────────
   dp(int value)
@@ -59,6 +60,7 @@ public This AssistBar(int initialX, int initialY) {
 	final int OPENING_SCRIPT_EDITOR = 5;
 	final int OPENING_NODE_SEARCH = 6;
 	final int OPENING_ACTIONS_GROUP = 7;
+	final int TOGGLING_ASSIST_BAR = 8;
 
 	int state = ACTIVITY_NONE;
 	int mode = CAPTURE_MODE;
@@ -173,27 +175,32 @@ public This AssistBar(int initialX, int initialY) {
 	}
 
 	setHandleMode(int mode, boolean state) {
-		This handleBtn = getIconButton(AssistInfo.HANDLE_BUTTON);
-		if (state) {
-			handleGesture.unmute();
-		} else {
-			handleGesture.mute();
-		}
-		switch (mode) {
-			case CAPTURE_MODE:
-				super.mode = CAPTURE_MODE;
-				handleBtn.resetIcon();
-				handleBtn.setTouchState(state);
-				break;
-			case DELETE_CAPTURE_MODE:
-				super.mode = DELETE_CAPTURE_MODE;
-				handleBtn.setTemporaryIcon(AssistInfo.DELETE_ICON);
-				handleBtn.setTouchState(state);
+		Runnable handleModeRun = new Runnable() {
+			run() {
+				This handleBtn = getIconButton(AssistInfo.HANDLE_BUTTON);
 				if (state) {
-					handleBtn.setTemporaryIconColor(tm.color("colorErrorContainer"), tm.color("colorOnErrorContainer"));
+					handleGesture.unmute();
+				} else {
+					handleGesture.mute();
 				}
-				break;
-		}
+				switch (mode) {
+					case CAPTURE_MODE:
+						super.mode = CAPTURE_MODE;
+						handleBtn.resetIcon();
+						handleBtn.setTouchState(state);
+						break;
+					case DELETE_CAPTURE_MODE:
+						super.mode = DELETE_CAPTURE_MODE;
+						handleBtn.setTemporaryIcon(AssistInfo.DELETE_ICON);
+						handleBtn.setTouchState(state);
+						if (state) {
+							handleBtn.setTemporaryIconColor(tm.color("colorErrorContainer"), tm.color("colorOnErrorContainer"));
+						}
+						break;
+				}
+			}
+		};
+		a11Y.post(handleModeRun);
 	}
 
 
@@ -207,6 +214,7 @@ public This AssistBar(int initialX, int initialY) {
 	removeStructure() {
 		if (structureOverlay != null && !structureOverlay.isRemoved()) {
 			structureOverlay.remove();
+			stuctureOverlay = null;
 		}
 	}
 
@@ -375,7 +383,7 @@ public This AssistBar(int initialX, int initialY) {
 	────────────────────────────*/
 	showSearch() {
 		if (filterSheet != null) filterSheet.remove();
-		nodeSearch = NodeSearch(structureOverlay);
+		nodeSearch = NodeSearch(TOP, structureOverlay);
 		A11yConfig.refresh();
 		Runnable post = new Runnable() {
 			run() {
@@ -421,7 +429,7 @@ public This AssistBar(int initialX, int initialY) {
 	}
 
 	toggleScriptEditor() {
-		a11Y.viewControl.show(ENV.Layout.TYPE_SCRIPT_EDITOR);
+		a11Y.viewControl.toggle(ENV.Layout.TYPE_SCRIPT_EDITOR);
 		super.state = OPENING_SCRIPT_EDITOR;
 	}
 
@@ -532,7 +540,6 @@ public This AssistBar(int initialX, int initialY) {
 		try {
 			// Remove Any Dialogs
 			if (isDialogsShowing()) {
-				showToast("Press again after dialogs are closed");
 				assistBar.performHapticFeedback(HapticFeedbackConstants.REJECT);
 				removeDialogs();
 				return;
@@ -592,7 +599,6 @@ public This AssistBar(int initialX, int initialY) {
 			buttonManager.unhideButtons(whenShown);
 		}
 	}
-
 	// Listener for Structure Overlay to switch layout
 	createStructureOverlayListener() {
 		This structureSnapshot;
@@ -689,6 +695,7 @@ public This AssistBar(int initialX, int initialY) {
 		assistSetting = null;
 		if (actionsGroupDialog != null) actionsGroupDialog.remove();
 		actionsGroupDialog = null;
+		a11Y.clean();
 	}
 
 	/*────────────────────────────
@@ -764,19 +771,37 @@ public This AssistBar(int initialX, int initialY) {
 
 		assistBar.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {
+				if (isToggling()) return;
 				try {
 					refreshSize();
 					setupResources();
 				} catch (e) {
 					log(e.getMessage(), "ERROR", TOP, true);
 				}
-
 			}
 			onViewDetachedFromWindow(View v) {
+				if (isToggling()) return;
 				clearResources();
-				a11Y.clean();
 			}
 		});
+	}
+
+	toggle() {
+		Runnable toggleRun = new Runnable() {
+			run() {
+				state = TOGGLING_ASSIST_BAR;
+				if (isShowing()) {
+					windowManager.removeView(assistBar);
+					windowManager.addView(assistBar, assistParams);
+				}
+				state = ACTIVITY_NONE;
+			}
+		};
+		a11Y.post(toggleRun);
+	}
+
+	isToggling() {
+		return state == TOGGLING_ASSIST_BAR;
 	}
 
 	isAdded() {
@@ -800,10 +825,7 @@ public This AssistBar(int initialX, int initialY) {
 	}
 
 	remove() {
-		removeStructure();
-		stuctureOverlay = null;
 		if (isShowing()) windowManager.removeView(assistBar);
-		a11Y.clean();
 	}
 
 	show() {
@@ -820,7 +842,9 @@ public This AssistBar(int initialX, int initialY) {
 				windowManager.addView(assistBar, assistParams);
 			}
 		};
-		if (!isShowing()) a11Y.post(displayOverlay);
+		if (!isShowing()) {
+			a11Y.post(displayOverlay);
+		}
 	}
 
 	return this;

@@ -253,13 +253,13 @@ FloatingSheet(This config) {
 			wmParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
 			wmParams.gravity = Gravity.TOP;
 			wmParams.y = 0;
-			a11Y.post(new Runnable() {
+			Runnable showRun = new Runnable() {
 				run() {
 					try {
 						windowManager.addView(baseRoot, wmParams);
 
 						/* After layout, move to bottom */
-						a11Y.post(new Runnable() {
+						a11Y.postDelayed(new Runnable() {
 							run() {
 								int screenHeight = ctx.getResources().getDisplayMetrics().heightPixels;
 								int sheetHeight = baseRoot.getHeight();
@@ -271,15 +271,14 @@ FloatingSheet(This config) {
 								windowManager.updateViewLayout(baseRoot, wmParams);
 								baseRoot.setVisibility(View.VISIBLE);
 								a11Y.addOverlay(TOP);
-								
 							}
-						});
+						}, 50);
 					} catch (Throwable e) {
 						tasker.showToast("Error adding overlay: " + e.getMessage());
 					}
 				}
-			});
-
+			};
+			a11Y.post(showRun);
 		}
 	}
 

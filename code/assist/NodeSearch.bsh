@@ -4,11 +4,12 @@ import bsh.This;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.graphics.Point;
 import java.util.concurrent.Callable;
+import android.os.Looper;
 
 /*───────────────────────────────────────────────────────────────
   NodeSearch()
   ───────────────────────────────────────────────────────────────*/
-NodeSearch(This structureOverlay) {
+NodeSearch(This assistBar, This structureOverlay) {
     
     final This TOP = this;
     This a11Y = getA11yInstance();
@@ -22,7 +23,7 @@ NodeSearch(This structureOverlay) {
         List itemList = TOP.itemList;
 		String title = "Nodes";
 		boolean showFilter = true;
-        boolean useOverlay = false;
+        boolean useOverlay = true;
 	    boolean useAccessibility = true;
 		
         onSuccess(Map map) {
@@ -48,10 +49,12 @@ NodeSearch(This structureOverlay) {
 
         onAttach() {
             structureOverlay.hide();
+            assistBar.setHandleMode(assistBar.DELETE_CAPTURE_MODE, false);
         }
 
         onDetach() {
             structureOverlay.unhide();
+            assistBar.setHandleMode(assistBar.DELETE_CAPTURE_MODE, true);
         }
         
 		return this;
@@ -100,6 +103,25 @@ NodeSearch(This structureOverlay) {
     }
 
     loadList();
+    
+    show() {
+        boolean isMainThread = Looper.getMainLooper().isCurrentThread();
+        if (config.useOverlay) {
+            if (isMainThread) {
+                listDialog.show();
+            } else {
+                Runnable showRun = new Runnable() {
+                    run() {
+                        listDialog.show();
+                    }
+                };
+                a11Y.post(showRun);
+            }
+		} else {
+			listDialog.show();
+		}
+    }
+
 	return this;
 }
 

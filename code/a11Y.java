@@ -309,7 +309,11 @@ a11Y() {
 	}
 
 	void post(Runnable postRun) {
-		mainHandler.post(postRun);
+		if (Looper.getMainLooper().isCurrentThread()) {
+			postRun.run();
+		} else {
+			mainHandler.post(postRun);
+		}
 	}
 
 	void postDelayed(Runnable postRun, long delay) {

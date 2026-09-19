@@ -3,6 +3,7 @@ importCommands("others");
 import bsh.This;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.graphics.Point;
+import android.os.Looper;
 
 /*───────────────────────────────────────────────────────────────
   DisplayMenu()
@@ -42,10 +43,15 @@ DisplayMenu() {
 			item.put("display", display);
 			try {
 				int index = i + 1; 
-				This ss = takeScreenshot(id);
-				screenshots.add(ss);
+				listener() {
+					onSuccess(This ss) {
+						screenshots.add(ss);
+						item.put("icon", ss.getDrawable());
+					}
+					return this;
+				}
+				This ss = takeScreenshot(id, listener());
 				Thread.sleep(screenshotDelay);
-				item.put("icon", ss.getDrawable());
 			} catch(e) {
 				tasker.showToast(e.toString());
 				log(e.getMessage(), "ERROR", TOP);
@@ -61,7 +67,7 @@ DisplayMenu() {
 		int iconSize = 240;
 		boolean showFilter;
 
-		boolean useOverlay = false;
+		boolean useOverlay = true;
 		boolean useAccessibility = true;
 
 		onSuccess(Map map) {
@@ -82,7 +88,7 @@ DisplayMenu() {
 						}
 					};
 				};
-				a11Y.post(runMe);
+				a11Y.postDelayed(runMe, 500);
 			} else {
 				log("No onClickListener set", "ERROR", TOP);
 			}
@@ -118,8 +124,22 @@ DisplayMenu() {
 		displayInfos = DisplayInfos();
 		loadList();
 		config = config(TOP);
-		TOP.listDialog = ListDialog(config);
-		listDialog.show();
+		listDialog = ListDialog(config);
+		boolean isMainThread = Looper.getMainLooper().isCurrentThread();
+        if (config.useOverlay) {
+            if (isMainThread) {
+                listDialog.show();
+            } else {
+                Runnable showRun = new Runnable() {
+                    run() {
+                        listDialog.show();
+                    }
+                };
+                a11Y.post(showRun);
+            }
+		} else {
+			listDialog.show();
+		}
 	}
 
 	remove() {

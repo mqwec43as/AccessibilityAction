@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+import android.os.Looper;
 
 /*───────────────────────────────────────────────────────────────
 ViewControl()
@@ -18,7 +20,7 @@ ViewControl() {
 	int visibleViews = 0;
 	int removedViews = 0;
 	// Stores view bsh.This containing show(), hide(), remove() and isShowing, isRemoved, isHidden
-	Map viewMap = new HashMap();
+	Map viewMap = new ConcurrentHashMap();
 	// Get a11Y to use stored flag constants
 	This a11Y = getA11yInstance();
 	Object[][] showRules = new Object[][] {
@@ -168,11 +170,6 @@ ViewControl() {
 	}
 
 	show(int targetViewsBit) {
-		boolean showingStructureOverlay = targetViewsBit == ENV.Layout.TYPE_STRUCTURE_OVERLAY;
-		if (showingStructureOverlay) {
-			remove(ENV.Layout.TYPE_ASSIST_BAR);
-		}
-		/* Process dependent rule alterations prior to performing the display actions */
 		for (int i = 0; i < showRules.length; i++) {
 			int ruleView = showRules[i][0];
 
@@ -205,9 +202,8 @@ ViewControl() {
 			removedViews &= ~myView;
 		}
 
-		if (showingStructureOverlay) {
-			show(ENV.Layout.TYPE_ASSIST_BAR);
-		}
+		This assistBar = getView(ENV.Layout.TYPE_ASSIST_BAR);
+		assistBar.toggle();
 
 	}
 

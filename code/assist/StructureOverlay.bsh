@@ -166,10 +166,14 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 		return rootLayout.getParent() == null;
 	}
 
-	post(Runnable run) {
-		a11Y.post(run);
+	boolean isMainThread() {
+		return Looper.getMainLooper().isCurrentThread();
 	}
 
+	post(Runnable run) {
+		if (isMainThread()) run.run();
+		else a11Y.post(run);
+	}
 
 	/* External API to highlight specific nodes via color. */
 	highlightNodeBox(This nodeBox, int strokeColor, int fillColor) {
@@ -414,10 +418,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 					getA11yInstance().set();
 					if (a11Y.assistBar == null) return;
 					if (a11Y.assistBar.actionPicker == null) return;
-					Map result = a11Y.assistBar.actionPicker.selectNodeActions(nodeData);
-					if (result != null) {
-						a11Y.selectedAction = result;
-					}
+					a11Y.assistBar.actionPicker.selectNodeActions(nodeData);
 				} catch (e) {
 					log(e.getMessage(), "ERROR", TOP);
 				}

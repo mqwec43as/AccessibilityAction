@@ -11,6 +11,7 @@ import android.graphics.graphics.Color;
 import android.graphics.drawable.Drawable;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import android.os.Looper;
 
 
 
@@ -29,9 +30,6 @@ WindowMenu() {
 	This WindowInfo = a11Y.WindowInfo;
     long screenshotDelay = a11Y.screenshotDelay != void ? a11Y.screenshotDelay : 500;
 	Map snapshots = new ConcurrentHashMap();
-
-	boolean useOverlay = false;
-	boolean useAccessibility = true;
 
 	loadList() {
 		windowList.clear();
@@ -116,6 +114,10 @@ WindowMenu() {
 		String title = "Window Menu";
 		boolean showFilter = true;
 		int iconSize = 200;
+
+		boolean useOverlay = true;
+		boolean useAccessibility = true;
+
 		onSuccess(Map map) {
 			AccessibilityWindowInfo window = map.get("window");
 			if (TOP.onClickListener != null) {
@@ -134,7 +136,7 @@ WindowMenu() {
 						}
 					};
 				};
-				a11Y.post(runMe);
+				a11Y.postDelayed(runMe, 500);
 			} else {
 				log("No onClickListener set", "ERROR", TOP);
 			}
@@ -172,8 +174,22 @@ WindowMenu() {
 	show() {
 		loadList();
 		config = config(TOP);
-		TOP.listDialog = ListDialog(config);
-		listDialog.show();
+		listDialog = ListDialog(config);
+		boolean isMainThread = Looper.getMainLooper().isCurrentThread();
+        if (config.useOverlay) {
+            if (isMainThread) {
+                listDialog.show();
+            } else {
+                Runnable showRun = new Runnable() {
+                    run() {
+                        listDialog.show();
+                    }
+                };
+                a11Y.post(showRun);
+            }
+		} else {
+			listDialog.show();
+		}
 	}
 
 	remove() {

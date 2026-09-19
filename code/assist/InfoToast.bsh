@@ -21,6 +21,7 @@ import bsh.This;
 import android.text.TextUtils;
 import java.util.Map;
 import java.util.HashMap;
+import android.os.Looper;
 
 
 /*────────────────────────────────────────────────────────────────
@@ -178,11 +179,6 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 		});
 	}
 
-	/*──────────── INITIAL DATA ────────────*/
-	addRow("id", "ID", nodeId, 1, primaryColor);
-	addRow("class", "Class", nodeClass, 1, secondaryColor);
-	if (nodeStatus != null && nodeStatus.length() > 0) addRow("status", "Status", nodeStatus, 1, onSurfaceColor);
-	if (nodeText != null && nodeText.length() > 0) addRow("text", "Text", nodeText, 2, onSurfaceColor);
 
 	/*──────────── MEASURE + POSITION ────────────*/
 	DisplayMetrics metrics = overlayContext.getResources().getDisplayMetrics();
@@ -258,11 +254,16 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	show() {
-		a11Y.post(new Runnable() {
+		Runnable showRun = new Runnable() {
 			run() {
 				windowManager.addView(container, params);
 			}
-		});
+		};
+		if (Looper.getMainLooper().isCurrentThread()) {
+			showRun.run();
+		} else {
+			a11Y.post(showRun);
+		}
 	}
 
 	isAdded() {
@@ -284,6 +285,12 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 		if (container == null) return false;
 		return !isAdded();
 	}
+
+	/*──────────── INITIAL DATA ────────────*/
+	addRow("id", "ID", nodeId, 1, primaryColor);
+	addRow("class", "Class", nodeClass, 1, secondaryColor);
+	if (nodeStatus != null && nodeStatus.length() > 0) addRow("status", "Status", nodeStatus, 1, onSurfaceColor);
+	if (nodeText != null && nodeText.length() > 0) addRow("text", "Text", nodeText, 2, onSurfaceColor);
 
 	show();
 	return this;

@@ -54,6 +54,8 @@ import com.joaomgcd.taskerm.genericaction.ActivityLifecycleEvent;
 import android.os.Handler;
 import android.os.Looper;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.BitmapDrawable;
+
 
 /*───────────────────────────────────────────────────────────────
 ListDialog Component
@@ -145,7 +147,6 @@ ListDialog(This config) {
 
 	CompletableSubject waitTimeout = CompletableSubject.create();
 
-
 	getContext() {
 		return layoutContext;
 	}
@@ -201,6 +202,15 @@ ListDialog(This config) {
 		}
 	}
 
+	isIconRecycled(Drawable iconDrawable) {
+		if (iconDrawable == null) return false;
+		if (iconDrawable instanceof BitmapDrawable) {
+			return ((BitmapDrawable) iconDrawable).getBitmap().isRecycled();
+		} else {
+			return false;
+		}
+	}
+
 	layout(Context layoutContext) {
 		super.layoutContext = layoutContext;
 		if (isActivityContext()) {
@@ -208,7 +218,6 @@ ListDialog(This config) {
 			monitor = SimpleActivityMonitor(getContext(), activityListener());
 		}
 
-		// Tasker doesn't support targeting for activity
 		if (!isActivityContext() && displayId != 0) {
 			DisplayManager dm = getContext().getSystemService(Context.DISPLAY_SERVICE);
 			if (dm != null) {
@@ -218,7 +227,6 @@ ListDialog(This config) {
 				}
 			}
 		}
-
 
 		pm = getContext().getPackageManager();
 
@@ -394,7 +402,6 @@ ListDialog(This config) {
 					if (isMulti) {
 						CheckBox checkBox = (CheckBox) row.getChildAt(row.getChildCount() - 1);
 						boolean found = false;
-						/* FIX: Use object identity to handle items with duplicate titles correctly */
 						for (int k = 0; k < selectedItems.size(); k++) {
 							if (selectedItems.get(k).equals(itemData)) {
 								found = true;
@@ -406,10 +413,14 @@ ListDialog(This config) {
 
 					if (hasIcon) {
 						try {
-							iconView.setImageDrawable((Drawable) iconDrawable);
-							iconView.setVisibility(View.VISIBLE);
+							if (isIconRecycled(iconDrawable)) {
+								itemData.put("icon", null);
+								iconView.setVisibility(View.GONE);
+							} else {
+								iconView.setImageDrawable((Drawable) iconDrawable);
+								iconView.setVisibility(View.VISIBLE);
+							}
 						} catch (Exception e) {
-							// iconView.setImageDrawable(null);
 							iconView.setVisibility(View.GONE);
 						}
 					} else if (hasGetIcon) {
@@ -473,7 +484,6 @@ ListDialog(This config) {
 
 		mainContainer.addView(listView);
 
-		/* Button Container */
 		buttonsContainer = new LinearLayout(getContext());
 		buttonsContainer.setOrientation(0);
 		buttonsContainer.setGravity(Gravity.END);
@@ -513,7 +523,6 @@ ListDialog(This config) {
 				clicked.put("index", pos);
 				if (isMulti) {
 					int index = -1;
-					/* FIX: Use object identity to handle items with duplicate titles correctly */
 					for (int i = 0; i < selectedItems.size(); i++) {
 						if (selectedItems.get(i) == clicked) {
 							index = i;
@@ -573,11 +582,12 @@ ListDialog(This config) {
 		} else {
 			windowManager = getContext().getSystemService(Context.WINDOW_SERVICE);
 			int overlayType = isAccessibilityContext() ? WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+			
 			WindowManager.LayoutParams params = new WindowManager.LayoutParams(
 				WindowManager.LayoutParams.MATCH_PARENT,
 				WindowManager.LayoutParams.WRAP_CONTENT,
 				overlayType,
-				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
 				android.graphics.PixelFormat.TRANSLUCENT
 			);
 			params.gravity = Gravity.BOTTOM;
