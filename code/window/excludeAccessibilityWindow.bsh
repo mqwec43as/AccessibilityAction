@@ -1,0 +1,7 @@
+/*
+ * Exclude all accessibility overlay windows WindowInfo.TYPE_ACCESSIBILITY_OVERLAY
+ */
+excludeAccessibilityWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return removeWindowFilter(WindowInfo.TYPE_ACCESSIBILITY_OVERLAY);
+}

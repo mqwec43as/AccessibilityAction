@@ -1,0 +1,7 @@
+/*
+ * Exclude all input method windows WindowInfo.TYPE_INPUT_METHOD
+ */
+excludeInputWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return removeWindowFilter(WindowInfo.TYPE_INPUT_METHOD);
+}

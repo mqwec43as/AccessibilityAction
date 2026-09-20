@@ -1,0 +1,7 @@
+/*
+ * Include all window control windows WindowInfo.TYPE_WINDOW_CONTROL
+ */
+includeWindowControlWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return addWindowFilter(WindowInfo.TYPE_WINDOW_CONTROL);
+}

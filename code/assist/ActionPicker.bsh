@@ -472,7 +472,7 @@ ActionPicker(This assistBar) {
 	  executeDialog(String text, int displayId, int windowFilter)
 	  **Executes code**
 	 ───────────────────────────────────────────────────────────────*/
-	public void executeDialog(String text, int displayId, int windowFilter) {
+	public void executeDialog(String code, int displayId, int windowFilter) {
 		This a11Y = getA11yInstance();
 		long defaultTimeout = 5000;
 
@@ -486,13 +486,13 @@ ActionPicker(This assistBar) {
 			List itemList = new ArrayList();
 			Map runCode = new HashMap();
 			runCode.put("title", "Run code now");
-			runCode.put("subtitle", text);
+			runCode.put("subtitle", code);
 			itemList.add(runCode);
 
 			onSuccess(Map map) {
 				if (map.equals(runCode)) {
 					log("Running code now on display " + displayId, "INFO", TOP);
-					runScript(text, 500, displayId, windowFilter);
+					runScript(code, 500, displayId, windowFilter);
 				}
 			}
 

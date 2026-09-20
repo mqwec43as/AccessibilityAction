@@ -1,0 +1,7 @@
+/*
+ * Exclude all window control windows WindowInfo.TYPE_WINDOW_CONTROL
+ */
+excludeWindowControlWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return removeWindowFilter(WindowInfo.TYPE_WINDOW_CONTROL);
+}
