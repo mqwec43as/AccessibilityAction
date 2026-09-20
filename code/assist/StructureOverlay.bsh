@@ -436,7 +436,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 				int windowType = 1 << window.type;
 				int displayId = window.getDisplayId();
 				if (windowType == WindowInfo.TYPE_APPLICATION && a11Y.captureAllWindowsAsDefault) {
-					List roots = getRoots();
+					List roots = getRoots(displayId);
 					for (int i = 0; i < roots.size(); i++) {
 						stack.add(new Object[] { (AccessibilityNodeInfo) roots.get(i), 0 });
 					}

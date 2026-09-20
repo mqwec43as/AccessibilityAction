@@ -18,7 +18,7 @@ import android.widget.CompoundButton;
 config()
 **Configuration Preset with Dynamic Material Chip Groups**
 ───────────────────────────────────────────────────────────────*/
-FilterSheet(This structure) {
+FilterSheet(This assistBar, This structure) {
 
 	final This TOP = this;
 	This a11Y = getA11yInstance();
@@ -44,11 +44,20 @@ FilterSheet(This structure) {
 	config() {
 		
 		float maxHeight = 0.35f;
+		int displayId = assistBar.getContext().getDisplay().getDisplayId();
+		float maxWidth = 0.5f;
+
+		onAttach() {
+			assistBar.toggle();
+		}
 
 		getViewList(Context activityContext) {
 			List views = new ArrayList();
 			float density = activityContext.getResources().getDisplayMetrics().density;
-			
+			This tm = ThemeManager(activityContext);
+			dp(int dp) {
+				return tm.dp(dp);
+			}
 			LinearLayout filterContainer = new LinearLayout(activityContext);
 			filterContainer.setOrientation(LinearLayout.VERTICAL);
 			

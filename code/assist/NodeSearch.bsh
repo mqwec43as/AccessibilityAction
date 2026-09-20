@@ -22,9 +22,11 @@ NodeSearch(This assistBar, This structureOverlay) {
 	config(This THIS) {
         List itemList = TOP.itemList;
 		String title = "Nodes";
+        String text = "Tap: Highlight, Long tap: Action picker";
 		boolean showFilter = true;
         boolean useOverlay = true;
 	    boolean useAccessibility = true;
+        int displayId = assistBar.getContext().getDisplay().getDisplayId();
 		
         onSuccess(Map map) {
             This nodeBox = map.get("nodeBox");

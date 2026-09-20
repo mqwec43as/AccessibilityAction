@@ -1,6 +1,6 @@
 import bsh.This;
 
-ActionsGroupDialog() {
+ActionsGroupDialog(This assistBar) {
 	final This TOP = this;
 	final This a11Y = getA11yInstance();
 	final int WINDOW_TYPE = ENV.Layout.TYPE_ACTIONS_GROUP_DIALOGS;
@@ -14,7 +14,7 @@ ActionsGroupDialog() {
 		return;
 	}
 	
-	This actionPicker = ActionPicker();
+	This actionPicker = ActionPicker(assistBar);
 	This displayMenu = a11Y.assistBar.displayMenu;
 	This windowMenu = a11Y.assistBar.windowMenu;
 	
@@ -100,6 +100,7 @@ ActionsGroupDialog() {
 		boolean showFilter = true;
 		boolean showFilter;
 		List itemList = new ArrayList();
+		int displayId = assistBar.getContext().getDisplay().getDisplayId();
 
 		boolean useOverlay = true;
 		boolean useAccessibility = true;

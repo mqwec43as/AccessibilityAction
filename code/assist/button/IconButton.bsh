@@ -35,6 +35,11 @@ IconButton(This assistBar) {
 	MaterialButton button;
 	This tm = assistBar.tm;
 	ContextThemeWrapper wrapper;
+	
+	dp(int value) {
+		return tm.dp(value);
+	}
+
 	int padding = dp(4);
 	int id = AssistInfo.HAS_NO_ID;
 	int backgroundColor = tm.color("colorPrimary");

@@ -8,7 +8,7 @@ import android.os.Looper;
 /*───────────────────────────────────────────────────────────────
   DisplayMenu()
   ───────────────────────────────────────────────────────────────*/
-DisplayMenu() {
+DisplayMenu(This assistBar) {
 	final This TOP = this;
 	This a11Y = getA11yInstance();
 	final int WINDOW_TYPE = ENV.Layout.TYPE_DISPLAY_MENU;
@@ -64,23 +64,31 @@ DisplayMenu() {
 	config(This THIS) {
 		List itemList = TOP.displayList;
 		String title = "Display Menu";
+		String text = "Tap: Capture tree, Long tap: Move assist bar";
 		int iconSize = 240;
 		boolean showFilter;
+		int displayId = assistBar.getContext().getDisplay().getDisplayId();
 
 		boolean useOverlay = true;
 		boolean useAccessibility = true;
+		float maxWidth = 0.5f;
 
 		onSuccess(Map map) {
 			Display display = map.get("display");
+			boolean longClick = map.getOrDefault("longClick", false);
 			if (TOP.onClickListener != null) {
 				Runnable runMe = new Runnable() {
 					run() {
 						try {
-							if (TOP.namespace.getVariable("onClickListener") != null) {
-								TOP.onClickListener.onClick(display);
+							if (longClick) {
+								assistBar.show(display.getDisplayId());
 							} else {
-								log("No onClickListener set", "INFO", TOP);
-								showToast("No onClickListener set");
+								if (TOP.namespace.getVariable("onClickListener") != null) {
+									TOP.onClickListener.onClick(display);
+								} else {
+									log("No onClickListener set", "INFO", TOP);
+									showToast("No onClickListener set");
+								}
 							}
 						} catch (Exception e) {
 							log(e.getMessage(), "ERROR", TOP);

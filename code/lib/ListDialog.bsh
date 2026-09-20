@@ -69,11 +69,13 @@ ListDialog(This config) {
 	long timeout = config.timeout == void ? 0 : config.timeout;
 	int iconSize = config.iconSize == void ? 40 : config.iconSize;
 	float dimAmount = config.dimAmount == void ? 0.0f: config.dimAmount;
+	float maxWidth = config.maxWidth == void ? 0.5f : config.maxWidth;
 	int themeId = config.themeId == void ? 0 : config.themeId;
 	boolean sort = config.sort == void ? false : config.sort;
 	boolean useOverlay = config.useOverlay == void ? false : config.useOverlay;
 	boolean useAccessibility = config.useAccessibility == void ? false : config.useAccessibility;
 	int displayId = config.displayId == void ? 0 : config.displayId;
+	String text = config.text == void ? null : config.text;
 
 	/* Height Logic Setup */
 	Object rawMaxH = config.maxHeight == void ? 0.8 : config.maxHeight;
@@ -90,6 +92,7 @@ ListDialog(This config) {
 	TextInputEditText filterInput;
 	TextInputLayout filterWrapper;
 	MaterialToolbar toolbar;
+	MaterialTextView textView;
 	LinearLayout mainContainer;
 	BaseAdapter adapter;
 	LinearLayout buttonsContainer;
@@ -224,16 +227,29 @@ ListDialog(This config) {
 				Display targetDisplay = dm.getDisplay(displayId);
 				if (targetDisplay != null) {
 					layoutContext = getContext().createDisplayContext(targetDisplay);
+					super.layoutContext = layoutContext;
 				}
 			}
 		}
 
 		pm = getContext().getPackageManager();
 
+		DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+		int screenW = metrics.widthPixels;
+		int screenH = metrics.heightPixels;
+		int dialogWidth = WindowManager.LayoutParams.MATCH_PARENT;
+
+		if (screenW > screenH) {
+			dialogWidth = (int) (screenW * maxWidth);
+			if (dialogWidth > screenW) {
+				dialogWidth = WindowManager.LayoutParams.MATCH_PARENT;
+			}
+		}
+
 		if (isActivityContext()) {
 			Window window = getContext().getWindow();
 			window.requestFeature(Window.FEATURE_NO_TITLE);
-			window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+			window.setLayout(dialogWidth, WindowManager.LayoutParams.WRAP_CONTENT);
 			window.setBackgroundDrawableResource(android.R.color.transparent);
 			window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
@@ -272,11 +288,21 @@ ListDialog(This config) {
 		mainContainer.setBackground(shape);
 		mainContainer.setClipToOutline(true);
 
-		if (title != null) {
+		if (title != null && !title.isEmpty()) {
 			toolbar = new MaterialToolbar(getContext());
 			toolbar.setTitle(title);
 			toolbar.setTitleCentered(true);
 			mainContainer.addView(toolbar);
+		}
+
+		if (text != null && !text.isEmpty()) {
+			textView = new MaterialTextView(getContext());
+			textView.setTextSize(14);
+			textView.setText(text);
+			textView.setPadding(0, 0, 0, dp(4));
+			textView.setMaxLines(3);
+			textView.setEllipsize(TextUtils.TruncateAt.END);
+			mainContainer.addView(textView);
 		}
 
 		if (showFilter) {
@@ -584,7 +610,7 @@ ListDialog(This config) {
 			int overlayType = isAccessibilityContext() ? WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
 			
 			WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-				WindowManager.LayoutParams.MATCH_PARENT,
+				dialogWidth,
 				WindowManager.LayoutParams.WRAP_CONTENT,
 				overlayType,
 				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,

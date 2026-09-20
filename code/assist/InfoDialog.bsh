@@ -40,20 +40,6 @@ import java.util.Map;
 
 import bsh.This;
 
-
-
-/*───────────────────────────────────────────────────────────────
-  UTILITY METHODS
-  Helper functions for data processing and UI scaling
-  ───────────────────────────────────────────────────────────────*/
-public int dp(int value) {
-	return (int) TypedValue.applyDimension(
-		TypedValue.COMPLEX_UNIT_DIP,
-		value,
-		context.getResources().getDisplayMetrics()
-	);
-}
-
 /*───────────────────────────────────────────────────────────────
 	GET NODE DATA
 	Extracts data from a given node
@@ -149,6 +135,10 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 	tm.setThemeDark();
 	info = getNodeData(targetNode);
 
+	dp(int dp) {
+		return tm.dp(dp);
+	}
+
 	/*  ROOT CONTAINER SETUP */
 	final LinearLayout root = new LinearLayout(ctx);
 	root.setOrientation(LinearLayout.VERTICAL);
@@ -176,7 +166,7 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 	ScrollView scroller = new ScrollView(ctx);
 	LinearLayout content = new LinearLayout(ctx);
 	content.setOrientation(LinearLayout.VERTICAL);
-	content.setPadding(40, 0, 40, 0);
+	content.setPadding(dp(12), 0, dp(12), 0);
 
 	/*  CHIP GROUP (Properties & Actions) */
 	ChipGroup chipGroup = new ChipGroup(ctx);
@@ -247,7 +237,19 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 		WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
 		android.graphics.PixelFormat.TRANSLUCENT
 	);
-	params.gravity = Gravity.CENTER;
+	DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
+	float maxWidth = 0.5f;
+	int screenW = metrics.widthPixels;
+	int screenH = metrics.heightPixels;
+	int infoWidth = WindowManager.LayoutParams.MATCH_PARENT;
+	if (screenW > screenH) {
+		infoWidth = (int) (screenW * maxWidth);
+		if (infoWidth > screenW) {
+			infoWidth = screenW;
+		}
+	}
+	params.gravity = Gravity.CENTER | Gravity.BOTTOM;
+	params.width = infoWidth;
 
 	/* Logic Definitions */
 	remove() {

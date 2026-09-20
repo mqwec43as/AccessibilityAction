@@ -1,5 +1,6 @@
 importCommands("lib.ui");
 importCommands("assist.button");
+importCommands("main");
 
 import android.content.Context;
 import android.graphics.Color;
@@ -78,8 +79,9 @@ public This AssistBar(int initialX, int initialY) {
 	// Properties
 	boolean useA11y = true;
 	This tm;
-	int padding = dp(4);
+	int padding;
 	Context assistContext;
+	int targetDisplayId;
 	WindowManager windowManager;
 	int assistOverlayType = useA11y ?
 		WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY :
@@ -89,7 +91,7 @@ public This AssistBar(int initialX, int initialY) {
 	int screenheight;
 	DisplayMetrics displayMetrics;
 	LinearLayout container;
-	int selectedDisplayId;
+	int selectedDisplayId = Display.DEFAULT_DISPLAY;
 	int selectedWindowFilter;
 
 	// Instances
@@ -110,27 +112,37 @@ public This AssistBar(int initialX, int initialY) {
 	float initialTouchY;
 	int initialWinX;
 	int initialWinY;
+	DisplayMetrics initialDisplayMetrics = getDisplayMetrics(selectedDisplayId);
+	final float initialXPercent = (float) initialX / initialDisplayMetrics.widthPixels;
+	final float initialYPercent = (float) initialY / initialDisplayMetrics.heightPixels;
 	This handleGesture;
 
-	create() {
-		assistContext = getContext(useA11y);
-		windowManager = (WindowManager) assistContext.getSystemService(Context.WINDOW_SERVICE);
+	getContext() {
+		return assistContext;
+	}
+
+	create(Context context) {
+		assistContext = context;
+		windowManager = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+		targetDisplayId = getContext().getDisplay().getDisplayId();
+		selectedDisplayId = targetDisplayId;
 
 		/* THEME */
-		tm = ThemeManager(assistContext);
+		tm = ThemeManager(getContext());
 		tm.setThemeDark();
+		padding = tm.dp(4);
 
-		displayMetrics = getDisplayMetrics();
+		displayMetrics = getDisplayMetrics(targetDisplayId);
 		screenheight = displayMetrics.heightPixels;
 
 		/* ROOT & CONTAINER SETUP */
-		assistBar = new FrameLayout(assistContext);
-		container = new LinearLayout(assistContext);
+		assistBar = new FrameLayout(getContext());
+		container = new LinearLayout(getContext());
 		container.setOrientation(LinearLayout.HORIZONTAL);
 
 		GradientDrawable bg = new GradientDrawable();
 		bg.setShape(GradientDrawable.RECTANGLE);
-		bg.setCornerRadius(dp(28));
+		bg.setCornerRadius(tm.dp(28));
 		bg.setColor(tm.color("colorSurfaceContainerHighest"));
 		container.setBackground(bg);
 		container.setPadding(padding, padding, padding, padding);
@@ -160,8 +172,10 @@ public This AssistBar(int initialX, int initialY) {
 		);
 		assistParams.title = AssistInfo.ASSIST_BAR_TITLE;
 		assistParams.gravity = Gravity.TOP | Gravity.LEFT;
-		assistParams.x = initialX;
-		assistParams.y = initialY;
+		int newX = displayMetrics.widthPixels * initialXPercent;
+		int newY = displayMetrics.heightPixels * initialYPercent;
+		assistParams.x = newX;
+		assistParams.y = newY;
 	}
 
 	setHandleTouch(boolean state) {
@@ -207,10 +221,6 @@ public This AssistBar(int initialX, int initialY) {
 	/*────────────────────────────
 	  UTILITY METHODS
 	────────────────────────────*/
-	getContext() {
-		return assistContext;
-	}
-
 	removeStructure() {
 		if (structureOverlay != null && !structureOverlay.isRemoved()) {
 			structureOverlay.remove();
@@ -396,6 +406,7 @@ public This AssistBar(int initialX, int initialY) {
 	}
 
 	toggleSearch() {
+		This searchButton = getIconButton(AssistInfo.SEARCH_BUTTON);
 		Runnable runMe = new Runnable() {
 			run() {
 				try {
@@ -440,7 +451,7 @@ public This AssistBar(int initialX, int initialY) {
 
 	toggleFilter() {
 		if (filterSheet == null) {
-			filterSheet = FilterSheet(TOP.namespace.getVariable("structureOverlay"));
+			filterSheet = FilterSheet(TOP, TOP.namespace.getVariable("structureOverlay"));
 			int filterY = (1 - filterSheet.config.maxHeight) * screenheight;
 			int assistY = assistParams.y + assistParams.height;
 			if (assistY > filterY) moveHandle(assistParams.x, filterY - assistParams.height);
@@ -649,7 +660,7 @@ public This AssistBar(int initialX, int initialY) {
 	────────────────────────────*/
 	setupResources() {
 		if (displayMenu == null) {
-			displayMenu = DisplayMenu();
+			displayMenu = DisplayMenu(TOP);
 			listener() {
 				onClick(Object display) {
 					TOP.namespace.setVariable("selectedDisplayId", display.getDisplayId(), false);
@@ -662,7 +673,7 @@ public This AssistBar(int initialX, int initialY) {
 			displayMenu.setOnClickListener(listener);
 		}
 		if (windowMenu == null) {
-			windowMenu = WindowMenu();
+			windowMenu = WindowMenu(TOP);
 			listener() {
 				onClick(AccessibilityWindowInfo window) {
 					TOP.namespace.setVariable("selectedDisplayId", window.getDisplayId(), false);
@@ -674,10 +685,10 @@ public This AssistBar(int initialX, int initialY) {
 			This listener = listener();
 			windowMenu.setOnClickListener(listener);
 		}
-		if (scriptEditor == null) scriptEditor = ScriptEditor();
-		if (assistSetting == null) assistSetting = AssistSetting();
-		if (actionPicker == null) actionPicker = ActionPicker();
-		if (actionsGroupDialog == null) actionsGroupDialog = ActionsGroupDialog();
+		if (scriptEditor == null) scriptEditor = ScriptEditor(TOP);
+		if (assistSetting == null) assistSetting = AssistSetting(TOP);
+		if (actionPicker == null) actionPicker = ActionPicker(TOP);
+		if (actionsGroupDialog == null) actionsGroupDialog = ActionsGroupDialog(TOP);
 	}
 
 	clearResources() {
@@ -828,12 +839,35 @@ public This AssistBar(int initialX, int initialY) {
 		if (isShowing()) windowManager.removeView(assistBar);
 	}
 
-	show() {
+	show(int targetDisplayId) {
+		boolean sameDisplay = getContext() != null && getContext().getDisplay().getDisplayId() == targetDisplayId;
+		Display targetDisplay;
+		boolean isDisplayValid; 
+		if (getContext() != null) {
+			Display display = getContext().getSystemService(Context.DISPLAY_SERVICE).getDisplay(targetDisplayId);
+			isDisplayValid = display != null;
+			
+		}
+
+		if (!isDisplayValid) {
+			targetDisplayId = Display.DEFAULT_DISPLAY;
+			sameDisplay = false;
+		}
+
 		if (assistBar == null) {
-			create();
+			Context context = getContext(useA11y, targetDisplayId);
+			create(context);
+			addButtons();
+			addListenerAndGesture();
+		} else if (!sameDisplay) {
+			if (isShowing()) remove();
+			clearResources();
+			Context context = getContext(useA11y, targetDisplayId);
+			create(context);
 			addButtons();
 			addListenerAndGesture();
 		}
+
 		Runnable displayOverlay = new Runnable() {
 			run() {
 				if (detector == null && handleGesture != null) {
@@ -845,6 +879,10 @@ public This AssistBar(int initialX, int initialY) {
 		if (!isShowing()) {
 			a11Y.post(displayOverlay);
 		}
+	}
+
+	show() {
+		show(targetDisplayId);
 	}
 
 	return this;

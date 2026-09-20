@@ -22,7 +22,7 @@ import android.text.TextUtils;
 import java.util.Map;
 import java.util.HashMap;
 import android.os.Looper;
-
+import android.util.TypedValue;
 
 /*────────────────────────────────────────────────────────────────
 	InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType)
@@ -53,6 +53,10 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	This a11Y = getA11yInstance();
 	final int WINDOW_TYPE = ENV.Layout.TYPE_INFO_TOAST;
 	a11Y.viewControl.addView(TOP);
+
+	dp(int value) {
+		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, overlayContext.getResources().getDisplayMetrics());
+	}
 	
 	WindowManager windowManager = (WindowManager) overlayContext.getSystemService(Context.WINDOW_SERVICE);
 
@@ -97,12 +101,12 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	/* Container */
 	final LinearLayout container = new LinearLayout(overlayContext);
 	container.setOrientation(LinearLayout.VERTICAL);
-	container.setPadding(25, 15, 25, 15);
+	container.setPadding(dp(12), dp(8), dp(12), dp(8));
 
 	GradientDrawable bg = new GradientDrawable();
 	bg.setColor(surfaceColor);
 	bg.setCornerRadius(12f);
-	bg.setStroke(3, outlineColor);
+	bg.setStroke(dp(1), outlineColor);
 	container.setBackgroundDrawable(bg);
 
 	/*──────────── ROW SYSTEM ────────────*/

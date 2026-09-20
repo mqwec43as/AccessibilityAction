@@ -18,7 +18,7 @@ import android.os.Looper;
 /*───────────────────────────────────────────────────────────────
   DisplayMenu()
   ───────────────────────────────────────────────────────────────*/
-WindowMenu() {
+WindowMenu(This assistBar) {
 	final This TOP = this;
 	This a11Y = getA11yInstance();
 	final int WINDOW_TYPE = ENV.Layout.TYPE_NODE_SEARCH;
@@ -114,6 +114,7 @@ WindowMenu() {
 		String title = "Window Menu";
 		boolean showFilter = true;
 		int iconSize = 200;
+		int displayId = assistBar.getContext().getDisplay().getDisplayId();
 
 		boolean useOverlay = true;
 		boolean useAccessibility = true;

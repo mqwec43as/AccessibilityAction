@@ -12,13 +12,12 @@ public void runScript(String script, long delayMs, int displayId, int windowFilt
 import bsh.This;
 This a11Y = tasker.getJavaVariable("a11Y");
 a11Y.set();
+setWaitTimeout(2000);
 """;
     
     header += "\nsetDisplay(" + displayId + ");\n";
     
-    if (windowFilter != 0) {
-        header += "addWindowFilter(" + windowFilter + ");\n";
-    }
+    header += "setWindowFilter(" + windowFilter + ");\n";
     
     
     log("Running script on display " + displayId + ":\n" + header + script , "INFO", TOP);

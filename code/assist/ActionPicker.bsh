@@ -19,7 +19,7 @@ import android.view.Display;
  * Requires SimilarNodes which consist of node details
  * Will prompt a series of dialog to select an action
  */
-ActionPicker() {
+ActionPicker(This assistBar) {
 
 	final This TOP = this;
 	int indexMinFilter = 6;
@@ -111,6 +111,7 @@ ActionPicker() {
 			String title = "Select Action";
 			boolean showFilter;
 			List itemList = new ArrayList(THIS.actionList);
+			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 			if (itemList.size() > indexMinFilter) showFilter = true;
 			
 			boolean useOverlay = true;
@@ -227,6 +228,7 @@ ActionPicker() {
 			boolean showFilter;
 			boolean useOverlay = true;
 			boolean useAccessibility = true;
+			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 			List itemList = new ArrayList(THIS.patternList);
 
 			onSuccess(Map map) {
@@ -429,6 +431,7 @@ ActionPicker() {
 			boolean useOverlay = true;
 			boolean useAccessibility = true;
 			List itemList = new ArrayList(THIS.overloadList);
+			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 			if (itemList.size() > indexMinFilter) showFilter = true;
 
 			onSuccess(Map map) {
@@ -478,6 +481,7 @@ ActionPicker() {
 			boolean showFilter;
 			boolean useOverlay = true;
 			boolean useAccessibility = true;
+			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 
 			List itemList = new ArrayList();
 			Map runCode = new HashMap();

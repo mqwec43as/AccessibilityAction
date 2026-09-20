@@ -33,7 +33,7 @@ import com.google.android.material.floatingtoolbar.FloatingToolbarLayout;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.textview.MaterialTextView;
-import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.button.MaterialButtonGroup;
 import android.widget.CompoundButton;
 import android.view.ContextThemeWrapper;
 
@@ -48,29 +48,7 @@ import java.util.regex.Matcher;
 import android.view.WindowManager;
 import android.accessibilityservice.AccessibilityService;
 import android.view.HapticFeedbackConstants;
-
-/*───────────────────────────────────────────────────────────────
-  dp(int val)
-  **Density Converter**
-  Converts pixels to density-independent pixels.
- ───────────────────────────────────────────────────────────────*/
-public int dp(int val) {
-	return (int)(val * context.getResources().getDisplayMetrics().density);
-}
-
-/*───────────────────────────────────────────────────────────────
-  addSpacer(Context ctx, ViewGroup container)
-  **Layout Spacer**
-  Adds a vertical 8dp gap between views.
- ───────────────────────────────────────────────────────────────*/
-public void addSpacer(Context ctx, ViewGroup container) {
-	int spacerHeight = dp(8);
-	View spacer = new View(ctx);
-	LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, spacerHeight);
-	spacer.setLayoutParams(params);
-	container.addView(spacer);
-}
-
+import android.util.DisplayMetrics;
 
 
 /*───────────────────────────────────────────────────────────────
@@ -78,7 +56,7 @@ public void addSpacer(Context ctx, ViewGroup container) {
   **Main UI Class**
   Handles the creation and logic of the floating script editor.
  ───────────────────────────────────────────────────────────────*/
-ScriptEditor() {
+ScriptEditor(This assistBar) {
 
 	if (ENV == void || ENV == null) ENV = Environment();
 	ENV.checkMaterialLib(this);
@@ -91,6 +69,7 @@ ScriptEditor() {
 	Activity activity;
 	Context context;
 	WindowManager windowManager;
+	This tm = assistBar.tm;
 
 	LinearLayout content;
 	TextInputEditText editText;
@@ -102,9 +81,22 @@ ScriptEditor() {
 	This tm;
 	boolean isActionEdit;
 	String codeText;
-	
+	float maxWidth = 0.5f;
+
 	getContext() {
 		return context;
+	}
+
+	public int dp(int val) {
+		return tm.dp(val);
+	}
+
+	public void addSpacer(Context ctx, ViewGroup container) {
+		int spacerHeight = dp(8);
+		View spacer = new View(ctx);
+		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, spacerHeight);
+		spacer.setLayoutParams(params);
+		container.addView(spacer);
 	}
 
 	boolean isActivityContext() {
@@ -215,19 +207,19 @@ ScriptEditor() {
 	String appendHeader(String script) {
 		script = script.trim();
 		String header = "";
+		int selectedWindowFilter = a11Y.assistBar.selectedWindowFilter;
+		int selectedDisplayId = a11Y.assistBar.selectedDisplayId;
 		if (!hasA11y(script)) {
 			header += "a11Y.set();\n";
 		}
-		if (!hasSetDisplay(script) && a11Y.assistBar.selectedDisplayId != 0) {
-			header += "setDisplay(" + a11Y.assistBar.selectedDisplayId + ");\n";
+		if (!hasSetDisplay(script) && selectedDisplayId != 0) {
+			header += "setDisplay(" + selectedDisplayId + ");\n";
 		}
 
-		if (!hasWindowFilter(script) && a11Y.assistBar.selectedWindowFilter != 0) {
-			String windows = String.join(" | ", WindowInfo.getFlagStringList(a11Y.assistBar.selectedWindowFilter));
+		if (!hasWindowFilter(script) && selectedWindowFilter != WindowInfo.TYPE_NONE && selectedWindowFilter == WindowInfo.TYPE_APPLICATION) {
+			String windows = String.join(" | ", WindowInfo.getFlagStringList(selectedWindowFilter));
 			header += "addWindowFilter(" + windows + ");\n";
-		} else {
-			tasker.showToast("No filter");
-		}
+		} 
 
 		if (header.length() > 0) {
 			script = header + script;
@@ -248,6 +240,8 @@ ScriptEditor() {
 			run() {
 				String script = editText.getText().toString();
 				remove();
+				int windowFilter = a11Y.assistBar.selectedWindowFilter;
+				if (windowFilter == WindowInfo.TYPE_APPLICATION) windowFilter = WindowInfo.TYPE_NONE;
 				runScript(script, 100, a11Y.assistBar.selectedDisplayId, a11Y.assistBar.selectedWindowFilter);
 			}
 		};
@@ -305,7 +299,9 @@ ScriptEditor() {
 				a11Y.assistBar.selectedDisplayId = display.getDisplayId();
 			}
 		};
-		return addChip(displayGroup, name, true, onClickListener);
+		Chip chip = addChip(displayGroup, name, true, onClickListener);
+		chip.setChecked(display.getDisplayId() == a11Y.assistBar.selectedDisplayId);
+		return chip;
 	}
 
 	addEditGroup() {
@@ -492,7 +488,14 @@ ScriptEditor() {
 
 	addButtons() {
 
-		LinearLayout buttonContainer = new LinearLayout(getContext());
+		ContextThemeWrapper wrapper;
+
+		getWrapper() {
+			if (wrapper == null) wrapper = tm.wrapper("Widget.Material3.Button.TextButton");
+			return wrapper;
+		}
+
+		MaterialButtonGroup buttonContainer = new MaterialButtonGroup(getWrapper());
 		buttonContainer.setOrientation(LinearLayout.HORIZONTAL);
 		buttonContainer.setGravity(Gravity.CENTER_HORIZONTAL);
 
@@ -502,10 +505,6 @@ ScriptEditor() {
 		);
 		groupContainerParams.gravity = Gravity.CENTER_HORIZONTAL;
 		content.addView(buttonContainer, groupContainerParams);
-
-		getWrapper() {
-			return tm.wrapper("Widget.MaterialComponents.Button.OutlinedButton");
-		}
 
 		Object[][] materialBtns = {
 			{
@@ -525,25 +524,20 @@ ScriptEditor() {
 						executeText();
 					}
 				}
-			}			
+			}
 		};
 
 		LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
-			ViewGroup.LayoutParams.WRAP_CONTENT,
-			ViewGroup.LayoutParams.WRAP_CONTENT
+			ViewGroup.LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams.MATCH_PARENT
 		);
-
-		int spacing = dp(4);
 
 		for (int i = 0; i < materialBtns.length; i++) {
 			MaterialButton btn = new MaterialButton(getWrapper());
 			Object config = materialBtns[i];
 			btn.setText(config[0]);
 			btn.setOnClickListener(config[1]);
-			if (i > 0) {
-				buttonParams.leftMargin = spacing;
-			}
-			buttonContainer.addView(btn, buttonParams);
+			buttonContainer.addView(btn);
 		}
 
 	}
@@ -562,7 +556,7 @@ ScriptEditor() {
 
 		/* Apply requested shape to root */
 		GradientDrawable shape = new GradientDrawable();
-		shape.setCornerRadius(28 * density);
+		shape.setCornerRadius(dp(28));
 		shape.setColor((int) tm.color("colorSurface"));
 		root.setBackground(shape);
 		root.setClipToOutline(true);
@@ -626,7 +620,7 @@ ScriptEditor() {
 
 		floatingRoot.addView(main);
 		root.addView(floatingRoot);
-		
+
 		if (isActivityContext()) {
 			This monitor = SimpleActivityMonitor(activity, activityListener());
 			window = activity.getWindow();
@@ -646,8 +640,21 @@ ScriptEditor() {
 			windowManager = getContext().getSystemService(Context.WINDOW_SERVICE);
 			int overlayType = isAccessibilityContext() ? WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
 			
+			DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+			int screenW = metrics.widthPixels;
+			int screenH = metrics.heightPixels;
+			int editorWidth = WindowManager.LayoutParams.MATCH_PARENT;
+
+			if (screenW > screenH) {
+				editorWidth = (int) (screenW * maxWidth);
+				if (editorWidth > screenW) {
+					editorWidth = WindowManager.LayoutParams.MATCH_PARENT;
+				}
+
+			}
+
 			WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-				WindowManager.LayoutParams.MATCH_PARENT,
+				editorWidth,
 				WindowManager.LayoutParams.WRAP_CONTENT,
 				overlayType,
 				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
@@ -679,7 +686,7 @@ ScriptEditor() {
 			}
 		}
 		if (!isShowing()) {
-			if (!useOverlay)  {
+			if (!useOverlay) {
 				java.util.function.Consumer uiLogic = new java.util.function.Consumer() {
 					accept(Object activityObj) {
 						layout(activityObj);
@@ -689,9 +696,9 @@ ScriptEditor() {
 			} else {
 				AccessibilityService a11yService = tasker.getAccessibilityService();
 				if (a11yService != null) {
-					layout(a11yService);
+					layout(assistBar.getContext());
 				} else {
-					layout(context);
+					layout(assistBar.getContext());
 				}
 			}
 		}
