@@ -60,6 +60,7 @@ AssistSetting(This assistBar) {
 		if (a11Y.config != void) {
 			a11Y.config.loadFrom(a11Y);
 			a11Y.config.save();
+			A11yConfig.refresh();
 		}
 	}
 

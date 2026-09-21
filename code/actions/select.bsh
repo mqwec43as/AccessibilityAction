@@ -31,7 +31,7 @@ select(AccessibilityNodeInfo node) {
 	showOnScreen(node);
 	boolean success = node.performAction(AccessibilityNodeInfo.ACTION_SELECT);
 
-	if (stepDelay > 0) wait(stepDelay);
+	stepDelay();
 
 	if (success) node.refresh();
 	return node;
@@ -112,22 +112,22 @@ select(AccessibilityNodeInfo root, String value) {
 }
 
 select(String value, Object[][] argsConfigs) {
-	AccessibilityNodeInfo node = getNode("text", value, 0, waitNodesTimeout, argsConfigs);
+	AccessibilityNodeInfo node = getNode("text", value, 0, A11yConfig.waitNodesTimeout, argsConfigs);
 	return select(node);
 }
 
 /* Parent and Sibling Overloads */
 // select(String value, String nearbyValue) {
-//  return select(getNode("text", value, 0, waitNodesTimeout, 0, "text", nearbyValue));
+//  return select(getNode("text", value, 0, A11yConfig.waitNodesTimeout, 0, "text", nearbyValue));
 // }
 
 select(String value, int parentLevel, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode("text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
+	AccessibilityNodeInfo node = getNode("text", value, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyValue);
 	return select(node);
 }
 
 select(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	AccessibilityNodeInfo node = getNode(key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
 	return select(node);
 }
 
@@ -173,16 +173,16 @@ select(AccessibilityNodeInfo root, String key, String value, int index) {
 }
 
 select(AccessibilityNodeInfo root, String value, Object[][] argsConfigs) {
-	AccessibilityNodeInfo node = getNode(root, "text", value, 0, waitNodesTimeout, argsConfigs);
+	AccessibilityNodeInfo node = getNode(root, "text", value, 0, A11yConfig.waitNodesTimeout, argsConfigs);
 	return select(node);
 }
 
 select(AccessibilityNodeInfo root, String value, int parentLevel, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode(root, "text", value, 0, waitNodesTimeout, parentLevel, "text", nearbyValue);
+	AccessibilityNodeInfo node = getNode(root, "text", value, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyValue);
 	return select(node);
 }
 
 select(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode(root, key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	AccessibilityNodeInfo node = getNode(root, key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
 	return select(node);
 }

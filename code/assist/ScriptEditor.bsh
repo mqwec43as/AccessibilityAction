@@ -143,12 +143,12 @@ ScriptEditor(This assistBar) {
 			nodes = findNodes("id", actionId);
 			isJava = findNodes(toNode(nodes), "text", "Java Code");
 			if (hasNode(isJava)) {
-				boolean oldDebugMe = a11Y.debugMe;
+				boolean oldDebugMe = A11yConfig.debugMe;
 				This a11Y = getA11yInstance();
-				a11Y.debugMe = false;
+				setDebugMode(false);
 				script = appendHeader(script);
 				setText("id", "net.dinglisch.android.taskerm:id/edittext", script, 0);
-				a11Y.debugMe = oldDebugMe;
+				setDebugMode(oldDebugMe);
 				return;
 			}
 		}
@@ -671,8 +671,8 @@ ScriptEditor(This assistBar) {
 	void show(boolean useOverlay) {
 		codeText = null;
 		isActionEdit = isActionEdit();
-		boolean oldDebugMe = debugMe;
-		debugMe = false;
+		boolean oldDebugMe = A11yConfig.debugMe;
+		setDebugMode(false);
 		List actionNodes = findNodes("id", "android:id/action_bar");
 		if (hasNode(actionNodes)) {
 			List isJava;
@@ -685,6 +685,7 @@ ScriptEditor(This assistBar) {
 				codeText = sanitize(codeText);
 			}
 		}
+		setDebugMode(oldDebugMe);
 		if (!isShowing()) {
 			if (!useOverlay) {
 				java.util.function.Consumer uiLogic = new java.util.function.Consumer() {

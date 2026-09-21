@@ -3,6 +3,7 @@ import java.util.regex.Pattern;
 import android.view.accessibility.AccessibilityWindowInfo;
 
 This A11yConfig() {
+    final This TOP = this;
     This a11Y = getA11yInstance();
     a11Y.config.setTo(this);
     int filterWindowType = 0;
@@ -10,7 +11,7 @@ This A11yConfig() {
     Pattern filterPackageName;
 
     refresh() {
-        a11Y.config.setTo(super);
+        a11Y.config.setTo(TOP);
         filterWindowType = 0;
         displayId = 0;
         filterPackageName = null;

@@ -87,7 +87,7 @@ longClick(AccessibilityNodeInfo node) {
     if (success) {
         log("Long-click success.", node);
         node.refresh();
-        if (stepDelay > 0) wait(stepDelay);
+        stepDelay();
         return node;
     } else {
         log("No long-clickable ancestor found.", node);
@@ -175,18 +175,18 @@ longClick(AccessibilityNodeInfo root, String text) {
 }
 
 longClick(String text, Object[][] argsConfigs) {
-	AccessibilityNodeInfo node = getNode("text", text, 0, waitNodesTimeout, argsConfigs);
+	AccessibilityNodeInfo node = getNode("text", text, 0, A11yConfig.waitNodesTimeout, argsConfigs);
 	return longClick(node);
 }
 
 /* Parent and Sibling Overloads */
 longClick(String text, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode("text", text, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 	return longClick(node);
 }
 
 longClick(String key, String value, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode(key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 	return longClick(node);
 }
 
@@ -240,17 +240,17 @@ longClick(AccessibilityNodeInfo root, String key, String value, int index) {
 }
 
 longClick(AccessibilityNodeInfo root, String text, Object[][] argsConfigs) {
-	AccessibilityNodeInfo node = getNode(root, "text", text, 0, waitNodesTimeout, argsConfigs);
+	AccessibilityNodeInfo node = getNode(root, "text", text, 0, A11yConfig.waitNodesTimeout, argsConfigs);
 	return longClick(node);
 }
 
 longClick(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(root, "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode(root, "text", text, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 	return longClick(node);
 }
 
 longClick(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(root, key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode(root, key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 	return longClick(node);
 }
 

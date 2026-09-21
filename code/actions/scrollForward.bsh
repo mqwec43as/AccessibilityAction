@@ -22,7 +22,7 @@ scrollForward(AccessibilityNodeInfo node) {
 	while (!node.isScrollable() && node.getParent() != null) node = node.getParent();
 	boolean success = node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
 	if (success) node.refresh();
-	if (stepDelay > 0) wait(stepDelay);
+	stepDelay();
 	return node;
 }
 

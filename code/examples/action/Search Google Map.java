@@ -1,5 +1,5 @@
 a11Y.set();
-waitNodesTimeout = 10000;
+setWaitTimeout(5000);
 searchKeyword = "Seaway";
 blockKeyword = "Saved in";
 unitDistance = "km";

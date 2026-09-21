@@ -321,14 +321,14 @@ List findNodes(AccessibilityNodeInfo root, This multiKeys) {
 	}
 
 	List nodes = new ArrayList();
-	boolean oldDebug = debugMe;
-	if (oldDebug == true) debugMe = false;
+	boolean oldDebug = A11yConfig.debugMe;
+	if (oldDebug == true) setDebugMode(false);
 	if (multiKeys.id != void) {
 		nodes = findNodes(root, "id", multiKeys.id);
 	} else if (multiKeys.text != void) {
 		nodes = findNodes(root, "text", multiKeys.text);
 	}
-	debugMe = oldDebug;
+	setDebugMode(oldDebug);
 	// Returns empty list if no nodes are found
 	if (nodes.isEmpty()) return nodes;
 
@@ -339,7 +339,7 @@ List findNodes(AccessibilityNodeInfo root, This multiKeys) {
 		}
 	}
 
-	if (debugMe) {
+	if (A11yConfig.debugMe) {
 		debugMe(matchNodes);
 	}
 

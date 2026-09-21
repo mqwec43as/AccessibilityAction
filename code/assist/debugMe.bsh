@@ -1,3 +1,5 @@
+importCommands("actions");
+
 import android.os.Handler;
 import android.os.Looper;
 import android.graphics.Color;
@@ -29,7 +31,7 @@ Parameters:
 - List nodes, list of nodes to debug
 ──────────────────────────────────────────────────────────────── */
 debugMe(List nodes) {
-	if (!debugMe || nodes == null || nodes.isEmpty()) return;
+	if (nodes == null || nodes.isEmpty() || !A11yConfig.debugMe) return;
 
 
 	Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -53,17 +55,17 @@ debugMe(List nodes) {
 	boolean isAction;
 
 	if ("findNodes".equals(callerName) || "waitNodes".equals(callerName)) {
-		delay = findDelay;
+		delay = A11yConfig.debugDelay;
 	} else {
-		delay = debugDelay;
+		delay = A11yConfig.debugDelay;
 		isAction = true;
 	}
 
-	if (!isAction) wait(stepDelay);
+	if (!isAction) stepDelay();
 
 	Object color = debugColor(callerName);
 	CompletableSubject waitNodeBox = CompletableSubject.create();
-	if (isAction && debugSteps) a11Y.debugNext = waitNodeBox;
+	if (isAction && A11yConfig.debugSteps) a11Y.debugNext = waitNodeBox;
 	List nodeBoxes = new ArrayList();
 	This structure;
 	Runnable debug = new Runnable() {
@@ -91,14 +93,14 @@ debugMe(List nodes) {
 			} else if (isAction && nodeBoxes.size() == 1) {
 				This nodeBox = nodeBoxes.get(0);
 				nodeBox.show();
-				if (debugInfo) {
+				if (A11yConfig.debugInfo) {
 					nodeBox.infocationText = invocationText;
 					nodeBox.showInfo();
 					nodeBox.infoToast.addRow("invocation", "Line", "\n" + invocationText, 3);
 				}
 			}
 
-			if (!debugSteps) waitNodeBox.onComplete();
+			if (!A11yConfig.debugSteps) waitNodeBox.onComplete();
 		}
 	};
 
@@ -158,7 +160,7 @@ Parameters:
 - double y, Y coordinate of the marker
 ──────────────────────────────────────────────────────────────── */
 public void debugMe(double x, double y) {
-	if (debugMe == void || !debugMe) return;
+	if (!A11yConfig.debugMe) return;
 	Context windowContext = getContext(true);
 	WindowManager wm = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
 	WindowManager.LayoutParams params = new WindowManager.LayoutParams();
@@ -193,14 +195,14 @@ public void debugMe(double x, double y) {
 							waitTap.onComplete();
 						} catch (Exception e) {}
 					}
-				}, debugDelay);
+				}, A11yConfig.debugDelay);
 			} catch (Exception e) {
 				log("debugMe Main Thread Error: " + e.getMessage());
 			}
 		}
 	};
 	mainHandler.post(uiRunnable);
-	waitTap.blockingAwait(debugDelay + 200, TimeUnit.MILLISECONDS);
+	waitTap.blockingAwait(A11yConfig.debugDelay + 200, TimeUnit.MILLISECONDS);
 
 
 

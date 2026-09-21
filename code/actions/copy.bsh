@@ -35,7 +35,7 @@ copy(AccessibilityNodeInfo node) {
 	debugMe(node);
 	boolean success = node.performAction(AccessibilityNodeInfo.ACTION_COPY);
 
-	if (stepDelay > 0) wait(stepDelay);
+	stepDelay();
 	if (success) node.refresh();
 	return node;
 
@@ -109,15 +109,15 @@ copy(AccessibilityNodeInfo root, String value) {
 }
 
 copy(String text, Object[][] argsConfigs) {
-	return copy(getNode("text", text, 0, waitNodesTimeout, argsConfigs));
+	return copy(getNode("text", text, 0, A11yConfig.waitNodesTimeout, argsConfigs));
 }
 
 copy(String text, int parentLevel, String nearbyText) {
-	return copy(getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
+	return copy(getNode("text", text, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
 copy(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return copy(getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
+	return copy(getNode(key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }
 
 /* AccessibilityNodeInfo Root specific variants */
@@ -156,13 +156,13 @@ copy(AccessibilityNodeInfo root, String key, String value, int index) {
 }
 
 copy(AccessibilityNodeInfo root, String text, Object[][] argsConfigs) {
-	return copy(getNode(root, "text", text, 0, waitNodesTimeout, argsConfigs));
+	return copy(getNode(root, "text", text, 0, A11yConfig.waitNodesTimeout, argsConfigs));
 }
 
 copy(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyText) {
-	return copy(getNode(root, "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText));
+	return copy(getNode(root, "text", text, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText));
 }
 
 copy(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return copy(getNode(root, key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
+	return copy(getNode(root, key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, nearbyKey, nearbyValue));
 }

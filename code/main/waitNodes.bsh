@@ -33,8 +33,8 @@ waitNodes(Object[][] argsConfigs, long timeout, boolean allFound) {
 	Map nodesMap = findNodes(argsConfigs, allFound);
 	if (nodesMap.keySet().size() > 0) return nodesMap;
 
-	boolean oldDebug = debugMe;
-	if (oldDebug == true) debugMe = false;
+	boolean oldDebug = A11yConfig.debugMe;
+	if (oldDebug == true) setDebugMode(false);
 	try {
 		nodesMap = tasker.getAccessibilityEvents()
 			.map(new io.reactivex.functions.Function() {
@@ -51,13 +51,13 @@ waitNodes(Object[][] argsConfigs, long timeout, boolean allFound) {
 			.firstOrError()
 			.blockingGet();
 	} catch (Exception e) {
-		debugMe = oldDebug;
+		setDebugMode(oldDebug);
 		Exception executionException = new JavaCodeException("Timeout waiting for nodes: " + stringifyObject(argsConfigs) + " : " + e.getMessage());
 		log(executionException.getMessage(), "ERROR");
 		throw executionException;
 	}
 
-	debugMe = oldDebug;
+	setDebugMode(oldDebug);
 
 	if (nodesMap != null && !nodesMap.isEmpty()) {
 		debugMe(nodesMap);
@@ -88,7 +88,7 @@ ArrayList waitNodes(String key, String value, long timeout) {
 }
 
 ArrayList waitNodes(String key, String value) {
-	return waitNodes(key, value, null, waitNodesTimeout);
+	return waitNodes(key, value, null, A11yConfig.waitNodesTimeout);
 }
 
 ArrayList waitNodes(String text, long timeout) {
@@ -96,7 +96,7 @@ ArrayList waitNodes(String text, long timeout) {
 }
 
 ArrayList waitNodes(String text) {
-	return waitNodes("text", text, null, waitNodesTimeout);
+	return waitNodes("text", text, null, A11yConfig.waitNodesTimeout);
 }
 
 ArrayList waitNodes(String key, String value, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {

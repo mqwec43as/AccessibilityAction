@@ -7,13 +7,13 @@ log(String logMessage) {
 
 log(String logMessage, String level, AccessibilityNodeInfo node) {
 	String nodeString = node == null ? "" : node.toString();
-	if (nodeString != "" && logIncludeNode) logMessage += " " + nodeString;
+	if (nodeString != "" && A11yConfig.logIncludeNode) logMessage += " " + nodeString;
 	tasker.log(logMessage, LOG_FILE, level, this.caller.namespace.name + " #" + this.namespace.invocationLine);
 }
 
 log(String logMessage, AccessibilityNodeInfo node) {
 	String nodeString = node == null ? "" : node.toString();
-	if (nodeString != "" && logIncludeNode) logMessage += " " + nodeString;
+	if (nodeString != "" && A11yConfig.logIncludeNode) logMessage += " " + nodeString;
 	tasker.log(logMessage, LOG_FILE, "INFO", this.caller.namespace.name + " #" + this.namespace.invocationLine);
 }
 

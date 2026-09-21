@@ -67,8 +67,8 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	int classIndex;
 	List classBoxes = new ArrayList();
 	List classNodes = new ArrayList();
-	boolean oldDebugMe = debugMe;
-	debugMe = false;
+	boolean oldDebugMe = A11yConfig.debugMe;
+	setDebugMode(false);
 	if (text != null && text.length() > 0) {
 		textNodes = findNodes(rootNode, "text", text);
 		if (!textNodes.isEmpty()) {
@@ -93,7 +93,7 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 		}
 	}
 	
-	debugMe = oldDebugMe;
+	setDebugMode(oldDebugMe);
 	
 	AccessibilityNodeInfo parent = node.getParent();
 	This parentBox;

@@ -136,7 +136,7 @@ a11Y() {
 			throw new JavaCodeException("ENV_PATH is null");
 		}
 		config.setTo(TOP, THIS);
-		setConstant(THIS);
+		setConstant(THIS, true);
 		this.interpreter.source(ENV_PATH + "/import.java");
 		return THIS;
 	}
@@ -145,14 +145,18 @@ a11Y() {
 		set(this.caller);
 	}
 	
-	void setConstant(This THIS) {
+	void setConstant(This THIS, boolean force) {
 		NameSpace callerNamespace = THIS.namespace;
 		for (String constant: constants) {
-			if (callerNamespace.getVariable(constant) == void) {
+			if (callerNamespace.getVariable(constant) == void && !force) {
 				Object value = TOP.namespace.getVariable(constant);
 				callerNamespace.setTypedVariable(constant, value.getClass(), value, true);
 			}
 		};
+	}
+
+	void setConstant(This THIS) {
+		setConstant(THIS, false);
 	}
 
 	void setEnvPath(String path) {
@@ -321,14 +325,14 @@ a11Y() {
 	}
 
 	void remove(boolean clearGlobalVariable) {
+		tasker.setJavaVariable("a11E", null);
+		if (clearGlobalVariable) tasker.setJavaVariable("a11Y", null);
 		log("Removing a11Y", TOP);
 		clean();
 		removeAssist();
 		removeEvents();
 		executor.shutdownNow();
 		a11yExecutor.shutdownNow();
-		tasker.setJavaVariable("a11E", null);
-		if (clearGlobalVariable) tasker.setJavaVariable("a11Y", null);
 	}
 
 	void remove() {
@@ -356,15 +360,19 @@ a11Y() {
 	return this;
 
 };
-
+if (!canDisplayA11yOverlay()) {
+	tasker.showToast("Please ensure accessibility service is running", "Assist & Debug features may not work.");
+	return;
+}
 log("Initializing a11Y");
-This a11Y = a11Y();
-a11Y.setEnvPath(ENV_PATH);
-a11Y.setEnv(ENV);
+This a11y = a11Y();
+tasker.setJavaVariable("a11Y", a11y);
+a11y.setEnvPath(ENV_PATH);
+a11y.setEnv(ENV);
 
 setVariable(String name, Object value) {
 	if (name != null && value != null) {
-		a11Y.namespace.setVariable(name, value, false);
+		a11y.namespace.setVariable(name, value, false);
 		this.caller.namespace.setVariable(name, value, false);
 	}
 }
@@ -374,19 +382,18 @@ setVariable("viewControl", viewControl);
 
 This config = Config(ENV_PATH + "/config.java");
 config.load();
-config.setTo(a11Y);
+config.setTo(a11y);
 setVariable("config", config);
 setVariable("NodeInfo", NodeInfo());
 setVariable("WindowInfo", WindowInfo());
 setVariable("AssistInfo", AssistInfo());
 setVariable("packageManager", PackageManager());
 
-a11Y.set();
+a11y.set();
 
 This inspector = MethodInspector(this);
 inspector.read();
-a11Y.inspector = inspector;
-tasker.setJavaVariable("a11Y", a11Y);
+a11y.inspector = inspector;
 
 setVariable("a11yController", A11yController());
 This a11E = a11E();

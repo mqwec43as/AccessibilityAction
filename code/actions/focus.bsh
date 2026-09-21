@@ -31,7 +31,7 @@ focus(AccessibilityNodeInfo node) {
 	showOnScreen(node);
 	debugMe(node);
 	boolean success = node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-	if (stepDelay > 0) wait(stepDelay);
+	stepDelay();
 	if (success) node.refresh();
 	return node;
 }

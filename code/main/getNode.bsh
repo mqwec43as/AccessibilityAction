@@ -70,11 +70,11 @@ getNode(This multiKeys, int index, long timeout) {
   ───────────────────────────────────────────────────────────────*/
 
 getNode(String text) {
-	return getNode("text", text, 0, waitNodesTimeout, null);
+	return getNode("text", text, 0, A11yConfig.waitNodesTimeout, null);
 }
 
 getNode(String text, int index) {
-	return getNode("text", text, index, waitNodesTimeout, null);
+	return getNode("text", text, index, A11yConfig.waitNodesTimeout, null);
 }
 
 getNode(String text, long timeout) {
@@ -82,7 +82,7 @@ getNode(String text, long timeout) {
 }
 
 getNode(String text, Object[][] argsConfigs) {
-	return getNode("text", text, 0, waitNodesTimeout, argsConfigs);
+	return getNode("text", text, 0, A11yConfig.waitNodesTimeout, argsConfigs);
 }
 
 getNode(String text, int index, long timeout) {
@@ -94,11 +94,11 @@ getNode(String text, int index, long timeout, Object[][] argsConfigs) {
 }
 
 getNode(String key, String value) {
-	return getNode(key, value, 0, waitNodesTimeout, null);
+	return getNode(key, value, 0, A11yConfig.waitNodesTimeout, null);
 }
 
 getNode(String key, String value, int index) {
-	return getNode(key, value, index, waitNodesTimeout, null);
+	return getNode(key, value, index, A11yConfig.waitNodesTimeout, null);
 }
 
 getNode(String key, String value, int index, long timeout) {
@@ -106,7 +106,7 @@ getNode(String key, String value, int index, long timeout) {
 }
 
 getNode(String text, int parentLevel, String nearbyText) {
-	return getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	return getNode("text", text, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 }
 
 getNode(String text, int index, long timeout, int parentLevel, String nearbyText) {
@@ -118,11 +118,11 @@ getNode(String text, int index, long timeout, int parentLevel, String nearbyKey,
 }
 
 getNode(String key, String value, int parentLevel, String nearbyText) {
-	return getNode(key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	return getNode(key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 }
 
 getNode(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
-	return getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	return getNode(key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
 }
 
 getNode(String key, String value, int index, long timeout, int parentLevel, String nearbyText) {
@@ -134,11 +134,11 @@ getNode(String key, String value, int index, long timeout, int parentLevel, Stri
   ───────────────────────────────────────────────────────────────*/
 
 getNode(AccessibilityNodeInfo root, String text) {
-	return getNode(root, "text", text, 0, waitNodesTimeout, null);
+	return getNode(root, "text", text, 0, A11yConfig.waitNodesTimeout, null);
 }
 
 getNode(AccessibilityNodeInfo root, String text, int index) {
-	return getNode(root, "text", text, index, waitNodesTimeout, null);
+	return getNode(root, "text", text, index, A11yConfig.waitNodesTimeout, null);
 }
 
 getNode(AccessibilityNodeInfo root, String text, long timeout) {
@@ -146,7 +146,7 @@ getNode(AccessibilityNodeInfo root, String text, long timeout) {
 }
 
 getNode(AccessibilityNodeInfo root, String text, Object[][] argsConfigs) {
-	return getNode(root, "text", text, 0, waitNodesTimeout, argsConfigs);
+	return getNode(root, "text", text, 0, A11yConfig.waitNodesTimeout, argsConfigs);
 }
 
 getNode(AccessibilityNodeInfo root, String text, int index, long timeout) {
@@ -158,11 +158,11 @@ getNode(AccessibilityNodeInfo root, String text, int index, long timeout, Object
 }
 
 getNode(AccessibilityNodeInfo root, String key, String value) {
-	return getNode(root, key, value, 0, waitNodesTimeout, null);
+	return getNode(root, key, value, 0, A11yConfig.waitNodesTimeout, null);
 }
 
 getNode(AccessibilityNodeInfo root, String key, String value, int index) {
-	return getNode(root, key, value, index, waitNodesTimeout, null);
+	return getNode(root, key, value, index, A11yConfig.waitNodesTimeout, null);
 }
 
 getNode(AccessibilityNodeInfo root, String key, String value, int index, long timeout) {
@@ -170,7 +170,7 @@ getNode(AccessibilityNodeInfo root, String key, String value, int index, long ti
 }
 
 getNode(This multiKeys, int index) {
-	return getNode(multiKeys,  index, waitNodesTimeout);
+	return getNode(multiKeys,  index, A11yConfig.waitNodesTimeout);
 }
 
 getNode(This multiKeys, long timeout) {
@@ -179,6 +179,6 @@ getNode(This multiKeys, long timeout) {
 
 getNode(This multiKeys) {
 	int index = multiKeys.index != void ? multiKeys.index : 0;
-	long timeout = multiKeys.timeout != void ? multiKeys.timeout : waitNodesTimeout;
+	long timeout = multiKeys.timeout != void ? multiKeys.timeout : A11yConfig.waitNodesTimeout;
 	return getNode(multiKeys,  index, timeout);
 }

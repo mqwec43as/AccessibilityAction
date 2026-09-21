@@ -25,9 +25,8 @@ ActionPicker(This assistBar) {
 	int indexMinFilter = 6;
 
 	/* Parameter from top variable */
-	if (includeAllMethods == void) includeAllMethods = false;
 	This a11Y = getA11yInstance();
-	a11Y.setConstant(TOP);
+	a11Y.setConstant(TOP, true);
 	This inspector = a11Y.inspector; /* Instance of MethodInspector */
 	DisplayManager displayManager = context.getSystemService(Context.DISPLAY_SERVICE);
 	int displayId = a11Y.assistBar.selectedDisplayId != void ? a11Y.assistBar.selectedDisplayId : 0;
@@ -607,12 +606,12 @@ ActionPicker(This assistBar) {
 	}
 
 	selectNodeActions(This targetNodeData) {
-		if (includeAllMethods) {
+		if (A11yConfig.includeAllMethods) {
 			String[] selectedGroups = new String[] { "actions", "main" };
-			return selectActionsFlow(targetNodeData, includeAllMethods, selectedGroups);
+			return selectActionsFlow(targetNodeData, A11yConfig.includeAllMethods, selectedGroups);
 		} else {
 			String[] selectedGroups = new String[] { "actions" };
-			return selectActionsFlow(targetNodeData, includeAllMethods, selectedGroups);
+			return selectActionsFlow(targetNodeData, A11yConfig.includeAllMethods, selectedGroups);
 		}
 	}
 

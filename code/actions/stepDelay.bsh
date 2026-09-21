@@ -1,0 +1,6 @@
+/*
+ * Step Delay
+ */
+stepDelay() {
+    if (A11yConfig.stepDelay > 0) wait(A11yConfig.stepDelay);
+}

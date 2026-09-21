@@ -44,8 +44,8 @@ boolean waitUntilGone(Object[][] argsConfigs, long timeout, boolean allGone) {
 		if (currentNodes.keySet().size() < argsConfigs.length) return true;
 	}
 
-	boolean oldDebug = debugMe;
-	if (oldDebug == true) debugMe = false;
+	boolean oldDebug = A11yConfig.debugMe;
+	if (oldDebug == true) setDebugMode(false);
 
 	boolean result = false;
 	try {
@@ -71,7 +71,7 @@ boolean waitUntilGone(Object[][] argsConfigs, long timeout, boolean allGone) {
 		throw executionException;
 	}
 
-	debugMe = oldDebug;
+	setDebugMode(oldDebug);
 	return result;
 }
 
@@ -96,7 +96,7 @@ boolean waitUntilGone(String key, String value, long timeout) {
 }
 
 boolean waitUntilGone(String key, String value) {
-	return waitUntilGone(key, value, null, waitNodesTimeout);
+	return waitUntilGone(key, value, null, A11yConfig.waitNodesTimeout);
 }
 
 boolean waitUntilGone(String text, long timeout) {
@@ -104,7 +104,7 @@ boolean waitUntilGone(String text, long timeout) {
 }
 
 boolean waitUntilGone(String text) {
-	return waitUntilGone("text", text, null, waitNodesTimeout);
+	return waitUntilGone("text", text, null, A11yConfig.waitNodesTimeout);
 }
 
 boolean waitUntilGone(String key, String value, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
@@ -170,5 +170,5 @@ boolean waitUntilGone(AccessibilityNodeInfo node, long timeout) {
 }
 
 boolean waitUntilGone(AccessibilityNodeInfo node) {
-	return waitUntilGone(node, waitNodesTimeout);
+	return waitUntilGone(node, A11yConfig.waitNodesTimeout);
 }
