@@ -42,7 +42,7 @@ a11Y() {
 	if (old != null) {
 		try {
 			boolean hasRemoveBoolean = old.namespace.getMethod("remove", new Class[] { Boolean.class }) != null;
-			if (hasRemoveBoolean) old.remove(false);
+			if (hasRemoveBoolean) old.remove(true);
 			else {
 				throw new JavaCodeException("Could not find remove(boolean) method");
 			}

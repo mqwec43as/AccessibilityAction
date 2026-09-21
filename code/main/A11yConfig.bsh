@@ -17,7 +17,7 @@ This A11yConfig() {
     }
 
     hasWindowFilter() {
-        return filterWindowType != WindowInfo.TYPE_NONE;
+        return filterWindowType != 0;
     }
 
     setPackageNamePattern(String pattern) {
