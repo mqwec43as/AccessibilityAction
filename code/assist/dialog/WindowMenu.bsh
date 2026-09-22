@@ -116,8 +116,9 @@ WindowMenu(This assistBar) {
 		int iconSize = 200;
 		int displayId = assistBar.getContext().getDisplay().getDisplayId();
 
-		boolean useOverlay = true;
+		boolean useOverlay = !assistBar.shouldUseActivity();
 		boolean useAccessibility = true;
+		float dimAmount = 0.5f;
 
 		onSuccess(Map map) {
 			AccessibilityWindowInfo window = map.get("window");
@@ -223,10 +224,3 @@ WindowMenu(This assistBar) {
 
 	return this;
 }
-
-/* Auto-start if called directly */
-// if (MAIN_DIRECTORY == void) {
-// 	a11Y.set();
-// 	DisplayMenu = DisplayMenu();
-// 	DisplayMenu.show();
-// }

@@ -24,8 +24,9 @@ NodeSearch(This assistBar, This structureOverlay) {
 		String title = "Nodes";
         String text = "Tap: Highlight, Long tap: Action picker";
 		boolean showFilter = true;
-        boolean useOverlay = true;
+        boolean useOverlay = !assistBar.shouldUseActivity();
 	    boolean useAccessibility = true;
+        float dimAmount = 0.5f;
         int displayId = assistBar.getContext().getDisplay().getDisplayId();
 		
         onSuccess(Map map) {

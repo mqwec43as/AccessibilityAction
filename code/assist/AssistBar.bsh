@@ -262,6 +262,28 @@ public This AssistBar(int initialX, int initialY) {
 		return buttons.get(id);
 	}
 
+	/*
+	 * Determine if activity dialog should be used
+	 * Activity should be used if assistBar is on the default display and has an application window
+	 * @returns	boolean
+	*/
+	boolean shouldUseActivity() {
+
+		boolean isDefaultDisplay = getContext().getDisplay().getDisplayId() == Display.DEFAULT_DISPLAY;
+		if (!isDefaultDisplay) return false;
+
+		List windows = getWindows(selectedDisplayId);
+		boolean useActivity;
+		for (AccessibilityWindowInfo window: windows) {
+			if (window.getType() == AccessibilityWindowInfo.TYPE_APPLICATION) {
+				useActivity = true;
+				break;
+			}
+		}
+		
+		return useActivity && isDefaultDisplay;
+	}
+
 	getButton(int id) {
 		This iconButton = buttons.get(id);
 		if (iconButton == null) {

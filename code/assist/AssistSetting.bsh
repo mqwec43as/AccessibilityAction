@@ -32,7 +32,7 @@ import android.os.Looper;
 import android.view.WindowManager;
 
 /*───────────────────────────────────────────────────────────────
-  AssistSetting()
+  AssistSetting(This assistBar)
   ───────────────────────────────────────────────────────────────*/
 AssistSetting(This assistBar) {
 
@@ -78,7 +78,7 @@ AssistSetting(This assistBar) {
 		// ! Might need to remove later if Tasker allows Activity to not be excluded in recents
 		// Remove when layoutContext is stopped
 		onStopped(ActivityLifecycleEvent event) {
-			event.layoutContext.finish();
+			event.activity.finish();
 		}
 		
 		return this;
@@ -324,7 +324,7 @@ AssistSetting(This assistBar) {
 				settingWidth,
 				WindowManager.LayoutParams.WRAP_CONTENT,
 				WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
 				android.graphics.PixelFormat.TRANSLUCENT
 			);
 			params.gravity = Gravity.BOTTOM;
@@ -352,7 +352,8 @@ AssistSetting(This assistBar) {
 	}
 
 	show() {
-		show(true);
+		boolean useOverlay = !assistBar.shouldUseActivity();
+		show(useOverlay);
 	}
 
 	toggle() {

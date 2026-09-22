@@ -7,8 +7,71 @@ import bsh.This;
 import android.graphics.drawable.BitmapDrawable;
 import android.content.Context;
 import com.joaomgcd.taskerm.action.java.JavaCodeException;
+import android.accessibilityservice.AccessibilityService;
+import android.graphics.drawable.Drawable;
 
 This ScreenshotHelper(This takeScreenshot, Bitmap bitmap) {
+
+	getErrorMessage(int errorCode) {
+		String message;
+		switch (errorCode) {
+			/*
+			 * The status of taking screenshot is success
+			 */
+			case AccessibilityService.TAKE_SCREENSHOT_SUCCESS:
+				message = "Screenshot success";
+				break;
+
+				/*
+				 * The status of taking screenshot is failure and the reason is internal error.
+				 */
+			case AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR:
+				message = "Screenshot failed with internal error";
+				break;
+
+				/*
+				 * The status of taking screenshot is failure and the reason is no accessibility access.
+				 */
+			case AccessibilityService.ERROR_TAKE_SCREENSHOT_NO_ACCESSIBILITY_ACCESS:
+				message = "Screenshot failed with no accessibility access";
+				break;
+
+				/*
+				 * The status of taking screenshot is failure and the reason is that too little time has
+				 * elapsed since the last screenshot.
+				 */
+			case AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT:
+				message = "Screenshot failed with too little time has elapsed since the last screenshot";
+				break;
+
+				/*
+				 * The status of taking screenshot is failure and the reason is invalid display Id.
+				 */
+			case AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY:
+				message = "Screenshot failed with invalid display Id";
+				break;
+
+				/*
+				 * The status of taking screenshot is failure and the reason is invalid accessibility window Id.
+				 */
+			case AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_WINDOW:
+				message = "Screenshot failed with invalid accessibility window Id";
+				break;
+
+				/*
+				 * The status of taking screenshot is failure and the reason is the window contains secure
+				 * content.
+				 * @see WindowManager.LayoutParams#FLAG_SECURE
+				 */
+			case AccessibilityService.ERROR_TAKE_SCREENSHOT_SECURE_WINDOW:
+				message = "Screenshot failed with the window contains secure content";
+				break;
+			default:
+				message = "Unknown error code: " + errorCode;
+				break;
+		}
+		return message;
+	}
 
 	Context getContext() {
 		return takeScreenshot.getContext();
@@ -18,7 +81,7 @@ This ScreenshotHelper(This takeScreenshot, Bitmap bitmap) {
 		return bitmap;
 	}
 
-    BitmapDrawable getDrawable() {
+	BitmapDrawable getDrawable() {
 		return new BitmapDrawable(getContext().getResources(), bitmap);
 	}
 
@@ -60,7 +123,7 @@ This ScreenshotHelper(This takeScreenshot, Bitmap bitmap) {
 		return returnBitmap;
 	}
 
-    Bitmap getBitmap(Rect targetBounds) {
+	Bitmap getBitmap(Rect targetBounds) {
 		return getBitmap(targetBounds, true);
 	}
 
@@ -80,7 +143,7 @@ This ScreenshotHelper(This takeScreenshot, Bitmap bitmap) {
 		}
 	}
 
-    File saveTo(String path) {
+	File saveTo(String path) {
 		FileOutputStream fos = null;
 		try {
 			File file = new File(path);
@@ -89,19 +152,23 @@ This ScreenshotHelper(This takeScreenshot, Bitmap bitmap) {
 			tasker.log("Screenshot saved to: " + path);
 			return file;
 		} catch (e) {
-            String message = "Error during saving screenshot to: " + path + "\n" + e.getMessage();
-            tasker.log(message);
-            throw new JavaCodeException(message);
-        } finally {
+			String message = "Error during saving screenshot to: " + path + "\n" + e.getMessage();
+			tasker.log(message);
+			throw new JavaCodeException(message);
+		} finally {
 			if (fos != null) {
 				fos.close();
 			}
 		}
 	}
 
-    int getPixelColor(int x, int y) {
+	int getPixelColor(int x, int y) {
 		return bitmap.getPixel(x, y);
 	}
 
 	return this;
+}
+
+This ScreenshotHelper() {
+	return ScreenshotHelper(this, null);
 }

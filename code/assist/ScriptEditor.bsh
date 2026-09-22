@@ -216,7 +216,7 @@ ScriptEditor(This assistBar) {
 			header += "setDisplay(" + selectedDisplayId + ");\n";
 		}
 
-		if (!hasWindowFilter(script) && selectedWindowFilter != WindowInfo.TYPE_NONE && selectedWindowFilter == WindowInfo.TYPE_APPLICATION) {
+		if (!hasWindowFilter(script) && selectedWindowFilter != WindowInfo.TYPE_NONE && selectedWindowFilter != WindowInfo.TYPE_APPLICATION) {
 			String windows = String.join(" | ", WindowInfo.getFlagStringList(selectedWindowFilter));
 			header += "addWindowFilter(" + windows + ");\n";
 		} 
@@ -385,14 +385,14 @@ ScriptEditor(This assistBar) {
 
 	addDisplayGroup() {
 		Display[] displays = getDisplays();
-		if (displayGroup == null && displays.length > 1) {
+		if (displays.length > 1) {
 			addSpacer(getContext(), content);
 			displayGroup = new ChipGroup(getContext());
 			addGroupTitle("Target Display", displayGroup);
 			displayGroup.setSingleSelection(true);
 			content.addView(displayGroup);
 			addSpacer(getContext(), content);
-		}
+		} 
 		updateDisplayGroup();
 	}
 
@@ -657,7 +657,10 @@ ScriptEditor(This assistBar) {
 				editorWidth,
 				WindowManager.LayoutParams.WRAP_CONTENT,
 				overlayType,
-				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL 
+					| WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH 
+					| WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED 
+					| WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
 				android.graphics.PixelFormat.TRANSLUCENT
 			);
 			params.gravity = Gravity.BOTTOM;
@@ -706,7 +709,8 @@ ScriptEditor(This assistBar) {
 	}
 
 	void show() {
-		show(true);
+		boolean useOverlay = !assistBar.shouldUseActivity();
+		show(useOverlay);
 	}
 
 	void remove() {

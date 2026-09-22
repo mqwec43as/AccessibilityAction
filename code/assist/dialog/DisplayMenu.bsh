@@ -1,4 +1,5 @@
 importCommands("others");
+importCommands("others.screenshot");
 
 import bsh.This;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -6,11 +7,12 @@ import android.graphics.Point;
 import android.os.Looper;
 
 /*───────────────────────────────────────────────────────────────
-  DisplayMenu()
+	Display Menu
   ───────────────────────────────────────────────────────────────*/
 DisplayMenu(This assistBar) {
 	final This TOP = this;
 	This a11Y = getA11yInstance();
+	This ScreenshotHelper = ScreenshotHelper();
 	final int WINDOW_TYPE = ENV.Layout.TYPE_DISPLAY_MENU;
 	a11Y.viewControl.addView(TOP);
 	List displayList = new ArrayList();
@@ -48,6 +50,11 @@ DisplayMenu(This assistBar) {
 						screenshots.add(ss);
 						item.put("icon", ss.getDrawable());
 					}
+					onError(int errorCode) {
+						String message = ScreenshotHelper.getErrorMessage(errorCode);
+						log(message, "ERROR", TOP);
+						tasker.showToast(message, "Display: " + display.getName() + " (" + id + ")");
+					}
 					return this;
 				}
 				This ss = takeScreenshot(id, listener());
@@ -69,8 +76,9 @@ DisplayMenu(This assistBar) {
 		boolean showFilter;
 		int displayId = assistBar.getContext().getDisplay().getDisplayId();
 
-		boolean useOverlay = true;
+		boolean useOverlay = !assistBar.shouldUseActivity();
 		boolean useAccessibility = true;
+		float dimAmount = 0.5f;
 		float maxWidth = 0.5f;
 
 		onSuccess(Map map) {
@@ -128,11 +136,20 @@ DisplayMenu(This assistBar) {
 		TOP.onClickListener = listener;
 	}
 
-	show() {
-		displayInfos = DisplayInfos();
-		loadList();
+	create(boolean readDisplay) {
+		if (readDisplay) {
+			displayInfos = DisplayInfos();
+			loadList();
+		}
 		config = config(TOP);
 		listDialog = ListDialog(config);
+		bind(TOP, listDialog.namespace);
+	}
+
+	create(false);
+
+	show() {
+		create(true);
 		boolean isMainThread = Looper.getMainLooper().isCurrentThread();
         if (config.useOverlay) {
             if (isMainThread) {
@@ -150,40 +167,6 @@ DisplayMenu(This assistBar) {
 		}
 	}
 
-	remove() {
-		if (listDialog != null) listDialog.remove();
-	}
-
-	toggle() {
-		if (listDialog != null) listDialog.toggle();
-	}
-
-	isAdded() {
-		if (listDialog == null) return false;
-		return listDialog.isAdded();
-	}
-
-	isHidden() {
-		if (listDialog == null) return false;
-		return listDialog.isHidden();
-	}
-
-	isShowing() {
-		if (listDialog == null) return false;
-		return listDialog.isShowing();
-	}
-
-	isRemoved() {
-		if (listDialog == null) return false;
-		return listDialog.isRemoved();
-	}
 
 	return this;
 }
-
-/* Auto-start if called directly */
-// if (MAIN_DIRECTORY == void) {
-// 	a11Y.set();
-// 	DisplayMenu = DisplayMenu();
-// 	DisplayMenu.show();
-// }

@@ -1,3 +1,5 @@
+importCommands("others.screenshot");
+
 import bsh.This;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
@@ -76,52 +78,6 @@ This StructureSnapshot(int displayId) {
 		onError(int errorCode) {
 			screenshotState = NOT_AVAILABLE;
 			if (hasOnError()) structureSnapshotListener.onError(errorCode);
-			switch (errorCode) {
-				/*
-				 * TThe status of taking screenshot is success
-				 */
-				case AccessibilityService.TAKE_SCREENSHOT_SUCCESS:
-					break;
-
-					/*
-					 * The status of taking screenshot is failure and the reason is internal error.
-					 */
-				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR:
-					break;
-
-					/*
-					 * The status of taking screenshot is failure and the reason is no accessibility access.
-					 */
-				case AccessibilityService.ERROR_TAKE_SCREENSHOT_NO_ACCESSIBILITY_ACCESS:
-					break;
-
-					/*
-					 * The status of taking screenshot is failure and the reason is that too little time has
-					 * elapsed since the last screenshot.
-					 */
-				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT:
-					break;
-
-					/*
-					 * The status of taking screenshot is failure and the reason is invalid display Id.
-					 */
-				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY:
-					break;
-
-					/*
-					 * The status of taking screenshot is failure and the reason is invalid accessibility window Id.
-					 */
-				case AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_WINDOW:
-					break;
-
-					/*
-					 * The status of taking screenshot is failure and the reason is the window contains secure
-					 * content.
-					 * @see WindowManager.LayoutParams#FLAG_SECURE
-					 */
-				case AccessibilityService.ERROR_TAKE_SCREENSHOT_SECURE_WINDOW:
-					break;
-			}
 		}
 
 		return this;

@@ -101,8 +101,9 @@ ActionsGroupDialog(This assistBar) {
 		boolean showFilter;
 		List itemList = new ArrayList();
 		int displayId = assistBar.getContext().getDisplay().getDisplayId();
+		float dimAmount = 0.5f;
 
-		boolean useOverlay = true;
+		boolean useOverlay = !assistBar.shouldUseActivity();
 		boolean useAccessibility = true;
 
 		for (int i = 0; i < Groups.length; i++) {
@@ -134,11 +135,24 @@ ActionsGroupDialog(This assistBar) {
 		return this;
 	}
 
-	dialogConfig = dialog(this);
-	listDialog = ListDialog(dialogConfig);
+	create() {
+		if (dialogConfig == null) dialogConfig = dialog(TOP);
+		listDialog = ListDialog(dialogConfig);
 
-	// * Make listDialog methods available here.
-	bind(this, listDialog.namespace);
+		// * Make listDialog methods available here.
+		bind(TOP, listDialog.namespace);
+	}
+
+	create();
+
+	show() {
+		boolean useOverlay = !assistBar.shouldUseActivity();
+		if (useOverlay != dialogConfig.useOverlay) {
+			dialogConfig.useOverlay = useOverlay;
+			create();
+		}
+		listDialog.show();
+	}
 
 	return this;
 }

@@ -113,8 +113,9 @@ ActionPicker(This assistBar) {
 			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 			if (itemList.size() > indexMinFilter) showFilter = true;
 			
-			boolean useOverlay = true;
+			boolean useOverlay = !assistBar.shouldUseActivity();
 			boolean useAccessibility = true;
+			float dimAmount = 0.5f;
 
 			onSuccess(Map map) {
 				THIS.selectedAction = (String) map.get("methodName");
@@ -225,8 +226,9 @@ ActionPicker(This assistBar) {
 		keyDialog(This THIS) {
 			String title = "Select Pattern";
 			boolean showFilter;
-			boolean useOverlay = true;
+			boolean useOverlay = !assistBar.shouldUseActivity();
 			boolean useAccessibility = true;
+			float dimAmount = 0.5f;
 			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 			List itemList = new ArrayList(THIS.patternList);
 
@@ -427,8 +429,9 @@ ActionPicker(This assistBar) {
 		overload(This THIS) {
 			String title = "Select Method";
 			boolean showFilter;
-			boolean useOverlay = true;
+			boolean useOverlay = !assistBar.shouldUseActivity();
 			boolean useAccessibility = true;
+			float dimAmount = 0.5f;
 			List itemList = new ArrayList(THIS.overloadList);
 			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 			if (itemList.size() > indexMinFilter) showFilter = true;
@@ -478,8 +481,9 @@ ActionPicker(This assistBar) {
 		execute(This THIS) {
 			String title = "Run now";
 			boolean showFilter;
-			boolean useOverlay = true;
+			boolean useOverlay = !assistBar.shouldUseActivity();
 			boolean useAccessibility = true;
+			float dimAmount = 0.5f;
 			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 
 			List itemList = new ArrayList();
