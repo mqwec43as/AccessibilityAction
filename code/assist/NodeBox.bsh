@@ -60,6 +60,7 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	setAlpha(int color, int alpha) {
 		return (alpha << 24) | (color & 0x00ffffff);
 	}
+	
 	int displayId = nodeContext.getDisplay().getDisplayId();
 	int rotation = nodeContext.getDisplay().getRotation();
 	int orientation = nodeContext.getResources().getConfiguration().orientation;
@@ -69,9 +70,14 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	int properties = NodeInfo.getProperties(node);
 	
 	AccessibilityWindowInfo window = node.getWindow();
-	int type = window.getType();
+	int type = AccessibilityWindowInfo.TYPE_APPLICATION;
 	int windowType = 1 << type;
-	int displayId = window.getDisplayId();
+	int displayId;
+	if (window != null) {
+		type = window.getType();
+		windowType = 1 << type;
+		displayId = window.getDisplayId();
+	}
 
 	// Has viewIdResourceName
 	if (NodeInfo != void) {
@@ -102,7 +108,7 @@ NodeBox(Context nodeContext, int overlayType, AccessibilityNodeInfo node) {
 	}
 
 	int getDefaultColor() {
-		return type == AccessibilityWindowInfo.TYPE_APPLICATION ? Color.GREEN : 0xFFFF5E00;
+		return type == AccessibilityWindowInfo.TYPE_APPLICATION ? Color.GREEN : 0xFFCCFF00;
 	}
 
 	WindowManager WINDOW_MANAGER;

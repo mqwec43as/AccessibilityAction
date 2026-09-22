@@ -65,6 +65,7 @@ WindowInfo() {
     }
 
     boolean hasFlag(AccessibilityWindowInfo window, int checkFlags) {
+        if (window == null) return false;
         int normalizedType = 1 << window.getType();
         return hasFlag(normalizedType, checkFlags);
     }

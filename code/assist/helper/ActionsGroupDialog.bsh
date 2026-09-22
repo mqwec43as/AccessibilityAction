@@ -129,6 +129,11 @@ ActionsGroupDialog(This assistBar) {
 		onAttach() {
 			a11Y.addOverlay(listDialog);
 		}
+
+		onCreated() {
+			a11Y.addOverlay(listDialog);
+		}
+
 		onCancel() {}
 
 		onTimeout() {}

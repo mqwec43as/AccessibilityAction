@@ -115,10 +115,6 @@ DisplayMenu(This assistBar) {
 
 		}
 
-		onTimeout() {}
-
-		onAttach() {}
-
 		onDetach() {
 			for (This ss: screenshots) {
 				try {

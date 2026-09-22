@@ -149,10 +149,6 @@ WindowMenu(This assistBar) {
 
 		}
 
-		onTimeout() {}
-
-		onAttach() {}
-
 		onDetach() {
 			Set set = snapshots.keySet();
 			for (int displayId : set) {
