@@ -55,6 +55,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.BitmapDrawable;
+import android.view.inputmethod.InputMethodManager;
 
 
 /*───────────────────────────────────────────────────────────────
@@ -314,6 +315,15 @@ ListDialog(This config) {
 			filterInput = new TextInputEditText(filterWrapper.getContext());
 			filterWrapper.addView(filterInput);
 			mainContainer.addView(filterWrapper);
+			filterWrapper.setEndIconMode(-1);
+			filterWrapper.setEndIconOnClickListener(new View.OnClickListener() {
+				onClick(View view) {
+					InputMethodManager imm = getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+					imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+				}
+			});
+			Drawable hideIcon = tm.attr("mw_hardware_keyboard_hide");
+			filterWrapper.setEndIconDrawable(hideIcon);
 		}
 
 		listView = new ListView(getContext());
@@ -617,8 +627,7 @@ ListDialog(This config) {
 				overlayType,
 				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL 
 					| WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH 
-					| WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED 
-					| WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
+					| WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
 				android.graphics.PixelFormat.TRANSLUCENT
 			);
 			params.gravity = Gravity.BOTTOM;

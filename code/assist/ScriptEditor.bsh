@@ -287,8 +287,11 @@ ScriptEditor(This assistBar) {
 		return chip;
 	}
 
-	Chip addEditChip(String text, boolean checkAble, View.OnClickListener onClickListener) {
-		return addChip(editGroup, text, checkAble, onClickListener);
+	Chip addEditChip(String text, Drawable icon, boolean checkAble, View.OnClickListener onClickListener) {
+		Chip chip = addChip(editGroup, text, checkAble, onClickListener);
+		chip.setChipIcon(icon);
+		chip.setChipIconVisible(true);
+		return chip;
 	}
 
 	Chip addDisplayChip(Display display) {
@@ -314,6 +317,7 @@ ScriptEditor(This assistBar) {
 		Object[][] editChips = {
 			{
 				"Run Line",
+				tm.attr("mw_av_play_arrow"),
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
@@ -326,6 +330,7 @@ ScriptEditor(This assistBar) {
 			},
 			{
 				"Set to code",
+				tm.attr("mw_editor_border_color"),
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
@@ -336,6 +341,7 @@ ScriptEditor(This assistBar) {
 			},
 			{
 				"Copy",
+				tm.attr("mw_content_content_copy"),
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
@@ -346,6 +352,7 @@ ScriptEditor(This assistBar) {
 			},
 			{
 				"Clear",
+				tm.attr("mw_action_delete_forever"),
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
@@ -353,12 +360,25 @@ ScriptEditor(This assistBar) {
 						editText.setText("");
 					}
 				}
+			},
+			{
+				"Close Keyboard",
+				tm.attr("mw_hardware_keyboard_hide"),
+				false,
+				new View.OnClickListener() {
+					onClick(View view) {
+						view.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
+						InputMethodManager imm = context.getSystemService(Context.INPUT_METHOD_SERVICE);
+						imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+					}
+				}
 			}
 		};
 
 		for (Object[] chip: editChips) {
-			addEditChip(chip[0], chip[1], chip[2]);
+			addEditChip(chip[0], chip[1], chip[2], chip[3]);
 		}
+
 	}
 
 	getDisplays() {
