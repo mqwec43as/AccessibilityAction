@@ -6,7 +6,7 @@ Replay a complex touch motion sequence using Shizuku input injection.
 # Dependencies
 1. [getContext](/readme/main/getContext.md)
 2. [getDisplayMetrics](/readme/main/getDisplayMetrics.md)
-3. [setDisplayId](/readme/main/setDisplayId.md)
+3. [setDisplay](/readme/main/setDisplay.md)
 
 &nbsp;
 # How it works

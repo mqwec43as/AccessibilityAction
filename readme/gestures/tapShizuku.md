@@ -1,43 +1,35 @@
 # [tapShizuku](/code/gestures/tapShizuku.bsh)
 
-Perform a low-level tap injection using Shizuku.
+Inject a touch tap through Shizuku by sending `ACTION_DOWN` and `ACTION_UP` motion events directly to the input manager.
 
 &nbsp;
 # Dependencies
 1. [getContext](/readme/main/getContext.md)
 2. [getDisplayMetrics](/readme/main/getDisplayMetrics.md)
-3. [setDisplayId](/readme/main/setDisplayId.md)
+3. [tasker.getShizukuService](https://tasker.joaoapps.com/android/reference/)
 
 &nbsp;
 # How it works
-`tapShizuku` normalizes coordinates to screen pixels and injects `MotionEvent` ACTION_DOWN and ACTION_UP events through the Shizuku input manager. It is a direct tap implementation that works when accessibility gestures are not available.
+`tapShizuku(double x, double y, long duration)` normalizes the input coordinates to the current display size, converts normalized values like `0.5` into pixel coordinates, and then injects a low-level touch sequence by reflecting `IInputManager` through Shizuku. It performs a quick `ACTION_DOWN` followed by `ACTION_UP`, optionally waiting for the given hold duration before releasing. The overloads accept either normalized coordinates or absolute pixel positions.
 
 &nbsp;
 # How to use
 
-**Simple normalized tap:**
+**Tap the center of the screen:**
 ```java
 tapShizuku(0.5, 0.5);
 ```
 
-&nbsp;
-**Tap with explicit duration:**
+**Tap at an exact pixel coordinate with a hold:**
 ```java
-tapShizuku(0.5, 0.5, 100);
+tapShizuku(540, 1200, 200L);
 ```
 
-&nbsp;
-**Tap using absolute pixel coordinates:**
+**Use the default short tap duration:**
 ```java
-tapShizuku(200, 400, 50);
-```
-
-&nbsp;
-**Default fast tap:**
-```java
-tapShizuku(200, 400);
+tapShizuku(0.3, 0.7);
 ```
 
 &nbsp;
 ## Return Value
-Returns `true` if the Shizuku tap injection succeeds, or `false` if it fails.
+Returns `true` when the Shizuku tap injection succeeds, or `false` if the input event fails or an exception is raised.

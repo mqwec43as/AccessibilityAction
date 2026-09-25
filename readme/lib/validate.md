@@ -1,21 +1,27 @@
 # [validate](/code/lib/validate.bsh)
 
-Validate object criteria and method availability for scripted actions and helper objects.
+Match a scripted criteria object against properties or getter methods on another object.
 
 &nbsp;
 # Dependencies
-None
+1. BeanShell `This` namespaces
+2. Java reflection for getter and `is...` method lookup
+3. Java regex `Pattern` for regex criteria
 
 &nbsp;
 # How it works
-`validate` is a helper function or object from the lib folder that provides validate object criteria and method availability for scripted actions and helper objects.
-It exposes methods such as `hasMethod`.
+`validate(This criteria, Object object)` examines criteria variables whose names begin with an uppercase letter or use an `isX` form, then invokes the corresponding `getX()` or `isX()` method on `object`. Values are compared exactly by default. Names listed in `criteria.regex`, `criteria.contains`, or `criteria.insensitive` switch the matching behavior. An optional `condition(Object)` callback can apply an additional final test.
 
 # How to use
 
 ```java
-validate(criteria, object);
+criteria.Text = "Settings";
+criteria.insensitive = "Text";
+criteria.condition = function(Object value) {
+	return value != null;
+};
+matches = validate(criteria, accessibilityEvent);
 ```
 
 ## Return Value
-Returns true when the criteria are met.
+Returns `true` when every configured criterion and optional condition matches; otherwise returns `false`.

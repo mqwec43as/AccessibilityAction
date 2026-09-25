@@ -1,20 +1,24 @@
 # [MaterialColorFallback](/code/lib/MaterialColorFallback.bsh)
 
-Fallback helper for Material theme colors when primary theme colors are unavailable.
+Provide fallback Material color values when the platform theme does not expose the required dynamic colors.
 
 &nbsp;
 # Dependencies
-None
+1. Android `Resources`
+2. `Environment` material-color capability flags
+3. [ThemeManager](/readme/assist/ThemeManager.md) consumers
 
 &nbsp;
 # How it works
-`MaterialColorFallback` is a helper function or object from the lib folder that provides fallback helper for material theme colors when primary theme colors are unavailable.
+`MaterialColorFallback()` creates a scripted color provider with default Material 3 color values and a mapping from names such as `colorPrimary` to Android system accent resources. Its `load()` method attempts to replace mapped values with resources resolved from the current context; fallback values remain available when a resource cannot be resolved.
 
 # How to use
 
 ```java
 fallback = MaterialColorFallback();
+fallback.load();
+primary = fallback.color("colorPrimary");
 ```
 
 ## Return Value
-Returns a scripted MaterialColorFallback helper object.
+Returns a scripted `MaterialColorFallback` object. Color lookup returns an integer color value, while `load()` updates the object and does not return data.

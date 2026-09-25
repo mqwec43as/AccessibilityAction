@@ -1,20 +1,26 @@
 # [runMe](/code/lib/runMe.bsh)
 
-Execute a background action or runnable helper asynchronously.
+Run a `Runnable` asynchronously on an RxJava computation thread.
 
 &nbsp;
 # Dependencies
-None
+1. RxJava `Completable`
+2. RxJava `Schedulers.computation()`
+3. [log](/readme/lib/log.md) for errors raised by surrounding runtime code
 
 &nbsp;
 # How it works
-`runMe` is a helper function or object from the lib folder that provides execute a background action or runnable helper asynchronously.
+`runMe(Runnable bgAction)` wraps the runnable in `Completable.fromRunnable(...)`, schedules it on `Schedulers.computation()`, and subscribes immediately. It is fire-and-forget and does not block the calling BeanShell script.
 
 # How to use
 
 ```java
-runMe(action);
+runMe(new Runnable() {
+	run() {
+		result = httpGet(url);
+	}
+});
 ```
 
 ## Return Value
-Returns void.
+Returns `void`; the runnable executes asynchronously.

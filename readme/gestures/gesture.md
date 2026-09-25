@@ -9,7 +9,7 @@ Dispatch a complex multi-step gesture using accessibility gestures and optional 
 3. [getDisplayMetrics](/readme/main/getDisplayMetrics.md)
 4. [getRoot](/readme/main/getRoot.md)
 5. [getService](/readme/main/getService.md)
-6. [setDisplayId](/readme/main/setDisplayId.md)
+6. [setDisplay](/readme/main/setDisplay.md)
 
 &nbsp;
 # How it works

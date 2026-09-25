@@ -1,25 +1,37 @@
 # [FloatingSheet](/code/lib/FloatingSheet.bsh)
 
-Create a draggable floating overlay sheet used to host custom UI panels.
+Create a draggable accessibility overlay sheet that hosts custom content panels and a drag handle.
 
 &nbsp;
 # Dependencies
-None
+1. [Environment](/readme/main/Environment.md)
+2. [ThemeManager](/readme/assist/ThemeManager.md)
+3. [getContext](/readme/main/getContext.md)
+4. [getService](/readme/main/getService.md)
 
 &nbsp;
 # How it works
-`FloatingSheet` is a helper function or object from the lib folder that provides create a draggable floating overlay sheet used to host custom ui panels.
-It exposes methods such as `show, remove, toggle, addSpacer`.
+`FloatingSheet(This config)` builds a bottom-sheet style overlay using a `WindowManager`, `FrameLayout`, `ScrollView`, and `MaterialToolbar`. It validates the config object for either `getView(...)` or `getViewList(...)`, applies a theme, sets a max-height limit, and attaches drag handlers so the sheet can be moved vertically and horizontally. The sheet also calls `onAttach()` and `onDetach()` hooks if they are defined on the config object.
 
+&nbsp;
 # How to use
 
 ```java
-sheet = FloatingSheet(config);
-```
+sheetConfig = This();
+sheetConfig.title = "Debug";
+sheetConfig.maxHeight = 0.75f;
+sheetConfig.getViewList = function(Context ctx) {
+    // return a List of Views here
+};
 
-```java
+sheet = FloatingSheet(sheetConfig);
 sheet.show();
 ```
 
+```java
+sheet.remove();
+```
+
+&nbsp;
 ## Return Value
-Returns a scripted FloatingSheet object.
+Returns a scripted `FloatingSheet` object with methods such as `show()`, `remove()`, `toggle()`, and `addSpacer(...)`.

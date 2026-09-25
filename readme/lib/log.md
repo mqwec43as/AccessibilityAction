@@ -1,15 +1,16 @@
 # [log](/code/lib/log.bsh)
 
-Log helper for writing messages with optional severity and tags.
+Write messages to the configured Tasker log with severity, caller, node, or tag metadata.
 
 &nbsp;
 # Dependencies
-None
+1. Tasker `tasker.log(...)`
+2. `LOG_FILE` from the active a11Y environment
+3. [A11yConfig](/readme/config/A11yConfig.md) for optional node logging
 
 &nbsp;
 # How it works
-`log` is a helper function or object from the lib folder that provides log helper for writing messages with optional severity and tags.
-It exposes methods such as `log`.
+The overloads support an INFO message, an explicit level, an `AccessibilityNodeInfo`, a scripted caller object, or a string tag. Node text is appended only when `A11yConfig.logIncludeNode` is enabled. Log entries include the calling namespace and BeanShell invocation line unless a tag is supplied.
 
 # How to use
 
@@ -22,4 +23,4 @@ log("Error", "ERROR", "MyTag");
 ```
 
 ## Return Value
-Returns void.
+Returns `void` after forwarding the message to Tasker's logger.
