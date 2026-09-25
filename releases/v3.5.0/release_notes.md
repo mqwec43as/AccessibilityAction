@@ -3,6 +3,7 @@
 1. Support overlays and other window types.
 2. Assist dialogs now use overlays and can be displayed on other display.
 3. Add previews for nodes, windows and displays.
+4. Method to scroll from certain node.
 
 &nbsp;
 # **Changes**
