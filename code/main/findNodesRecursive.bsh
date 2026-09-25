@@ -70,7 +70,7 @@ List findNodesRecursive(AccessibilityNodeInfo root, String key, String value) {
 		*/
 		if (isMatch) {
 			nodes.add(node);
-			if (findFirstForRecursive != void && findFirstForRecursive) return nodes;
+			if (A11yConfig.findFirstForRecursive) break;
 		} 
 
 		/* Add children to the stack to continue recursion */

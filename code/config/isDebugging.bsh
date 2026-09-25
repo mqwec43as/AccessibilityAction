@@ -1,0 +1,6 @@
+/*
+ * Check if currently debugging
+ */
+isDebugging() {
+    return A11yConfig.debugMe;
+}

@@ -19,11 +19,14 @@ Arguments:
 Example:
 showToast("Hello World");
 ───────────────────────────────────────────────────────────────*/
-public void showToast(final String text) {
-	
+public void showToast(Context context, final String text) {
 	getA11yInstance().post(new Runnable() {
 		run() {
 			Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
 		}
 	});
+}
+
+public void showToast(final String text) {
+	showToast(getContext(), text);
 }

@@ -134,7 +134,7 @@ public boolean isMatch(AccessibilityNodeInfo node, This multiKeys) {
 				targetValue = Pattern.compile(targetValue);
 				break;
 			case "flags":
-				targetValue = Integer.parseInt(targetValue);
+				if (targetValue instanceof String) targetValue = Integer.parseInt(targetValue);
 				break;
 			default:
 				targetValue = targetValue;

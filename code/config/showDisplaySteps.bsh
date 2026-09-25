@@ -5,3 +5,7 @@ showDisplaySteps(boolean state) {
     A11yConfig.debugSteps = state;
     return state;
 }
+
+showDisplaySteps() {
+    return showDisplaySteps(true);
+}

@@ -9,6 +9,9 @@ This A11yConfig() {
     int filterWindowType = 0;
     int displayId = 0;
     Pattern filterPackageName;
+    int scrollMaximumTries = 10;
+    long scrollDelay = 100;
+    boolean scrollAgainWhenFailed = true;
 
     refresh() {
         a11Y.config.setTo(TOP);

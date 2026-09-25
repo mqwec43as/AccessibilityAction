@@ -129,6 +129,7 @@ List findNodes(String key, String value) {
 		List foundNodes = findNodes(root, key, value);
 		if (!foundNodes.isEmpty()) {
 			nodes.addAll(foundNodes);
+			if (A11yConfig.findFirstForRecursive) break;
 		}
 	}
 

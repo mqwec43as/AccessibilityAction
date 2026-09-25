@@ -1,6 +1,6 @@
 /*───────────────────────────────────────────────────────────────
-	This code was generated with the asssitance of AI Tools.
-	link: https://taskernet.com/shares/?user=AS35m8mYAsKnyvlz5PqGXgNUZ9JjdBkYfoFVvHU2Sv3VHWY8qbQr6i6XTqmBRJqwPDPzKu5ypD%2FkbH%2BQyA%3D%3D&id=Project%3AEdge+Bar+Final
+    This code was generated with the assistance of AI Tools.
+    link: https://taskernet.com/shares/?user=AS35m8mYAsKnyvlz5PqGXgNUZ9JjdBkYfoFVvHU2Sv3VHWY8qbQr6i6XTqmBRJqwPDPzKu5ypD%2FkbH%2BQyA%3D%3D&id=Project%3AEdge+Bar+Final
 ────────────────────────────────────────────────────────────── */
 import android.view.MotionEvent;
 import android.view.InputDevice;
@@ -24,136 +24,133 @@ import rikka.shizuku.ShizukuBinderWrapper;
 import android.hardware.input.IInputManager$Stub$Proxy;
 import android.hardware.input.IInputManager$Stub;
 import android.content.Context;
+
 /*───────────────────────────────────────────────────────────────
 gestureShizuku(Object[][] points, Paint paint)
 **Replays Complex Touch Events via Shizuku**
 ───────────────────────────────────────────────────────────────*/
 public boolean gestureShizuku(Object[][] points, Paint paint) {
-	if (points == null || points.length == 0) return false;
+    if (points == null || points.length == 0) return false;
 
-	ShizukuBinderWrapper inputBinder = tasker.getShizukuService("input");
-	IInputManager$Stub$Proxy iim = IInputManager$Stub.asInterface(inputBinder);
-	Context windowContext = getContext(true);
-	WindowManager wm = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
-	int targetDisplayId =windowContext.getDisplay().getDisplayId();
-	DisplayMetrics dm = getDisplayMetrics(targetDisplayId);
-	int screenWidth = dm.widthPixels;
-	int screenHeight = dm.heightPixels;
+    ShizukuBinderWrapper inputBinder = tasker.getShizukuService("input");
+    IInputManager$Stub$Proxy inputManagerProxy = IInputManager$Stub.asInterface(inputBinder);
+    Context windowContext = getContext(true);
+    WindowManager windowManager = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
+    int targetDisplayId = windowContext.getDisplay().getDisplayId();
+    DisplayMetrics displayMetrics = getDisplayMetrics(targetDisplayId);
+    int screenWidth = displayMetrics.widthPixels;
+    int screenHeight = displayMetrics.heightPixels;
 
-	boolean showTrail = (paint != null);
-	Bitmap bitmapRef = null;
-	Canvas canvasRef = null;
-	ImageView overlayRef = null;
-	if (showTrail) {
-		bitmapRef = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
-		canvasRef = new Canvas(bitmapRef);
-		overlayRef = new ImageView(context);
-		overlayRef.setImageBitmap(bitmapRef);
+    boolean showTrail = (paint != null);
+    Bitmap trailBitmap = null;
+    Canvas trailCanvas = null;
+    ImageView overlayImageView = null;
+    if (showTrail) {
+        trailBitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
+        trailCanvas = new Canvas(trailBitmap);
+        overlayImageView = new ImageView(context);
+        overlayImageView.setImageBitmap(trailBitmap);
 
-		WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-			WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
-			WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-			WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-			PixelFormat.TRANSLUCENT
-		);
-		params.gravity = Gravity.TOP | Gravity.LEFT;
+        WindowManager.LayoutParams windowParams = new WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        );
+        windowParams.gravity = Gravity.TOP | Gravity.LEFT;
 
-		final ImageView fOverlay = overlayRef;
-		final WindowManager.LayoutParams fParams = params;
-		new Handler(Looper.getMainLooper()).post(new Runnable() {
-			run() { try { wm.addView(fOverlay, fParams); } catch (Exception e) {} }
-		});
-	}
+        final ImageView finalOverlayImageView = overlayImageView;
+        final WindowManager.LayoutParams finalWindowParams = windowParams;
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            run() { try { windowManager.addView(finalOverlayImageView, finalWindowParams); } catch (Exception ignoredException) {} }
+        });
+    }
 
-	try {
-		long downTime = SystemClock.uptimeMillis();
-		float lastX =0f;
-		float lastY =0f;
+    try {
+        long downTime = SystemClock.uptimeMillis();
+        float lastX = 0f;
+        float lastY = 0f;
 
-		for (int i = 0; i < points.length; i++) {
-			float targetX = ((Number) points[i][0]).floatValue();
-			float targetY = ((Number) points[i][1]).floatValue();
-			if (Math.abs(targetX) <= 1.0f) targetX *= screenWidth;
-			if (Math.abs(targetY) <= 1.0f) targetY *= screenHeight;
+        for (int pointIndex = 0; pointIndex < points.length; pointIndex++) {
+            float targetX = points[pointIndex][0];
+            float targetY = points[pointIndex][1];
+            if (Math.abs(targetX) <= 1.0f) targetX *= screenWidth;
+            if (Math.abs(targetY) <= 1.0f) targetY *= screenHeight;
 
-			int actionType = ((Number) points[i][2]).intValue();
-			long duration = ((Number) points[i][3]).longValue();
+            int actionType = points[pointIndex][2].intValue();
+            long stepDuration = points[pointIndex][3].longValue();
 
-			if (actionType == 3 && points[i].length >= 6) {
-				float cX = ((Number) points[i][4]).floatValue();
-				float cY = ((Number) points[i][5]).floatValue();
-				if (Math.abs(cX) <= 1.0f) {
-					cX *= screenWidth;
-					cY *= screenHeight;
-				}
+            if (actionType == 3 && points[pointIndex].length >= 6) {
+                float controlX1 = points[pointIndex][4];
+                float controlY1 = points[pointIndex][5];
+                if (Math.abs(controlX1) <= 1.0f) {
+                    controlX1 *= screenWidth;
+                    controlY1 *= screenHeight;
+                }
 
-				int steps = (int) Math.max(1, duration / 16);
-				long stepDur = duration / steps;
+                int totalSteps = (int) Math.max(1, stepDuration / 16);
+                long subStepDuration = stepDuration / totalSteps;
 
-				for (int s = 1; s <= steps; s++) {
-					float t = (float) s / steps;
-					float invT = 1.0f - t;
-					float bx = invT * invT * lastX + 2 * invT * t * cX + t * t * targetX;
-					float by = invT * invT * lastY + 2 * invT * t * cY + t * t * targetY;
+                for (int stepIndex = 1; stepIndex <= totalSteps; stepIndex++) {
+                    float progressRatio = (float) stepIndex / totalSteps;
+                    float inverseProgress = 1.0f - progressRatio;
+                    float currentStepX = inverseProgress * inverseProgress * lastX + 2 * inverseProgress * progressRatio * controlX1 + progressRatio * progressRatio * targetX;
+                    float currentStepY = inverseProgress * inverseProgress * lastY + 2 * inverseProgress * progressRatio * controlY1 + progressRatio * progressRatio * targetY;
 
-					MotionEvent event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, bx, by, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
-					event.setSource(InputDevice.SOURCE_TOUCHSCREEN);
-					event.setDisplayId(targetDisplayId);
-					iim.injectInputEvent(event, 1);
-					event.recycle();
+                    MotionEvent motionEvent = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, currentStepX, currentStepY, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
+                    motionEvent.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+                    motionEvent.setDisplayId(targetDisplayId);
+                    inputManagerProxy.injectInputEvent(motionEvent, 1);
+                    motionEvent.recycle();
 
-					if (showTrail) {
-						canvasRef.drawLine(lastX, lastY, bx, by, paint);
-						final ImageView fOverlay = overlayRef;
-						new Handler(Looper.getMainLooper()).post(new Runnable() { run() { fOverlay.invalidate(); } });
-					}
+                    if (showTrail) {
+                        trailCanvas.drawLine(lastX, lastY, currentStepX, currentStepY, paint);
+                        final ImageView finalOverlayImageView = overlayImageView;
+                        new Handler(Looper.getMainLooper()).post(new Runnable() { run() { finalOverlayImageView.invalidate(); } });
+                    }
 
-					lastX = bx;
-					lastY = by;
-					if (stepDur > 0) Thread.sleep(stepDur);
-				}
-			} else {
-				int action = (actionType == 0) ? MotionEvent.ACTION_DOWN :
-					(actionType == 1) ? MotionEvent.ACTION_UP : MotionEvent.ACTION_MOVE;
+                    lastX = currentStepX;
+                    lastY = currentStepY;
+                    if (subStepDuration > 0) Thread.sleep(subStepDuration);
+                }
+            } else {
+                int motionAction = (actionType == 0) ? MotionEvent.ACTION_DOWN :
+                    (actionType == 1) ? MotionEvent.ACTION_UP : MotionEvent.ACTION_MOVE;
 
-				MotionEvent event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), action, targetX, targetY, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
-				event.setSource(InputDevice.SOURCE_TOUCHSCREEN);
-				event.setDisplayId(targetDisplayId);
-				iim.injectInputEvent(event, 1);
-				event.recycle();
+                MotionEvent motionEvent = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), motionAction, targetX, targetY, 1.0f, 1.0f, 0, 1.0f, 1.0f, 0, 0);
+                motionEvent.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+                motionEvent.setDisplayId(targetDisplayId);
+                inputManagerProxy.injectInputEvent(motionEvent, 1);
+                motionEvent.recycle();
 
-				if (showTrail) {
-					canvasRef.drawLine(lastX, lastY, targetX, targetY, paint);
-					final ImageView fOverlay = overlayRef;
-					new Handler(Looper.getMainLooper()).post(new Runnable() { run() { fOverlay.invalidate(); } });
-				}
+                if (showTrail) {
+                    trailCanvas.drawLine(lastX, lastY, targetX, targetY, paint);
+                    final ImageView finalOverlayImageView = overlayImageView;
+                    new Handler(Looper.getMainLooper()).post(new Runnable() { run() { finalOverlayImageView.invalidate(); } });
+                }
 
-				lastX = targetX;
-				lastY = targetY;
-				if (duration > 0) Thread.sleep(duration);
-			}
-		}
+                lastX = targetX;
+                lastY = targetY;
+                if (stepDuration > 0) Thread.sleep(stepDuration);
+            }
+        }
 
-		if (showTrail) {
-			final ImageView fOverlay = overlayRef;
-			new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-				run() { try { wm.removeView(fOverlay); } catch (Exception e) {} }
-			}, 500);
-		}
-		return true;
-	} catch (Exception e) {
-		log("gestureShizuku Error: " + e.toString());
-		return false;
-	}
-
-
-
+        if (showTrail) {
+            final ImageView finalOverlayImageView = overlayImageView;
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                run() { try { windowManager.removeView(finalOverlayImageView); } catch (Exception ignoredException) {} }
+            }, 500);
+        }
+        return true;
+    } catch (Exception executionException) {
+        log("gestureShizuku Error: " + executionException.toString());
+        return false;
+    }
 }
-
 
 /* Overloaded method */
 public boolean gestureShizuku(Object[][] points) {
-	return gestureShizuku(points, null);
+    return gestureShizuku(points, null);
 }
 
 /* Example: Execute a circle gestureShizuku */

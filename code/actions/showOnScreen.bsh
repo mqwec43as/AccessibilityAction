@@ -1,8 +1,24 @@
+importCommands("config");
 import android.view.accessibility.AccessibilityNodeInfo;
 
 showOnScreen(AccessibilityNodeInfo node) {
-	if (node.isVisibleToUser()) return node;
+	node.refresh();
 	boolean success = node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.getId());
-	if (success) node.refresh();
-	return node;
+	if (success) {
+		node.refresh();
+	}
+	if (isDebugging()) wait(500);
+	return success;
+}
+
+showOnScreen(AccessibilityNodeInfo node, long duration) {
+	boolean success = showOnScreen(node);
+	if (duration > 0) wait(duration);
+	return success;
+}
+
+showOnScreen(AccessibilityNodeInfo node, boolean useDelay) {
+	boolean success = showOnScreen(node);
+	if (useDelay) stepDelay();
+	return success;
 }

@@ -1,3 +1,5 @@
+importCommands("lib");
+
 import android.view.MotionEvent;
 import java.io.File;
 import java.net.URI;
@@ -46,164 +48,173 @@ Returns:
 * boolean → True if gesture execution finishes successfully, false otherwise.
 ──────────────────────────────────────────────────────────────── */
 public boolean gesture(Object[][] points, Paint paint) {
-	if (points == null || points.length == 0) return false;
+    if (points == null || points.length == 0) return false;
 
-	AccessibilityNodeInfo root = getRoot();
-	if (root == null) {
-		return gestureShizuku(points, paint);
-	}
+    AccessibilityNodeInfo rootNode = getRoot();
+    if (rootNode == null) {
+        return gestureShizuku(points, paint);
+    }
 
-	Context windowContext = getContext(true);
-	int targetDisplayId = windowContext.getDisplay().getDisplayId();
+    Context windowContext = getContext(true);
+    int targetDisplayId = windowContext.getDisplay().getDisplayId();
 
-	WindowManager windowManager = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
-	DisplayMetrics dm = getDisplayMetrics(targetDisplayId);
-	int screenWidth = dm.widthPixels;
-	int screenHeight = dm.heightPixels;
+    WindowManager windowManager = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
+    DisplayMetrics displayMetrics = getDisplayMetrics(targetDisplayId);
+    int screenWidth = displayMetrics.widthPixels;
+    int screenHeight = displayMetrics.heightPixels;
 
-	Bitmap bitmapRef = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
-	Canvas canvasRef = new Canvas(bitmapRef);
-	boolean showTrail = (paint != null);
+    Bitmap trailBitmap = Bitmap.createBitmap(screenWidth, screenHeight, Bitmap.Config.ARGB_8888);
+    Canvas trailCanvas = new Canvas(trailBitmap);
+    boolean showTrail = (paint != null);
 
-	Handler mainHandler = new Handler(Looper.getMainLooper());
-	ImageView overlayRef;
+    Handler mainThreadHandler = new Handler(Looper.getMainLooper());
+    ImageView overlayImageView;
 
-	CompletableSubject uiInitSignal = CompletableSubject.create();
-	mainHandler.post(new Runnable() {
-		run() {
-			overlayRef = new ImageView(windowContext);
-			overlayRef.setImageBitmap(bitmapRef);
-			uiInitSignal.onComplete();
-		}
-	});
-	uiInitSignal.blockingAwait();
-
-
-	WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-		WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
-		WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-		66088,
-		PixelFormat.TRANSLUCENT
-	);
-	params.layoutInDisplayCutoutMode = 1;
-	params.gravity = Gravity.TOP | Gravity.LEFT;
-
-	try {
-		HandlerThread handlerThread = new HandlerThread("A11yThread" + System.currentTimeMillis());
-		handlerThread.start();
-		Handler a11yHandler = new Handler(handlerThread.getLooper());
-
-		StrokeDescription currentStroke = null;
-		boolean started = false;
-		float lastX =0f;
-		float lastY =0f;
-
-		for (int i = 0; i < points.length; i++) {
-			float targetX = ((Number) points[i][0]).floatValue();
-			float targetY = ((Number) points[i][1]).floatValue();
-			if (Math.abs(targetX) <= 1.0f) targetX *= (float) screenWidth;
-			if (Math.abs(targetY) <= 1.0f) targetY *= (float) screenHeight;
-
-			int actionType = ((Number) points[i][2]).intValue();
-			long totalDuration = ((Number) points[i][3]).longValue();
-
-			int steps = (actionType == 3 || actionType == 4) ? (int) Math.max(1, totalDuration / 16) : 1;
-			long stepDuration = Math.max(1, totalDuration / steps);
-
-			for (int s = 1; s <= steps; s++) {
-				float t = (float) s / steps;
-				float currentStepX, currentStepY;
-
-				if (actionType == 3 && points[i].length >= 6) {
-					float cx1 = ((Number) points[i][4]).floatValue();
-					float cy1 = ((Number) points[i][5]).floatValue();
-					if (Math.abs(cx1) <= 1.0f) {
-						cx1 *= screenWidth;
-						cy1 *= screenHeight;
-					}
-					float invT = 1 - t;
-					currentStepX = invT * invT * lastX + 2 * invT * t * cx1 + t * t * targetX;
-					currentStepY = invT * invT * lastY + 2 * invT * t * cy1 + t * t * targetY;
-				}
-				else {
-					currentStepX = targetX;
-					currentStepY = targetY;
-				}
-
-				Path p = new Path();
-				if (!started) {
-					if (showTrail) {
-						mainHandler.post(new Runnable() {
-							run() { try { windowManager.addView(overlayRef, params); } catch (Exception e) {} }
-						});
-					}
-					p.moveTo(currentStepX, currentStepY);
-					p.lineTo(currentStepX, currentStepY);
-					currentStroke = new StrokeDescription(p, 0, stepDuration, true);
-					started = true;
-				} else {
-					p.moveTo(lastX, lastY);
-					p.lineTo(currentStepX, currentStepY);
-					boolean isLastStep = (i == points.length - 1 && s == steps);
-					boolean willContinue = (!isLastStep && actionType != 2);
-					currentStroke = currentStroke.continueStroke(p, 0, stepDuration, willContinue);
-				}
-
-				final Path drawPath = p;
-				
-				CompletableSubject stepSignal = CompletableSubject.create();
-				AccessibilityService.GestureResultCallback callback = tasker.implementClass(AccessibilityService.GestureResultCallback.class, new ClassImplementation() {
-					run(Callable supercaller, String methodName, Object[] args) {
-						if (methodName.equals("onCompleted")) {
-							if (showTrail) {
-								canvasRef.drawPath(drawPath, paint);
-								mainHandler.post(new Runnable() {
-									run() { if (overlayRef != null) overlayRef.invalidate(); }
-								});
-							}
-							stepSignal.onComplete();
-						} else {
-							stepSignal.onError(new RuntimeException("Cancelled"));
-						}
-						return null;
-					}
-				});
+    CompletableSubject uiInitSignal = CompletableSubject.create();
+    mainThreadHandler.post(new Runnable() {
+        run() {
+            overlayImageView = new ImageView(windowContext);
+            overlayImageView.setImageBitmap(trailBitmap);
+            uiInitSignal.onComplete();
+        }
+    });
+    uiInitSignal.blockingAwait();
 
 
-				GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
-				gestureBuilder.addStroke(currentStroke);
-				gestureBuilder.setDisplayId(targetDisplayId);
-				getService().dispatchGesture(gestureBuilder.build(), callback, a11yHandler);
+    WindowManager.LayoutParams windowParams = new WindowManager.LayoutParams(
+        WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+        66088,
+        PixelFormat.TRANSLUCENT
+    );
+    windowParams.layoutInDisplayCutoutMode = 1;
+    windowParams.gravity = Gravity.TOP | Gravity.LEFT;
 
-				stepSignal.blockingAwait();
+    try {
+        HandlerThread handlerThread = new HandlerThread("A11yThread" + System.currentTimeMillis());
+        handlerThread.start();
+        Handler accessibilityHandler = new Handler(handlerThread.getLooper());
 
-				lastX = currentStepX;
-				lastY = currentStepY;
-			}
-		}
+        StrokeDescription currentStroke = null;
+        boolean strokeStarted = false;
+        float lastX = 0f;
+        float lastY = 0f;
 
-		if (showTrail) {
-			mainHandler.postDelayed(new Runnable() {
-				run() { try { windowManager.removeView(overlayRef); } catch (Exception e) {} }
-			}, 200);
-		}
-		handlerThread.quitSafely();
-		return true;
-	} catch (Exception ex) {
-		if (showTrail) mainHandler.post(new Runnable() {
-			run() {
-				try {
-					windowManager.removeView(overlayRef);
-				} catch (Exception e) {}
-			}
-		});
-		return false;
-	}
+        for (int pointIndex = 0; pointIndex < points.length; pointIndex++) {
+            float targetX = points[pointIndex][0];
+            float targetY = points[pointIndex][1];
+            if (Math.abs(targetX) <= 1.0f) targetX *= (float) screenWidth;
+            if (Math.abs(targetY) <= 1.0f) targetY *= (float) screenHeight;
+
+            int actionType = points[pointIndex][2];
+            long totalDuration = points[pointIndex][3];
+
+            int totalSteps = (actionType == 3 || actionType == 4) ? (int) Math.max(1, totalDuration / 16) : 1;
+            long stepDuration = Math.max(1, totalDuration / totalSteps);
+
+            for (int stepIndex = 1; stepIndex <= totalSteps; stepIndex++) {
+                float progressRatio = (float) stepIndex / totalSteps;
+                float currentStepX, currentStepY;
+
+                if (actionType == 3 && points[pointIndex].length >= 6) {
+                    float controlX1 = points[pointIndex][4];
+                    float controlY1 = points[pointIndex][5];
+                    if (Math.abs(controlX1) <= 1.0f) {
+                        controlX1 *= screenWidth;
+                        controlY1 *= screenHeight;
+                    }
+                    float inverseProgress = 1 - progressRatio;
+                    currentStepX = inverseProgress * inverseProgress * lastX + 2 * inverseProgress * progressRatio * controlX1 + progressRatio * progressRatio * targetX;
+                    currentStepY = inverseProgress * inverseProgress * lastY + 2 * inverseProgress * progressRatio * controlY1 + progressRatio * progressRatio * targetY;
+                }
+                else {
+                    currentStepX = targetX;
+                    currentStepY = targetY;
+                }
+
+                Path strokePath = new Path();
+                if (!strokeStarted) {
+                    if (showTrail) {
+                        mainThreadHandler.post(new Runnable() {
+                            run() { try { windowManager.addView(overlayImageView, windowParams); } catch (Exception ignoredException) {} }
+                        });
+                    }
+                    strokePath.moveTo(currentStepX, currentStepY);
+                    strokePath.lineTo(currentStepX, currentStepY);
+                    currentStroke = new StrokeDescription(strokePath, 0, stepDuration, true);
+                    strokeStarted = true;
+                } else {
+                    strokePath.moveTo(lastX, lastY);
+                    strokePath.lineTo(currentStepX, currentStepY);
+                    boolean isLastStep = (pointIndex == points.length - 1 && stepIndex == totalSteps);
+                    boolean willContinue = (!isLastStep && actionType != 2);
+                    currentStroke = currentStroke.continueStroke(strokePath, 0, stepDuration, willContinue);
+                }
+
+                final Path drawPath = strokePath;
+
+                CompletableSubject stepSignal = CompletableSubject.create();
+                AccessibilityService.GestureResultCallback gestureCallback = tasker.implementClass(AccessibilityService.GestureResultCallback.class, new ClassImplementation() {
+                    run(Callable supercaller, String methodName, Object[] args) {
+                        if (methodName.equals("onCompleted")) {
+                            if (showTrail) {
+                                trailCanvas.drawPath(drawPath, paint);
+                                mainThreadHandler.post(new Runnable() {
+                                    run() { 
+										if (overlayImageView != null) overlayImageView.invalidate();
+									}
+                                });
+                            }
+                            stepSignal.onComplete();
+                        } else if (methodName.equals("onCancelled")) {
+                            int cancelIndex = pointIndex + 1;
+                            stepSignal.onError(new RuntimeException("Cancelled on #" + cancelIndex + ": " + targetX + "," + targetY));
+                        } else return null;
+                    }
+                });
+
+
+                GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+                gestureBuilder.addStroke(currentStroke);
+                gestureBuilder.setDisplayId(targetDisplayId);
+                getService().dispatchGesture(gestureBuilder.build(), gestureCallback, accessibilityHandler);
+
+                stepSignal.blockingAwait();
+
+                lastX = currentStepX;
+                lastY = currentStepY;
+            }
+        }
+
+        if (showTrail) {
+            mainThreadHandler.postDelayed(new Runnable() {
+                run() {
+                    try {
+                        windowManager.removeView(overlayImageView);
+                    } catch (Exception ignoredException) {
+
+                    }
+                }
+            }, 200);
+        }
+        handlerThread.quitSafely();
+        return true;
+    } catch (Exception executionException) {
+        if (showTrail) mainThreadHandler.post(new Runnable() {
+            run() {
+                try {
+                    windowManager.removeView(overlayImageView);
+                } catch (Exception ignoredException) {}
+            }
+        });
+        log("Gesture failed: " + executionException.getMessage(), "ERROR", super);
+        return false;
+    }
 
 }
 
 public boolean gesture(Object[][] points) {
-	return gesture(points, null);
+    return gesture(points, null);
 }
 
 // Paint circlePaint = new Paint();
