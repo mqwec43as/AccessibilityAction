@@ -207,7 +207,7 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 					ClipData clip = ClipData.newPlainText("NodeData", toCopy);
 					clipboard.setPrimaryClip(clip);
 					String display = toCopy.length() > 20 ? toCopy.substring(0, 20) + "..." : toCopy;
-					showToast("Copied: " + display);
+					showToast(v.getContext(),"Copied: " + display);
 				}
 			}
 		});

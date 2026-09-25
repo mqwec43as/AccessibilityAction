@@ -264,7 +264,8 @@ public This AssistBar(int initialX, int initialY) {
 
 	/*
 	 * Determine if activity dialog should be used
-	 * Activity should be used if assistBar is on the default display and has an application window
+	 * Activity should be used if assistBar is on the default display 
+	 * and has an application window without an input window present
 	 * @returns	boolean
 	*/
 	boolean shouldUseActivity() {
@@ -273,15 +274,20 @@ public This AssistBar(int initialX, int initialY) {
 		if (!isDefaultDisplay) return false;
 
 		List windows = getWindows(selectedDisplayId);
-		boolean useActivity;
+		boolean hasAppWindow;
+		boolean hasInputWindow;
 		for (AccessibilityWindowInfo window: windows) {
-			if (window.getType() == AccessibilityWindowInfo.TYPE_APPLICATION) {
-				useActivity = true;
-				break;
-			}
-		}
-		
-		return useActivity && isDefaultDisplay;
+			switch (window.getType()) {
+				case AccessibilityWindowInfo.TYPE_APPLICATION:
+					hasAppWindow = true;
+					break;
+				case AccessibilityWindowInfo.TYPE_INPUT_METHOD:
+					hasInputWindow = true;
+					break;
+			};
+		};
+
+		return hasAppWindow && !hasInputWindow;
 	}
 
 	getButton(int id) {
@@ -369,7 +375,7 @@ public This AssistBar(int initialX, int initialY) {
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
-						tasker.showToast("Info not set yet");
+						showToast(getContext(), "Info not set yet");
 					}
 				}
 			},
@@ -435,7 +441,7 @@ public This AssistBar(int initialX, int initialY) {
 					if (nodeSearch != null) {
 						if (structureOverlay != null && structureOverlay.isShowing()) {
 							if (structureOverlay.structureSnapshot.isScreenshotRecycled()) {
-								tasker.showToast("Screenshot recycled");
+								showToast(getContext(), "Screenshot recycled");
 							} else {
 								log("Showing Node Search when structure overlay is showing", "INFO", TOP);
 								showSearch();
@@ -640,6 +646,7 @@ public This AssistBar(int initialX, int initialY) {
 			setHandleMode(DELETE_CAPTURE_MODE, false);
 			buttonManager.setButtonsTouchState(AssistInfo.SEARCH_BUTTON | AssistInfo.FILTER_BUTTON, false);
 			TOP.switchLayout(true);
+			hide();
 			structureOverlay.takeScreenshot();
 		}
 
@@ -671,7 +678,12 @@ public This AssistBar(int initialX, int initialY) {
 		}
 
 		onScreenshotSuccess(This structureSnapshot) {
+			unhide();
 			log("Screenshot success", "INFO", TOP);
+		}
+
+		onScreenshotError(int errorCode) {
+			unhide();
 		}
 
 		return this;
@@ -686,7 +698,7 @@ public This AssistBar(int initialX, int initialY) {
 			listener() {
 				onClick(Object display) {
 					TOP.namespace.setVariable("selectedDisplayId", display.getDisplayId(), false);
-					showToast("Selected Display: " + display.getName());
+					showToast(getContext(), "Selected Display: " + display.getName());
 					TOP.displayStructure(display.getDisplayId());
 				}
 				return this;
@@ -699,7 +711,7 @@ public This AssistBar(int initialX, int initialY) {
 			listener() {
 				onClick(AccessibilityWindowInfo window) {
 					TOP.namespace.setVariable("selectedDisplayId", window.getDisplayId(), false);
-					showToast("Selected Window: " + window.getTitle());
+					showToast(getContext(), "Selected Window: " + window.getTitle());
 					TOP.displayStructure(window);
 				}
 				return this;
@@ -905,6 +917,15 @@ public This AssistBar(int initialX, int initialY) {
 
 	show() {
 		show(targetDisplayId);
+	}
+
+	// Visibility hidden
+	hide() {
+		if (isShowing()) assistBar.setVisibility(View.GONE);
+	}
+
+	unhide() {
+		if (isAdded() && isHidden()) assistBar.setVisibility(View.VISIBLE);
 	}
 
 	return this;

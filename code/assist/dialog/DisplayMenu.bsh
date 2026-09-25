@@ -95,7 +95,7 @@ DisplayMenu(This assistBar) {
 									TOP.onClickListener.onClick(display);
 								} else {
 									log("No onClickListener set", "INFO", TOP);
-									showToast("No onClickListener set");
+									showToast(assistBar.getContext(), "No onClickListener set");
 								}
 							}
 						} catch (Exception e) {

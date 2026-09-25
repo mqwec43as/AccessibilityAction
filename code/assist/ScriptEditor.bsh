@@ -152,7 +152,7 @@ ScriptEditor(This assistBar) {
 				return;
 			}
 		}
-		showToast("Not in Java code action" + getUsageEvents() { "className" });
+		showToast(getContext(), "Not in Java code action" + getUsageEvents() { "className" });
 
 	}
 
@@ -171,7 +171,7 @@ ScriptEditor(This assistBar) {
 		String script = editText.getText().toString();
 		script = appendHeader(script);
 		setClipboard(script);
-		tasker.showToast("Copied to clipboard");
+		showToast(getContext(), "Copied to clipboard");
 	}
 
 	String getLines() {

@@ -29,6 +29,12 @@ DEBUG_COLOR = new Object[][] {
 		Color.TRANSPARENT
 	},
 	{
+		"findScrollNodes",
+		4,
+		Color.YELLOW,
+		Color.TRANSPARENT
+	},
+	{
 		"tap",
 		5,
 		Color.YELLOW,

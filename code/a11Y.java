@@ -144,6 +144,10 @@ a11Y() {
 	void set() {
 		set(this.caller);
 	}
+
+	void bind() {
+		bind(this.caller, super.namespace);
+	}	
 	
 	void setConstant(This THIS, boolean force) {
 		NameSpace callerNamespace = THIS.namespace;
@@ -304,20 +308,33 @@ a11Y() {
 		execute(runMe);
 	}
 
-	void testDisplay() {
+	void testDisplay(long duration) {
 		if (displayInfos == null) {
 			set();
 			displayInfos = DisplayInfos();
 		}
-		displayInfos.show(6000);
+		Runnable showInfo = new Runnable() {
+			run() {
+				displayInfos.show(duration);
+			}
+		};
+		post(showInfo);
 	}
 
-	void post(Runnable postRun) {
-		if (Looper.getMainLooper().isCurrentThread()) {
+	void testDisplay() {
+		testDisplay(3000);
+	}
+
+	void post(Runnable postRun, boolean forceMainThread) {
+		if (Looper.getMainLooper().isCurrentThread() && !forceMainThread) {
 			postRun.run();
 		} else {
 			mainHandler.post(postRun);
 		}
+	}
+
+	void post(Runnable postRun) {
+		post(postRun, false);
 	}
 
 	void postDelayed(Runnable postRun, long delay) {
@@ -360,10 +377,12 @@ a11Y() {
 	return this;
 
 };
+
 if (!canDisplayA11yOverlay()) {
 	tasker.showToast("Please ensure accessibility service is running", "Assist & Debug features may not work.");
 	return;
 }
+
 log("Initializing a11Y");
 This a11y = a11Y();
 tasker.setJavaVariable("a11Y", a11y);

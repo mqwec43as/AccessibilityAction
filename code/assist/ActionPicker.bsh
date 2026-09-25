@@ -471,10 +471,10 @@ ActionPicker(This assistBar) {
 	}
 
 	/*───────────────────────────────────────────────────────────────
-	  executeDialog(String text, int displayId, int windowFilter)
+	  executeDialog(String text, int targetDisplayId, int windowFilter)
 	  **Executes code**
 	 ───────────────────────────────────────────────────────────────*/
-	public void executeDialog(String code, int displayId, int windowFilter) {
+	public void executeDialog(String code, int targetDisplayId, int windowFilter) {
 		This a11Y = getA11yInstance();
 		long defaultTimeout = 5000;
 
@@ -494,8 +494,8 @@ ActionPicker(This assistBar) {
 
 			onSuccess(Map map) {
 				if (map.equals(runCode)) {
-					log("Running code now on display " + displayId, "INFO", TOP);
-					runScript(code, 500, displayId, windowFilter);
+					log("Running code now on display " + targetDisplayId, "INFO", TOP);
+					runScript(code, 500, targetDisplayId, windowFilter);
 				}
 			}
 
@@ -537,6 +537,7 @@ ActionPicker(This assistBar) {
 	 ───────────────────────────────────────────────────────────────*/
 	selectActionsFlow(This nodeData, boolean includeAllMethods, String[] selectedGroups) {
 		String finalSelectedAction = selectActions(inspector, includeAllMethods, selectedGroups);
+		tasker.setJavaVariable("nodeData", nodeData);
 		if (finalSelectedAction == null) {
 			log("No action selected", "INFO", TOP);
 			return null;
@@ -583,19 +584,19 @@ ActionPicker(This assistBar) {
 		} else if (a11Y.actionPickerAddToEditor != void && !a11Y.actionPickerAddToEditor) {
 			log("Copy to clipboard", "INFO", TOP);
 			setClipboard((String) finalOverload.get("usage"));
-			showToast("Copy to clipboard");
+			showToast(assistBar.getContext(), "Copy to clipboard");
 		}
 
 		int windowType;
 		int displayId;
 		if (nodeData != null) {
 			a11Y.assistBar.selectedWindowFilter = a11Y.assistBar.selectedWindowFilter | nodeData.windowType;
-			int windowType = nodeData.windowType;
-			int displayId = nodeData.displayId;
+			windowType = nodeData.windowType;
+			displayId = nodeData.displayId;
 		}
 
 		if (appended) {
-			showToast(text);
+			showToast(assistBar.getContext(), text);
 		}
 
 		List notReplaced = (List) finalOverload.get("notReplacedParams");
@@ -603,7 +604,7 @@ ActionPicker(This assistBar) {
 			String code = (String) finalOverload.get("usage");
 			executeDialog(code, displayId, windowType);
 		} else {
-			tasker.showToast(notReplaced.toString() + " are not set yet.");
+			showToast(assistBar.getContext(), notReplaced.toString() + " are not set yet.");
 		}
 
 		return finalOverload;

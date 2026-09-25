@@ -36,7 +36,7 @@ WindowMenu(This assistBar) {
 		Thread.sleep(200);
 		SparseArray allDisplaysWindows = getService().getWindowsOnAllDisplays();
 		if (allDisplaysWindows == null) {
-			tasker.showToast("No windows found");
+			showToast(assistBar.getContext(), "No windows found");
 			return;
 		}
 		// Loop through all displays windows
@@ -130,7 +130,7 @@ WindowMenu(This assistBar) {
 								TOP.onClickListener.onClick(window);
 							} else {
 								log("No onClickListener set", "INFO", TOP);
-								showToast("No onClickListener set");
+								showToast(assistBar.getContext(), "No onClickListener set");
 							}
 						} catch (Exception e) {
 							log(e.getMessage(), "ERROR", TOP);

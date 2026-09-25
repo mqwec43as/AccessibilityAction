@@ -138,7 +138,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 
 	rootLayout.setOnClickListener(new View.OnClickListener() {
 		public void onClick(View view) {
-			tasker.showToast("Root");
+			showToast(getContext(), "Root");
 		}
 	});
 
@@ -384,7 +384,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 
 		onDoubleTap(This nodeBox) {
 			addHistory(nodeBox);
-			showToast("Clean Leftover");
+			showToast(getContext(), "Clean Leftover");
 			a11Y.clean();
 			return true;
 		}
@@ -524,7 +524,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 						}
 						
 						float end = System.currentTimeMillis() - start;
-						showToast("Found " + nodeList.size() + " nodes in " + (end) + " ms");
+						showToast(getContext(), "Found " + nodeList.size() + " nodes in " + (end) + " ms");
 						if (TOP.listener != null) {
 							log("Calling onStructureReady", TOP);
 							TOP.listener.onStructureReady(TOP);
@@ -546,7 +546,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 	show(List nodes) {
 		super.state = CAPTURING_STRUCTURE;
 		if (nodes.isEmpty()) {
-			showToast("Not found");
+			showToast(getContext(), "Not found");
 			return;
 		}
 		if (nodeBoxListener == null) nodeBoxListener = getDefaultListener();

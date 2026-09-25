@@ -621,16 +621,21 @@ ListDialog(This config) {
 			windowManager = getContext().getSystemService(Context.WINDOW_SERVICE);
 			int overlayType = isAccessibilityContext() ? WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
 			
+			int flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL 
+					| WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH 
+					| WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+			
+			if (!showFilter) flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+			
 			WindowManager.LayoutParams params = new WindowManager.LayoutParams(
 				dialogWidth,
 				WindowManager.LayoutParams.WRAP_CONTENT,
 				overlayType,
-				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL 
-					| WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH 
-					| WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+				flags,
 				android.graphics.PixelFormat.TRANSLUCENT
 			);
 			params.gravity = Gravity.BOTTOM;
+
 			if (dimAmount != 0.0f) {
 				params.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
 				params.dimAmount = dimAmount;

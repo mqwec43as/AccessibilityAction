@@ -10,7 +10,7 @@ ActionsGroupDialog(This assistBar) {
 	This dialogConfig;
 
 	if (a11Y.assistBar == void) {
-		showToast("AssistBar not found");
+		showToast(assistBar.getContext(), "AssistBar not found");
 		return;
 	}
 	
@@ -97,7 +97,6 @@ ActionsGroupDialog(This assistBar) {
 
 	dialog(This THIS) {
 		String title = "Select Action";
-		boolean showFilter = true;
 		boolean showFilter;
 		List itemList = new ArrayList();
 		int displayId = assistBar.getContext().getDisplay().getDisplayId();
@@ -120,7 +119,6 @@ ActionsGroupDialog(This assistBar) {
 			Runnable runMe = map.get("run");
 			if (useMain) {
 				a11Y.post(runMe);
-				return;
 			} else {
 				a11Y.execute(runMe);
 			}

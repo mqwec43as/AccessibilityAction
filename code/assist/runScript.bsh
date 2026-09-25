@@ -39,7 +39,7 @@ test = "Debug";
                this.interpreter.eval(header + script);
             } catch (Exception e) {
                 log("Script Error: " + e.getMessage(), "ERROR", TOP);
-                tasker.showToast("Script Error, see log for details.");
+                showToast(getContext(false, displayId), "Script Error, see log for details.");
             } finally {
                 if (a11Y != null && a11Y != void) {
                     a11Y.unmuteEvents();

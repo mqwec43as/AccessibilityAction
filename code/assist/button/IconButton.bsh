@@ -87,7 +87,6 @@ IconButton(This assistBar) {
 		if (button == null) build();
 		if (super.icon != null) button.setIcon(super.icon);
 		if (backgroundColor != null && iconColor != null) setIconColor(backgroundColor, iconColor);
-		else tasker.showToast("Not reset");
 		return this;
 	}
 
