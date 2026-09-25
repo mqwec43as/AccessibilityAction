@@ -1,0 +1,19 @@
+/*─────────────────────────────────────────────────────────────── 
+This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+import android.view.accessibility.AccessibilityNodeInfo;
+
+/* ───────────────────────────────────────────────────────────────
+ * Find scrollable parent
+ * ───────────────────────────────────────────────────────────────*/
+AccessibilityNodeInfo getScrollableParent(AccessibilityNodeInfo node) {
+	while (node != null) {
+		if (node.isScrollable()) {
+			return node;
+		}
+		node = node.getParent();
+	}
+	return null;
+}
+

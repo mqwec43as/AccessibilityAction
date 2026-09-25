@@ -19,11 +19,17 @@ import bsh.This;
  * scrollForward();
  * ───────────────────────────────────────────────────────────────*/
 scrollForward(AccessibilityNodeInfo node) {
-	while (!node.isScrollable() && node.getParent() != null) node = node.getParent();
-	boolean success = node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
-	if (success) node.refresh();
-	stepDelay();
-	return node;
+	if (node == null) return null;
+	if (!node.isScrollable()) node = getScrollableParent(node);
+	boolean success;
+	if (node != null) success = node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+	if (success) {
+        node.refresh();
+        stepDelay();
+	    return node;
+    } else {
+        return null;
+    }
 }
 
 scrollForward(This multiKeys) {
@@ -31,22 +37,47 @@ scrollForward(This multiKeys) {
 }
 
 scrollForward(String key, String value, int index) {
-	AccessibilityNodeInfo node = getNode(key, value);
+	AccessibilityNodeInfo node = getNode(key, value, index);
 	return scrollForward(node);
 }
 
-scrollForward() {
-	AccessibilityNodeInfo root = getRoot();
-	if (root == null) {
-		log("No active root window found.");
-		return null;
-	}
-
-	AccessibilityNodeInfo scrollNode = findScrollableNode(root);
-	if (scrollNode == null) {
+scrollForward(int scrollCount, int areaOrderIndex) {
+	List scrollableNodes = findScrollNodes();
+    
+	if (!hasNode(scrollableNodes)) {
 		log("No scrollable node found on screen.");
 		return null;
-	}
+	} else {
+        AccessibilityNodeInfo node = toNode(scrollableNodes, areaOrderIndex);
+        boolean hasSuccess;
 
-	return scrollForward(scrollNode);
+        for (int i = 0; i < scrollCount; i++) {
+            node.refresh();
+            boolean success = node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+            if (!success) {
+                log("Failed to scroll forward at." + i + "th of " + scrollCount + " times.");
+                break;
+            } else {
+                if (A11yConfig.stepDelay <= 50) {
+					wait(50);
+				} else {
+					stepDelay();
+				}
+            }
+        }
+
+        if (hasSuccess) {
+            return node;
+        } else {
+            return null;
+        }
+    }
+}
+
+scrollForward(int scrollCount) {
+    return scrollForward(scrollCount, 0);
+}
+
+scrollForward() {
+    return scrollForward(1,0);
 }

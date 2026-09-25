@@ -1,0 +1,7 @@
+/*
+ * Set the scroll delay
+ */
+setScrollDelay(long scrollDelay) {
+    A11yConfig.scrollDelay = scrollDelay;
+    return A11yConfig.scrollDelay;
+}

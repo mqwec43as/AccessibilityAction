@@ -1,0 +1,167 @@
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.ArrayList;
+import java.util.List;
+
+/*
+ * Scroll from scroll node to target node.
+ * 
+ * The scroll node is expected to be scrollable.
+ * This will try to scroll the opposite way when the very first scroll fails.
+ * 
+ */
+scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toKey, String toValue, int scrollCount, boolean scrollForward) {
+	boolean oldDebug = A11yConfig.debugMe;
+	setDebugMode(false);
+	List nodes = new ArrayList();
+	int maximumTries = A11yConfig.scrollMaximumTries;
+	boolean hasScrolled;
+	long scrollDelay = A11yConfig.scrollDelay;
+	if (scrollNode.isScrollable()) {
+		setDebugMode(true);
+    	debugMe(scrollNode);
+		setDebugMode(false);
+		for (int i = 0; i < scrollCount; i++) {
+			nodes = findNodes(scrollNode, toKey, toValue);
+			if (hasNode(nodes)) break;
+			boolean result;
+			if (scrollForward) result = scrollNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+			else result = scrollNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+
+			// * If the first scroll failed, try the other direction
+			if (!result && !hasScrolled) {
+				scrollForward = !scrollForward;
+				if (scrollForward) result = scrollNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+				else result = scrollNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+			} 
+			
+			// Try to scroll again
+			if (!result && A11yConfig.scrollAgainWhenFailed) {
+				while (!result) {
+					wait(scrollDelay);
+					if (scrollForward) result = scrollNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+					else result = scrollNode.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+					maximumTries--;
+					if (maximumTries == 0) break;
+				}
+
+				if (result) {
+					int usedTries = A11yConfig.scrollMaximumTries - maximumTries;
+					log("Token restored after " + usedTries + " tries. Scrolled forward at." + i + "th of " + scrollCount + " times.");
+					maximumTries = A11yConfig.scrollMaximumTries;
+				} else {
+					log("Token exhausted. Failed to scroll forward at." + i + "th of " + scrollCount + " times.");
+				}
+			}
+
+			if (!hasScrolled) hasScrolled = true;
+
+			if (!result) {
+				break;
+			} else {
+				wait(scrollDelay);
+				scrollNode.refresh();
+			}
+		}
+	} 
+
+	setDebugMode(oldDebug);
+
+	if (hasNode(nodes)) {
+		AccessibilityNodeInfo node = toNode(nodes);
+		showOnScreen(node);
+		debugMe(node);
+		stepDelay();
+		return node;
+	} else {
+		return null;
+	}
+}
+
+scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toKey, String toValue, boolean scrollForward) {
+	return scrollFromNodeTo(scrollNode, toKey, toValue, 20, scrollForward);
+}
+
+scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toKey, String toValue, int scrollCount) {
+	return scrollFromNodeTo(scrollNode, toKey, toValue, scrollCount, true);
+}
+
+scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toText, int scrollCount, boolean scrollForward) {
+	return scrollFromNodeTo(scrollNode, "text", toText, scrollCount, scrollForward);
+}
+
+scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toKey, String toValue) {
+	return scrollFromNodeTo(scrollNode, toKey, toValue, 20, true);
+}
+
+scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toText, int scrollCount) {
+	return scrollFromNodeTo(scrollNode, "text", toText, scrollCount, true);
+}
+
+scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toText, boolean scrollForward) {
+	return scrollFromNodeTo(scrollNode, "text", toText, 20, scrollForward);
+}
+
+scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toText) {
+	return scrollFromNodeTo(scrollNode, "text", toText, 20, true);
+}
+
+/* ───────────────────────────────────────────────────────────────
+ * Scroll overloads with key and value for scroll node
+  ───────────────────────────────────────────────────────────────*/
+scrollFromNodeTo(String key, String value, String toKey, String toValue, int scrollCount, boolean scrollForward) {
+    AccessibilityNodeInfo fromNode = getNode(key, value);
+    List nodes = new ArrayList();
+    if (fromNode != null) {
+        nodes.add(fromNode);
+    }
+    List scrollNodes = findScrollNodes(nodes);
+    if (hasNode(scrollNodes)) {
+        return scrollFromNodeTo(toNode(scrollNodes), toKey, toValue, scrollCount, scrollForward);
+    } else {
+        return null;
+    }
+}
+
+scrollFromNodeTo(String key, String value, String toKey, String toValue, int scrollCount) {
+    return scrollFromNodeTo(key, value, toKey, toValue, scrollCount, true);
+}
+
+scrollFromNodeTo(String key, String value, String toKey, String toValue, boolean scrollForward) {
+    return scrollFromNodeTo(key, value, toKey, toValue, 20, scrollForward);
+}
+
+scrollFromNodeTo(String key, String value, String toText, int scrollCount, boolean scrollForward) {
+    return scrollFromNodeTo(key, value, "text", toText, scrollCount, scrollForward);
+}
+
+scrollFromNodeTo(String key, String value, String toKey, String toValue) {
+    return scrollFromNodeTo(key, value, toKey, toValue, 20, true);
+}
+
+scrollFromNodeTo(String key, String value, String toText, int scrollCount) {
+    return scrollFromNodeTo(key, value, "text", toText, scrollCount, true);
+}
+
+scrollFromNodeTo(String key, String value, String toText, boolean scrollForward) {
+    return scrollFromNodeTo(key, value, "text", toText, 20, scrollForward);
+}
+
+scrollFromNodeTo(String text, String toText, int scrollCount, boolean scrollForward) {
+    return scrollFromNodeTo("text", text, "text", toText, scrollCount, scrollForward);
+}
+
+scrollFromNodeTo(String key, String value, String toText) {
+    return scrollFromNodeTo(key, value, "text", toText, 20, true);
+}
+
+scrollFromNodeTo(String text, String toText, int scrollCount) {
+    return scrollFromNodeTo("text", text, "text", toText, scrollCount, true);
+}
+
+scrollFromNodeTo(String text, String toText, boolean scrollForward) {
+    return scrollFromNodeTo("text", text, "text", toText, 20, scrollForward);
+}
+
+scrollFromNodeTo(String text, String toText) {
+    return scrollFromNodeTo("text", text, "text", toText, 20, true);
+}

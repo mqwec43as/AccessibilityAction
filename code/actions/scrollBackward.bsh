@@ -21,11 +21,16 @@ import bsh.This;
  * ───────────────────────────────────────────────────────────────*/
 scrollBackward(AccessibilityNodeInfo node) {
 	if (node == null) return null;
-    while (!node.isScrollable() && node.getParent() != null) node = node.getParent();
-    boolean success = node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
-    if (success) node.refresh();
-    stepDelay();
-    return node;
+	if (!node.isScrollable()) node = getScrollableParent(node);
+	boolean success;
+	if (node != null) success = node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+	if (success) {
+        node.refresh();
+        stepDelay();
+	    return node;
+    } else {
+        return null;
+    }
 }
 
 scrollBackward(This multiKeys) {
@@ -33,22 +38,48 @@ scrollBackward(This multiKeys) {
 }
 
 scrollBackward(String key, String value, int index) {
-    AccessibilityNodeInfo node = getNode(key, value, index);
-    return scrollBackward(node);
+	AccessibilityNodeInfo node = getNode(key, value, index);
+	return scrollBackward(node);
+}
+
+scrollBackward(int scrollCount, int areaOrderIndex) {
+	List scrollableNodes = findScrollNodes();
+    
+	if (!hasNode(scrollableNodes)) {
+		log("No scrollable node found on screen.");
+		return null;
+	} else {
+        AccessibilityNodeInfo node = toNode(scrollableNodes, areaOrderIndex);
+        boolean hasSuccess;
+
+        for (int i = 0; i < scrollCount; i++) {
+			node.refresh();
+           	boolean success = node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+            if (!success) {
+				log("Failed to scroll backward at." + i + "th of " + scrollCount + " times.");
+                break;
+            } else {
+                if (!hasSuccess) hasSuccess = true;
+				if (A11yConfig.stepDelay <= 50) {
+					wait(50);
+				} else {
+					stepDelay();
+				}
+            }
+        }
+
+        if (hasSuccess) {
+            return node;
+        } else {
+            return null;
+        }
+    }
+}
+
+scrollBackward(int scrollCount) {
+	return scrollBackward(scrollCount, 0);
 }
 
 scrollBackward() {
-    AccessibilityNodeInfo root = getRoot();
-    if (root == null) {
-        log("No active root window found.");
-        return null;
-    }
-
-    AccessibilityNodeInfo scrollNode = findScrollableNode(root);
-    if (scrollNode == null) {
-        log("No scrollable node found on screen.");
-        return null;
-    }
-
-    return scollBackward(scrollNode);
+	return scrollBackward(1, 0);
 }
