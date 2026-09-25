@@ -1,6 +1,7 @@
 importCommands("lib.ui");
 importCommands("assist.button");
 importCommands("main");
+importCommands("assist.display");
 
 import android.content.Context;
 import android.graphics.Color;
@@ -62,6 +63,7 @@ public This AssistBar(int initialX, int initialY) {
 	final int OPENING_NODE_SEARCH = 6;
 	final int OPENING_ACTIONS_GROUP = 7;
 	final int TOGGLING_ASSIST_BAR = 8;
+	final int CLOSING_ASSIST_BAR_FROM_BUTTON = 9;
 
 	int state = ACTIVITY_NONE;
 	int mode = CAPTURE_MODE;
@@ -104,6 +106,7 @@ public This AssistBar(int initialX, int initialY) {
 	This assistSetting;
 	This actionPicker;
 	This actionsGroupDialog;
+	This displayListener;
 
 	// Buttons and Handle
 	GestureDetector detector;
@@ -723,6 +726,10 @@ public This AssistBar(int initialX, int initialY) {
 		if (assistSetting == null) assistSetting = AssistSetting(TOP);
 		if (actionPicker == null) actionPicker = ActionPicker(TOP);
 		if (actionsGroupDialog == null) actionsGroupDialog = ActionsGroupDialog(TOP);
+		if (displayListener == null) {
+			displayListener = MyDisplayListener(TOP);
+			displayListener.register();
+		}
 	}
 
 	clearResources() {
@@ -740,6 +747,8 @@ public This AssistBar(int initialX, int initialY) {
 		assistSetting = null;
 		if (actionsGroupDialog != null) actionsGroupDialog.remove();
 		actionsGroupDialog = null;
+		if (displayListener != null) displayListener.unregister();
+		displayListener = null;
 		a11Y.clean();
 	}
 

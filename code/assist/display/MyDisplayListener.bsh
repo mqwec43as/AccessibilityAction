@@ -1,0 +1,102 @@
+import android.content.Context;
+import android.hardware.display.DisplayManager;
+import android.hardware.display.DisplayManager.DisplayListener;
+import android.view.Display;
+import bsh.This;
+
+
+/*───────────────────────────────────────────────────────────────
+Scripted object managing display change events, state tracking,
+and automatic state updates back to Tasker variables and commands.
+
+Return:
+- This scripted object instance (DisplayListener)
+
+Example:
+// Create, register and start listening for display updates
+displayTracker = DisplayListener().register();
+───────────────────────────────────────────────────────────────*/
+MyDisplayListener(This assistBar) {
+	DisplayManager displayManager;
+	DisplayListener listener;
+
+	Context getContext() {
+		return assistBar.getContext();
+	}
+
+	DisplayManager getDisplayManager() {
+		if (displayManager == null) displayManager = context.getSystemService(Context.DISPLAY_SERVICE);
+		return displayManager;
+	}
+
+    getStructure() {
+        return assistBar.structureOverlay;
+    }
+
+	getDisplay(int displayId) {
+		return getDisplayManager().getDisplay(displayId);
+	}
+
+    isAssistBarOnValidDisplay() {
+        return getContext().getDisplay().isValid();
+    }
+
+	isStructureOnValidDisplay() {
+		This structure = getStructure();
+		boolean onValidDisplay;
+		if (structure != null) {
+			onValidDisplay = structure.getContext().getDisplay().isValid();
+		}
+		return onValidDisplay;
+	}
+
+	DisplayListener getListener() {
+		if (listener == null) {
+			listener = new DisplayManager.DisplayListener() {
+				onDisplayAdded(int displayId) {
+					Display display = getDisplay(displayId);
+					String name = "";
+					if (display != null) {
+						name = display.getName();
+					}
+					showToast(getContext(), "Display " + name + " #" + displayId + " is added");
+				}
+
+				onDisplayRemoved(int displayId) {
+                    showToast("Display #" + displayId + " removed");
+                    if (!isStructureOnValidDisplay()) {
+                        assistBar.removeStructure();
+                    }
+
+					if (!isAssistBarOnValidDisplay()) {
+						assistBar.show(Display.DEFAULT_DISPLAY);
+					}
+				}
+
+				onDisplayChanged(int displayId) {
+					This structure = getStructure();
+					if (structure != null && structure.isShowing()) {
+						boolean onDisplay = displayId == getStructure().getContext().getDisplay().getDisplayId();
+						if (onDisplay) {
+							assistBar.removeStructure();
+							showToast(getContext(), "Display #" + displayId + " changed properties, removing structure overlay");
+						}
+					}
+				}
+			};
+		}
+		return listener;
+	}
+
+	void register() {
+		if (listener == null) {
+			getDisplayManager().registerDisplayListener(getListener(), null);
+		}
+	}
+
+	void unregister() {
+		if (listener != null) getDisplayManager().unregisterDisplayListener(listener);
+	}
+
+	return this;
+}
