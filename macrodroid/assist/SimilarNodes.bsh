@@ -8,6 +8,8 @@ import bsh.This;
 import android.graphics.Point;
 import android.graphics.Rect;
 import bsh.This;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
 /*────────────────────────────────────────────────────────────────
 	SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox)
 	Custom class to manage similar nodes for given node on given screen
@@ -52,6 +54,10 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	List textBoxes = new ArrayList();
 	List textNodes = new ArrayList();
 
+	AccessibilityWindowInfo window = node.getWindow();
+	int windowType = nodeBox.windowType;
+	int displayId = nodeBox.displayId;
+
 	String id = node.getViewIdResourceName();
 	int idIndex;
 	List idBoxes = new ArrayList();
@@ -61,8 +67,8 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	int classIndex;
 	List classBoxes = new ArrayList();
 	List classNodes = new ArrayList();
-	boolean oldDebugMe = debugMe;
-	debugMe = false;
+	boolean oldDebugMe = A11yConfig.debugMe;
+	setDebugMode(false);
 	if (text != null && text.length() > 0) {
 		textNodes = findNodes(rootNode, "text", text);
 		if (!textNodes.isEmpty()) {
@@ -87,9 +93,11 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 		}
 	}
 	
-	debugMe = oldDebugMe;
-
-	This parentBox = nodeBoxesMap.get(node.getParent());
+	setDebugMode(oldDebugMe);
+	
+	AccessibilityNodeInfo parent = node.getParent();
+	This parentBox;
+	if (parent != null) parentBox = nodeBoxesMap.get(parent);
 
 	public String getText(int maxLength) {
 		if (text == null || text.length() <= maxLength) {
@@ -146,7 +154,6 @@ SimilarNodes(AccessibilityNodeInfo rootNode, Map nodeBoxesMap, This nodeBox) {
 	}
 
 	highlightAll() {
-		highlightClass();
 		highlightParent();
 		highlightText();
 		highlightId();

@@ -1,0 +1,7 @@
+/*
+ * Limit parent level before fallback for click & long click
+ */
+setLimitParentLevel(int parentLevel) {
+    A11yConfig.limitParentLevel = parentLevel;
+    return parentLevel;
+}

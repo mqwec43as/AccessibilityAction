@@ -1,3 +1,6 @@
+importCommands("actions");
+importCommands("lib");
+
 import android.os.Handler;
 import android.os.Looper;
 import android.graphics.Color;
@@ -5,8 +8,6 @@ import bsh.This;
 import android.view.accessibility.AccessibilityNodeInfo;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
-import io.reactivex.subjects.CompletableSubject;
-
 import android.accessibilityservice.AccessibilityService;
 import android.graphics.PixelFormat;
 import android.view.Gravity;
@@ -29,7 +30,7 @@ Parameters:
 - List nodes, list of nodes to debug
 ──────────────────────────────────────────────────────────────── */
 debugMe(List nodes) {
-	if (!debugMe || nodes == null || nodes.isEmpty()) return;
+	if (nodes == null || nodes.isEmpty() || !A11yConfig.debugMe) return;
 
 
 	Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -53,13 +54,13 @@ debugMe(List nodes) {
 	boolean isAction;
 
 	if ("findNodes".equals(callerName) || "waitNodes".equals(callerName)) {
-		delay = findDelay;
+		delay = A11yConfig.debugDelay;
 	} else {
-		delay = debugDelay;
+		delay = A11yConfig.debugDelay;
 		isAction = true;
 	}
 
-	if (!isAction) wait(stepDelay);
+	if (!isAction) stepDelay();
 
 	Object color = debugColor(callerName);
 	This waitNodeBox = CompletableImpl();
@@ -81,24 +82,23 @@ debugMe(List nodes) {
 			}
 			if (!isAction) {
 				// Adjust if in assist mode
-				boolean inAssistMode = a11Y.assistBar.isShown();
-				int displayId = inAssistMode ? a11Y.assistBar.selectedDisplayId : 0;
+				boolean inAssistMode = a11Y.assistBar.isShowing();
+				int displayId = A11yConfig.displayId;
 				structure = StructureOverlay(true, displayId);	
-				
 				structure.setTouchable(true);
 				structure.setNodeBoxTouchable(false);
 				structure.show(nodeBoxes);
 			} else if (isAction && nodeBoxes.size() == 1) {
 				This nodeBox = nodeBoxes.get(0);
 				nodeBox.show();
-				if (debugInfo) {
+				if (A11yConfig.debugInfo) {
 					nodeBox.infocationText = invocationText;
 					nodeBox.showInfo();
 					nodeBox.infoToast.addRow("invocation", "Line", "\n" + invocationText, 3);
 				}
 			}
 
-			if (!debugSteps) waitNodeBox.onComplete();
+			if (!A11yConfig.debugSteps) waitNodeBox.onComplete();
 		}
 	};
 
@@ -118,6 +118,7 @@ debugMe(List nodes) {
 		a11Y.clean();
 	}
 	wait(100);
+
 
 }
 
@@ -156,7 +157,7 @@ Parameters:
 - double y, Y coordinate of the marker
 ──────────────────────────────────────────────────────────────── */
 public void debugMe(double x, double y) {
-	if (debugMe == void || !debugMe) return;
+	if (!A11yConfig.debugMe) return;
 	Context windowContext = getContext(true);
 	WindowManager wm = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
 	WindowManager.LayoutParams params = new WindowManager.LayoutParams();
@@ -191,14 +192,14 @@ public void debugMe(double x, double y) {
 							waitTap.onComplete();
 						} catch (Exception e) {}
 					}
-				}, debugDelay);
+				}, A11yConfig.debugDelay);
 			} catch (Exception e) {
 				log("debugMe Main Thread Error: " + e.getMessage());
 			}
 		}
 	};
 	mainHandler.post(uiRunnable);
-	waitTap.blockingAwait(debugDelay + 200, TimeUnit.MILLISECONDS);
+	waitTap.blockingAwait(A11yConfig.debugDelay + 200, TimeUnit.MILLISECONDS);
 
 
 

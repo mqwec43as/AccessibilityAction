@@ -1,21 +1,26 @@
 import bsh.This;
 
-ActionsGroupDialog() {
+ActionsGroupDialog(This assistBar) {
 	final This TOP = this;
-	long defaultTimeout = 60000;
 	final This a11Y = getA11yInstance();
-	This dialogInstance;
+	final int WINDOW_TYPE = ENV.Layout.TYPE_ACTIONS_GROUP_DIALOGS;
+	a11Y.viewControl.addView(TOP);
+
+	This listDialog;
 	This dialogConfig;
 
 	if (a11Y.assistBar == void) {
-		showToast("AssistBar not found");
+		showToast(assistBar.getContext(), "AssistBar not found");
 		return;
 	}
-	This actionPicker = ActionPicker();
+	
+	This actionPicker = ActionPicker(assistBar);
 	This displayMenu = a11Y.assistBar.displayMenu;
+	This windowMenu = a11Y.assistBar.windowMenu;
+	
 	Runnable displayMenuRun = new Runnable() {
 		run() {
-			displayMenu.show();
+			a11Y.viewControl.show(ENV.Layout.TYPE_DISPLAY_MENU);
 		}
 	};
 
@@ -43,12 +48,24 @@ ActionsGroupDialog() {
 		}
 	};
 
+	Runnable windowMenuRun = new Runnable() {
+		run() {
+			windowMenu.show();
+		}
+	};
+
 	// title, description, Runnable, Main THread
 	Object[][] Groups = new Object[][] {
 		{
 			"Display",
 			"Select display and capture structure",
 			displayMenuRun,
+			false
+		},
+		{
+			"Window",
+			"Select window and capture structure",
+			windowMenuRun,
 			false
 		},
 		{
@@ -77,12 +94,16 @@ ActionsGroupDialog() {
 		}
 	};
 
+
 	dialog(This THIS) {
 		String title = "Select Action";
-		boolean showFilter = true;
-		long timeout = defaultTimeout;
 		boolean showFilter;
 		List itemList = new ArrayList();
+		int displayId = assistBar.getContext().getDisplay().getDisplayId();
+		float dimAmount = 0.5f;
+
+		boolean useOverlay = !assistBar.shouldUseActivity();
+		boolean useAccessibility = true;
 
 		for (int i = 0; i < Groups.length; i++) {
 			Map map = new HashMap();
@@ -94,29 +115,47 @@ ActionsGroupDialog() {
 		}
 
 		onSuccess(Map map) {
-			THIS.selectedAction = map;
+			boolean useMain = map.get("useMain");
+			Runnable runMe = map.get("run");
+			if (useMain) {
+				a11Y.post(runMe);
+			} else {
+				a11Y.execute(runMe);
+			}
 		}
 
 		onAttach() {
-			a11Y.addOverlay(dialogInstance);
+			a11Y.addOverlay(listDialog);
 		}
+
+		onCreated() {
+			a11Y.addOverlay(listDialog);
+		}
+
 		onCancel() {}
 
 		onTimeout() {}
 		return this;
 	}
 
-	dialogConfig = dialog(this);
-	dialogInstance = ListDialog(dialogConfig);
-	if (dialogInstance.show() && selectedAction != void) {
-		boolean useMain = selectedAction.get("useMain");
-		Runnable runMe = selectedAction.get("run");
-		if (useMain) {
-			a11Y.post(runMe);
-			return;
-		} else {
-			a11Y.execute(runMe);
-		}
+	create() {
+		if (dialogConfig == null) dialogConfig = dialog(TOP);
+		listDialog = ListDialog(dialogConfig);
+
+		// * Make listDialog methods available here.
+		bind(TOP, listDialog.namespace);
 	}
-	return;
+
+	create();
+
+	show() {
+		boolean useOverlay = !assistBar.shouldUseActivity();
+		if (useOverlay != dialogConfig.useOverlay) {
+			dialogConfig.useOverlay = useOverlay;
+			create();
+		}
+		listDialog.show();
+	}
+
+	return this;
 }

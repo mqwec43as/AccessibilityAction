@@ -30,16 +30,13 @@ Returns: HashMap where keys are IDs and values are ArrayLists of nodes.
 ───────────────────────────────────────────────────────────────*/
 waitNodes(Object[][] argsConfigs, long timeout, boolean allFound) {
 	Map NO_RESULT = new HashMap();
-	AccessibilityNodeInfo root = getRoot();
-	Map nodesMap = findNodes(root, argsConfigs, allFound);
+	Map nodesMap = findNodes(argsConfigs, allFound);
 	if (nodesMap.keySet().size() > 0) return nodesMap;
-	
-	boolean oldDebug = debugMe;
-	if (oldDebug == true) debugMe = false;
 
-	Exception executionException = null;
-
+	boolean oldDebug = A11yConfig.debugMe;
+	if (oldDebug == true) setDebugMode(false);
 	long startTime = System.currentTimeMillis();
+	Exception executionException = null;
 	long whileDelay = stepDelay > 100 ? stepDelay : 100;
 	while (System.currentTimeMillis() - startTime < timeout) {
 		AccessibilityNodeInfo rootNode = getRoot();
@@ -63,7 +60,7 @@ waitNodes(Object[][] argsConfigs, long timeout, boolean allFound) {
 		executionException = new Exception("Timeout waiting for nodes: " + stringifyObject(argsConfigs));
 	}
 
-	debugMe = oldDebug;
+	setDebugMode(oldDebug);
 
 	if (executionException != null) {
 		log(executionException.getMessage(), "ERROR");
@@ -99,7 +96,7 @@ ArrayList waitNodes(String key, String value, long timeout) {
 }
 
 ArrayList waitNodes(String key, String value) {
-	return waitNodes(key, value, null, waitNodesTimeout);
+	return waitNodes(key, value, null, A11yConfig.waitNodesTimeout);
 }
 
 ArrayList waitNodes(String text, long timeout) {
@@ -107,7 +104,7 @@ ArrayList waitNodes(String text, long timeout) {
 }
 
 ArrayList waitNodes(String text) {
-	return waitNodes("text", text, null, waitNodesTimeout);
+	return waitNodes("text", text, null, A11yConfig.waitNodesTimeout);
 }
 
 ArrayList waitNodes(String key, String value, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {

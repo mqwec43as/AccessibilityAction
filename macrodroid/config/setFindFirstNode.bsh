@@ -1,0 +1,7 @@
+/*
+ * Set findFirstForRecursive
+ */
+setFindFirstNode(boolean state) {
+    A11yConfig.findFirstForRecursive = state;
+    return A11yConfig.findFirstForRecursive;
+}

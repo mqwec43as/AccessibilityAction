@@ -39,7 +39,7 @@ setText(AccessibilityNodeInfo node, String setText) {
 	if (success) {
 		log("SetText success Text: " + setText + ".", node);
 		node.refresh();
-		if (stepDelay > 0) wait(stepDelay);
+		stepDelay();
 		return node;
 	} else {
 		log("SetText failed. Text: " + setText + ".", node);
@@ -107,7 +107,7 @@ setText(String key, String value, String setText, int index, long timeout) {
 }
 
 setText(String key, String value, String setText, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode(key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 	return setText(node, setText);
 }
 
@@ -120,17 +120,17 @@ setText(String setText) {
 
 
 setText(String text, String setText, Object[][] argsConfigs) {
-	AccessibilityNodeInfo node = getNode("text", text, 0, waitNodesTimeout, argsConfigs);
+	AccessibilityNodeInfo node = getNode("text", text, 0, A11yConfig.waitNodesTimeout, argsConfigs);
 	return setText(node, setText);
 }
 
 setText(String text, String setText, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode("text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode("text", text, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 	return setText(node, setText);
 }
 
 setText(String key, String value, String setText, int parentLevel, String nearbyKey, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode(key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	AccessibilityNodeInfo node = getNode(key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
 	return setText(node, setText);
 }
 
@@ -179,26 +179,26 @@ setText(AccessibilityNodeInfo root, String key, String value, String setText, in
 }
 
 setText(AccessibilityNodeInfo root, String text, String setText, Object[][] argsConfigs) {
-	AccessibilityNodeInfo node = getNode(root, "text", text, 0, waitNodesTimeout, argsConfigs);
+	AccessibilityNodeInfo node = getNode(root, "text", text, 0, A11yConfig.waitNodesTimeout, argsConfigs);
 	return setText(node, setText);
 }
 
 setText(AccessibilityNodeInfo root, String text, String setText, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(root, "text", text, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode(root, "text", text, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 	return setText(node, setText);
 }
 
 setText(AccessibilityNodeInfo root, String key, String value, String setText, int parentLevel, String nearbyText) {
-	AccessibilityNodeInfo node = getNode(root, key, value, 0, waitNodesTimeout, parentLevel, "text", nearbyText);
+	AccessibilityNodeInfo node = getNode(root, key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, "text", nearbyText);
 	return setText(node, setText);
 }
 
 setText(AccessibilityNodeInfo root, String key, String value, String setText, int parentLevel, String nearbyKey, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode(root, key, value, 0, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	AccessibilityNodeInfo node = getNode(root, key, value, 0, A11yConfig.waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
 	return setText(node, setText);
 }
 
 setText(AccessibilityNodeInfo root, String key, String value, String setText, int index, int parentLevel, String nearbyKey, String nearbyValue) {
-	AccessibilityNodeInfo node = getNode(root, key, value, index, waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
+	AccessibilityNodeInfo node = getNode(root, key, value, index, A11yConfig.waitNodesTimeout, parentLevel, nearbyKey, nearbyValue);
 	return setText(node, setText);
 }

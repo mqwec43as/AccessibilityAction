@@ -1,0 +1,7 @@
+/*
+ * Set find hint duration
+ */
+setFindDelay(long duration) {
+    A11yConfig.findDelay = duration;
+    return duration;
+}

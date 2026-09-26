@@ -7,6 +7,10 @@ import java.util.Iterator;
 This code was primarily generated using AI with minimal human editing.
 ───────────────────────────────────────────────────────────────*/
 
+boolean hasNode(AccessibilityNodeInfo node) {
+	return node != null;
+}
+
 /*───────────────────────────────────────────────────────────────
  * hasNode(ArrayList nodes)
  * **Verify Node Presence in List**

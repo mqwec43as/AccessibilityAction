@@ -1,45 +1,68 @@
+importCommands("assist.structure");
+
 import bsh.This;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.graphics.Point;
+import java.util.concurrent.Callable;
+import android.os.Looper;
 
 /*───────────────────────────────────────────────────────────────
   NodeSearch()
   ───────────────────────────────────────────────────────────────*/
-NodeSearch(This structureOverlay) {
+NodeSearch(This assistBar, This structureOverlay) {
     
     final This TOP = this;
     This a11Y = getA11yInstance();
     final int WINDOW_TYPE = ENV.Layout.TYPE_NODE_SEARCH;
     a11Y.viewControl.addView(TOP);
-
     Map map = structureOverlay.map;
     List itemList = new ArrayList();
+    int iconSize = dp(48);
+
 	config(This THIS) {
         List itemList = TOP.itemList;
 		String title = "Nodes";
+        String text = "Tap: Highlight, Long tap: Action picker";
 		boolean showFilter = true;
-		long timeout = 150000;
-        This structure = TOP.structureOverlay;
-		onSuccess(Map map) {
+        boolean useOverlay = !assistBar.shouldUseActivity();
+	    boolean useAccessibility = true;
+        float dimAmount = 0.5f;
+        int displayId = assistBar.getContext().getDisplay().getDisplayId();
+		
+        onSuccess(Map map) {
             This nodeBox = map.get("nodeBox");
-            structure.unhide();
-            structure.activeHighlight(nodeBox);
+            boolean longClick = map.getOrDefault("longClick", false);
+            if (longClick) {
+                Thread.sleep(200);
+                structureOverlay.openActionPicker(nodeBox);
+            } else {
+                structureOverlay.unhide();
+                Thread.sleep(200);
+                structureOverlay.activeHighlight(nodeBox);
+            }
 		}
 
 		onCancel() {
-            structure.unhide();
+            structureOverlay.unhide();
         }
 
 		onTimeout() {
-            structure.unhide();
+            structureOverlay.unhide();
         }
 
         onAttach() {
-            structure.hide();
+            structureOverlay.hide();
+            assistBar.setHandleMode(assistBar.DELETE_CAPTURE_MODE, false);
+        }
+
+        onCreated() {
+            structureOverlay.hide();
+            assistBar.setHandleMode(assistBar.DELETE_CAPTURE_MODE, false);
         }
 
         onDetach() {
-            structure.unhide();
+            structureOverlay.unhide();
+            assistBar.setHandleMode(assistBar.DELETE_CAPTURE_MODE, true);
         }
         
 		return this;
@@ -47,14 +70,19 @@ NodeSearch(This structureOverlay) {
 
     This config = config(this);
     This listDialog = ListDialog(config);
+    
+    // * Make listDialog methods available here.
+    bind(this, listDialog.namespace);
 
     loadList() {
+        boolean includeEmpty = a11Y.includeEmptyNodeinSearch;
         for (AccessibilityNodeInfo node: map.keySet()) {
 			This nodeBox = map.get(node);
             if (nodeBox.isHidden()) continue;
             String id = node.viewIdResourceName;
             String text = getText(node);
-            if (id == null && (text == null || text.isEmpty())) continue;
+            boolean empty = id == null && (text == null || text.isEmpty());
+            if (empty && !includeEmpty) continue;
 
             // Add title
 			Map item = new HashMap();
@@ -66,9 +94,15 @@ NodeSearch(This structureOverlay) {
             if (text != null && !text.isEmpty()) contents.add("Text: " + text);
             Point coor = getCoordinates(node);
             contents.add("Coor: " + coor.x + "," + coor.y);
+            contents.add("Depth: " + nodeBox.depth);
             String content = String.join("\n", contents);
 			item.put("subtitle", content);
-
+            Callable getIcon = new Callable() {
+                call() {
+                   return structureOverlay.structureSnapshot.getNodeBoxDrawable(nodeBox);
+                }
+            };
+            item.put("getIcon", getIcon);
             // Attach nodeBox
             item.put("nodeBox", nodeBox);
 
@@ -76,35 +110,26 @@ NodeSearch(This structureOverlay) {
 		}
     }
 
-    show() {
-        listDialog.show();
-    }
-
-    remove() {
-        listDialog.remove();
-    }
-
-    toggle() {
-        listDialog.toggle();
-    }
-
-    isAdded() {
-		return listDialog.isAdded();
-	}
-
-	isHidden() {
-		return listDialog.isHidden();
-	}
-
-	isShown() {
-		return listDialog.isShown();
-	}
-
-	isRemoved() {
-		return listDialog.isRemoved();
-	}
-
     loadList();
+    
+    show() {
+        boolean isMainThread = Looper.getMainLooper().isCurrentThread();
+        if (config.useOverlay) {
+            if (isMainThread) {
+                listDialog.show();
+            } else {
+                Runnable showRun = new Runnable() {
+                    run() {
+                        listDialog.show();
+                    }
+                };
+                a11Y.post(showRun);
+            }
+		} else {
+			listDialog.show();
+		}
+    }
+
 	return this;
 }
 

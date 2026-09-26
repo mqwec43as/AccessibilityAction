@@ -11,7 +11,7 @@ setDisplayByPackageName(String packageName)
 **Set Display ID by Package Name**
 Finds the first active application window belonging to the specified
 package name across all displays, and saves its display ID to the
-global variable 'DISPLAY_ID'.
+global variable 'A11yConfig.displayId'.
 
 Arguments:
 
@@ -22,19 +22,13 @@ setDisplay("com.android.settings");
 ───────────────────────────────────────────────────────────────*/
 public int setDisplayByPackageName(String packageName) {
 	if (packageName == null) {
-		DISPLAY_ID = 0;
+		A11yConfig.displayId = 0;
 		return 0;
 	}
 
-	android.content.Context service = getService();
-	if (service == null) {
-		DISPLAY_ID = 0;
-		return 0;
-	}
-
-	SparseArray allDisplaysWindows = service.getWindowsOnAllDisplays();
+	SparseArray allDisplaysWindows = getService().getWindowsOnAllDisplays();
 	if (allDisplaysWindows == null) {
-		DISPLAY_ID = 0;
+		A11yConfig.displayId = 0;
 		return 0;
 	}
 
@@ -65,13 +59,13 @@ public int setDisplayByPackageName(String packageName) {
 			rootNode.recycle();
 
 			if (nodePackage != null && packageName.equals(nodePackage.toString())) {
-				DISPLAY_ID = displayId;
+				A11yConfig.displayId = displayId;
 				return displayId;
 			}
 		}
 	}
 
-	DISPLAY_ID = 0;
+	A11yConfig.displayId = 0;
 	return 0;
 
 }

@@ -17,17 +17,7 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingtoolbar.FloatingToolbarLayout;
 import bsh.This;
 import java.util.List;
-
-/*───────────────────────────────────────────────────────────────
-addSpacer(Context ctx, ViewGroup container)
-───────────────────────────────────────────────────────────────*/
-public void addSpacer(Context ctx, ViewGroup container) {
-	int spacerHeight = dp(8);
-	View spacer = new View(ctx);
-	LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, spacerHeight);
-	spacer.setLayoutParams(params);
-	container.addView(spacer);
-}
+import android.util.DisplayMetrics;
 
 /*───────────────────────────────────────────────────────────────
   FloatingSheet()
@@ -39,16 +29,25 @@ public void addSpacer(Context ctx, ViewGroup container) {
   ─────────────────────────────────────────────────────────────── */
 
 FloatingSheet(This config) {
-	boolean viewFound = config.namespace.getMethod("getView", new Class[] { Object.class }) != null;
-	if (!viewFound) viewFound = config.namespace.getMethod("getView", new Class[] { Context.class }) != null;
+	
+	boolean hasMethod(String methodName, Class[] classes) {
+		if (classes == null) classes = new Class[] {};
+		return config.namespace.getMethod(methodName, classes) != null;
+	}
 
+	boolean hasAttach = hasMethod("onAttach", null);
+	boolean hasDetach = hasMethod("onDetach", null);
+	boolean hasGetView = hasMethod("getView", new Class[] { Object.class });
+	if (!hasGetView) hasGetView = hasMethod("getView", new Class[] { Context.class });
+	boolean hasGetViewList = hasMethod("getViewList", new Class[] { Object.class });
+	if (!hasGetViewList) hasGetViewList = hasMethod("getViewList", new Class[] { Context.class });
+	int displayId = config.displayId != void ? config.displayId : 0;
+	float maxWidth = config.maxWidth == void ? 0.5f : config.maxWidth;
 
-	boolean viewListFound = config.namespace.getMethod("getViewList", new Class[] { Object.class }) != null;
-	if (!viewListFound) viewListFound = config.namespace.getMethod("getViewList", new Class[] { Context.class }) != null;
-
-	if (!viewFound && !viewListFound) {
+	if (!hasGetView && !hasGetViewList) {
 		throw new Exception("No view found");
 	}
+
 
 	This a11Y = getA11yInstance();
 	final This TOP = this;
@@ -56,56 +55,98 @@ FloatingSheet(This config) {
 	if (ENV == void || ENV == null) ENV = Environment();
 	ENV.checkMaterialLib(this);
 
-	Handler mainHandler = new Handler(Looper.getMainLooper());
-	Context ctx = getContext(true, 0);
-	android.content.Context a11yService = getService();
+	Context ctx = getContext(true, displayId);
+	This tm = ThemeManager(ctx);
+	tm.setThemeDark();
+	Object a11yService = getService();
 	WindowManager windowManager = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
-	boolean isRemoved = true;
-	boolean hasShown = false;
-	FrameLayout baseRoot = null;
-	WindowManager.LayoutParams wmParams = null;
+	FrameLayout root;
+	WindowManager.LayoutParams rootParams;
+	FloatingToolbarLayout floatingRoot;
+	LinearLayout main;
+	RelativeLayout dragHandle;
+	View visualPill;
 	int maxHeightPx = 0;
 
+	/*───────────────────────────────────────────────────────────────
+	addSpacer(Context ctx, ViewGroup container)
+	───────────────────────────────────────────────────────────────*/
+	public void addSpacer(Context ctx, ViewGroup container) {
+		int spacerHeight = tm.dp(8);
+		View spacer = new View(ctx);
+		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, spacerHeight);
+		spacer.setLayoutParams(params);
+		container.addView(spacer);
+	}
+
 	/* Drag constants */
-	final int DRAG_HANDLE_HEIGHT = dp(30);
-	final int PILL_WIDTH = dp(60);
-	final int PILL_HEIGHT = dp(5);
+	final int DRAG_HANDLE_HEIGHT = tm.dp(30);
+	final int PILL_WIDTH = tm.dp(60);
+	final int PILL_HEIGHT = tm.dp(5);
 	final int PILL_COLOR = 0xFFB0B0B0;
 
 	/* Drag tracking */
 	float initialTouchY;
+	float initialTouchX;
 	int initialWinY;
+	int initialWinX;
+	boolean firstShown = true;
+
+	attachStateListener() {
+		View.OnAttachStateChangeListener stateListener = new View.OnAttachStateChangeListener() {
+			onViewAttachedToWindow(View v) {
+				Runnable updateHeight = new Runnable() {
+					run() {
+						int screenHeight = ctx.getResources().getDisplayMetrics().heightPixels;
+						int sheetHeight = root.getHeight();
+						if (sheetHeight > maxHeightPx) {
+							sheetHeight = maxHeightPx;
+							rootParams.height = maxHeightPx;
+						}
+						rootParams.y = screenHeight - sheetHeight;
+						windowManager.updateViewLayout(root, rootParams);
+						root.setVisibility(View.VISIBLE);
+						firstShown = false;
+					}
+				};
+				if (firstShown) a11Y.postDelayed(updateHeight, 50);
+				a11Y.addOverlay(TOP);
+				if (hasAttach) config.onAttach();
+			}
+			onViewDetachedFromWindow(View v) {
+				remove();
+				if (hasDetach) config.onDetach();
+			}
+		};
+		root.addOnAttachStateChangeListener(stateListener);
+	}
 
 	remove() {
-		if (baseRoot != null && windowManager != null && !isRemoved) {
+		if (root != null && windowManager != null && !isRemoved()) {
 			try {
-				windowManager.removeView(baseRoot);
+				windowManager.removeView(root);
 			} catch (Throwable e) {}
-			isRemoved = true;
-			hasShown = false;
 		}
 	}
 
-	// layout() {
+	layout() {
 		float density = ctx.getResources().getDisplayMetrics().density;
 
 		if (ENV == void || ENV == null) ENV = Environment();
-		This tm = ThemeManager(ctx);
-		tm.setThemeDark();
-		baseRoot = new FrameLayout(ctx);
-		baseRoot.setVisibility(View.INVISIBLE);
+		root = new FrameLayout(ctx);
+		root.setVisibility(View.INVISIBLE);
 
-		/* Applying requested shape to baseRoot */
+		/* Applying requested shape to root */
 		GradientDrawable shape = new GradientDrawable();
 		shape.setCornerRadius(28 * density);
 		shape.setColor((int) tm.color("colorSurfaceContainer"));
-		baseRoot.setBackground(shape);
-		baseRoot.setClipToOutline(true);
+		root.setBackground(shape);
+		root.setClipToOutline(true);
 
-		FloatingToolbarLayout root = new FloatingToolbarLayout(ctx);
-		root.setBackgroundColor(Color.TRANSPARENT);
+		floatingRoot = new FloatingToolbarLayout(ctx);
+		floatingRoot.setBackgroundColor(Color.TRANSPARENT);
 
-		final LinearLayout main = new LinearLayout(ctx);
+		main = new LinearLayout(ctx);
 		main.setOrientation(LinearLayout.VERTICAL);
 
 		FrameLayout.LayoutParams mainParams = new FrameLayout.LayoutParams(
@@ -118,13 +159,13 @@ FloatingSheet(This config) {
 		/* ─────────────────────────────────────────────────────────
 		   DRAG HANDLE WITH VISUAL PILL
 		   ───────────────────────────────────────────────────────── */
-		final RelativeLayout dragHandle = new RelativeLayout(ctx);
+		dragHandle = new RelativeLayout(ctx);
 		dragHandle.setLayoutParams(new LinearLayout.LayoutParams(
 			ViewGroup.LayoutParams.MATCH_PARENT,
 			DRAG_HANDLE_HEIGHT
 		));
 
-		View visualPill = new View(ctx);
+		visualPill = new View(ctx);
 		RelativeLayout.LayoutParams pillParams = new RelativeLayout.LayoutParams(PILL_WIDTH, PILL_HEIGHT);
 		pillParams.addRule(RelativeLayout.CENTER_IN_PARENT);
 		visualPill.setLayoutParams(pillParams);
@@ -169,10 +210,10 @@ FloatingSheet(This config) {
 		main.addView(scroller);
 
 
-		if (viewFound) {
+		if (hasGetView) {
 			View view = config.getView(ctx);
 			content.addView(view);
-		} else if (viewListFound) {
+		} else if (hasGetViewList) {
 			List views = config.getViewList(ctx);
 			for (int i = 0; i < views.size(); i++) {
 				View view = (View) views.get(i);
@@ -183,8 +224,9 @@ FloatingSheet(This config) {
 			}
 		}
 
-		root.addView(main);
-		baseRoot.addView(root);
+		floatingRoot.addView(main);
+		root.addView(floatingRoot);
+		attachStateListener();
 
 		/* ─────────────────────────────────────────────────────────
 		   DRAG HANDLING & VERTICAL MOVEMENT
@@ -194,23 +236,21 @@ FloatingSheet(This config) {
 				switch (event.getAction()) {
 					case MotionEvent.ACTION_DOWN: 
 						initialTouchY = event.getRawY();
-						initialWinY = wmParams != null ? wmParams.y : 0;
+						initialTouchX = event.getRawX();
+						initialWinY = rootParams != null ? rootParams.y : 0;
+						initialWinX = rootParams != null ? rootParams.x / 2 : 0;
 						return true;
 					case MotionEvent.ACTION_MOVE: 
 						float deltaY = event.getRawY() - initialTouchY;
+						float deltaX = event.getRawX() - initialTouchX;
 						int newY = initialWinY + (int) deltaY;
+						int newX = initialWinX + (int) deltaX;
 
-						/* Clamp within screen bounds */
-						int screenHeight = ctx.getResources().getDisplayMetrics().heightPixels;
-						if (newY < 0) newY = 0;
-						if (newY + baseRoot.getHeight() > screenHeight) {
-							newY = screenHeight - baseRoot.getHeight();
-						}
-
-						if (wmParams != null) {
-							wmParams.y = newY;
+						if (rootParams != null) {
+							rootParams.y = newY;
+							rootParams.x = newX;
 							try {
-								windowManager.updateViewLayout(baseRoot, wmParams);
+								windowManager.updateViewLayout(root, rootParams);
 							} catch (Throwable e) {}
 						}
 						return true;
@@ -222,17 +262,17 @@ FloatingSheet(This config) {
 		/* ─────────────────────────────────────────────────────────
 		   CLICK OUTSIDE TO DESTROY
 		   ───────────────────────────────────────────────────────── */
-		baseRoot.setOnTouchListener(new View.OnTouchListener() {
+		root.setOnTouchListener(new View.OnTouchListener() {
 			onTouch(View v, MotionEvent event) {
 				if (event.getAction() != 0) return false; /* Only handle ACTION_DOWN */
 
-				/* Get root (sheet) bounds */
+				/* Get floatingRoot (sheet) bounds */
 				int[] rootLoc = new int[2];
-				root.getLocationOnScreen(rootLoc);
+				floatingRoot.getLocationOnScreen(rootLoc);
 				int rootLeft = rootLoc[0];
 				int rootTop = rootLoc[1];
-				int rootRight = rootLeft + root.getWidth();
-				int rootBottom = rootTop + root.getHeight();
+				int rootRight = rootLeft + floatingRoot.getWidth();
+				int rootBottom = rootTop + floatingRoot.getHeight();
 
 				float touchX = event.getRawX();
 				float touchY = event.getRawY();
@@ -245,54 +285,49 @@ FloatingSheet(This config) {
 				return false;
 			}
 		});
-	// }
+	}
 
 	show() {
-		if (!hasShown) {
-			// layout();
-			isRemoved = false;
-			hasShown = true;
+		if (!isShowing()) {
+			if (root == null) {
+				layout();
+				DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
+				int screenW = metrics.widthPixels;
+				int screenH = metrics.heightPixels;
+				int sheetWidth = WindowManager.LayoutParams.MATCH_PARENT;
 
-			wmParams = new WindowManager.LayoutParams();
-			wmParams.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
-			wmParams.format = PixelFormat.TRANSLUCENT;
-			wmParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-			wmParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-			wmParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
-			wmParams.gravity = Gravity.TOP;
-			wmParams.y = 0;
-			mainHandler.post(new Runnable() {
+				if (screenW > screenH) {
+					sheetWidth = (int) (screenW * maxWidth);
+					if (sheetWidth > screenW) {
+						sheetWidth = WindowManager.LayoutParams.MATCH_PARENT;
+					}
+				}
+
+				rootParams = new WindowManager.LayoutParams();
+				rootParams.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
+				rootParams.format = PixelFormat.TRANSLUCENT;
+				rootParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+				rootParams.width = sheetWidth;
+				rootParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+				rootParams.gravity = Gravity.TOP;
+				rootParams.y = 0;
+			}
+
+			Runnable showRun = new Runnable() {
 				run() {
 					try {
-						windowManager.addView(baseRoot, wmParams);
-
-						/* After layout, move to bottom */
-						mainHandler.post(new Runnable() {
-							run() {
-								int screenHeight = ctx.getResources().getDisplayMetrics().heightPixels;
-								int sheetHeight = baseRoot.getHeight();
-								if (sheetHeight > maxHeightPx) {
-									sheetHeight = maxHeightPx;
-									wmParams.height = maxHeightPx;
-								}
-								wmParams.y = screenHeight - sheetHeight;
-								windowManager.updateViewLayout(baseRoot, wmParams);
-								baseRoot.setVisibility(View.VISIBLE);
-								a11Y.addOverlay(TOP);
-								
-							}
-						});
+						windowManager.addView(root, rootParams);
 					} catch (Throwable e) {
 						tasker.showToast("Error adding overlay: " + e.getMessage());
 					}
 				}
-			});
-
+			};
+			a11Y.post(showRun);
 		}
 	}
 
 	toggle() {
-		if (!hasShown) {
+		if (!isShowing()) {
 			show();
 		} else {
 			remove();
@@ -300,18 +335,22 @@ FloatingSheet(This config) {
 	}
 
 	isAdded() {
-		return baseRoot.isAttachedToWindow();
+		if (root == null) return false;
+		return root.isAttachedToWindow();
 	}
 
 	isHidden() {
-		return baseRoot.getVisibility() == View.GONE && isAdded();
+		if (root == null) return false;
+		return root.getVisibility() == View.GONE && isAdded();
 	}
 
-	isShown() {
-		return baseRoot.getVisibility() == View.VISIBLE && isAdded();
+	isShowing() {
+		if (root == null) return false;
+		return root.getVisibility() == View.VISIBLE && isAdded();
 	}
 
 	isRemoved() {
+		if (root == null) return false;
 		return !isAdded();
 	}
 

@@ -21,9 +21,8 @@ Example:
 AccessibilityNodeInfo root = getRoot();
 ───────────────────────────────────────────────────────────────*/
 AccessibilityNodeInfo getRoot(int displayId) {
-	android.content.Context service = getService();
 	if (displayId == 0) {
-		return service.getRootInActiveWindow();
+		return getService().getRootInActiveWindow();
 	} else {
 		AccessibilityWindowInfo focusedWindow = getFocusedWindow(displayId);
 		if (focusedWindow != null) return focusedWindow.getRoot();
@@ -32,7 +31,7 @@ AccessibilityNodeInfo getRoot(int displayId) {
 }
 
 AccessibilityNodeInfo getRoot() {
-	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
 	return getRoot(displayId);
 }
 

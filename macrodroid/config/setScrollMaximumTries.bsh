@@ -1,0 +1,7 @@
+/*
+ * Set the scroll maximum tries
+ */
+setScrollMaximumTries(int maximumTries) {
+    A11yConfig.scrollMaximumTries = maximumTries;
+    return A11yConfig.scrollMaximumTries;
+}

@@ -258,6 +258,16 @@ Object[][] DIRECTORIES_OBJECT = new Object[][] {
 	{
 		"global",
 		"Global Actions"
+	},
+
+	{
+		"config",
+		"Config Utilities"
+	},
+
+	{
+		"window",
+		"Window Utilities"
 	}
 };
 

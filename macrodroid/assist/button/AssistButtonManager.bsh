@@ -1,0 +1,120 @@
+
+import bsh.This; 
+
+AssistButtonManager(This assistBar) {
+    This AssistInfo = assistBar.AssistInfo;
+
+    int[] iconButtonIds = {
+        AssistInfo.ACTIONS_GROUP_BUTTON,
+        AssistInfo.CLOSE_BUTTON,
+        AssistInfo.SEARCH_BUTTON,
+        AssistInfo.SETTING_BUTTON,
+        AssistInfo.FILTER_BUTTON,
+        AssistInfo.SCRIPT_BUTTON,
+        AssistInfo.HANDLE_BUTTON
+    };
+
+    final int ACTION_HIDE = 0; 
+    final int ACTION_UNHIDE = 1;
+    final int ACTION_REMOVE_FROM_CONTAINER = 2;
+    final int ACTION_ADD_TO_CONTAINER = 3;
+    final int ACTION_TOUCHABLE = 4;
+    final int ACTION_UNTOUCHABLE = 5;
+
+    int isShowing = 0;
+
+    getIconButton(int iconId) {
+        return assistBar.buttons.get(iconId);
+    }
+
+    actions(int iconsIds, int action) {
+        for (int iconId: iconButtonIds) {
+            boolean isTargeted = (iconId & iconsIds) == iconId;
+            if (!isTargeted) continue;
+            This iconButton = getIconButton(iconId);
+            if (iconButton == null) continue;
+            switch(action) {
+                case ACTION_HIDE:
+                    iconButton.hide(); 
+                    break;
+                case ACTION_UNHIDE:
+                    iconButton.unhide();
+                    break;
+                case ACTION_REMOVE_FROM_CONTAINER:
+                    iconButton.removeFromContainer();
+                    break;
+                case ACTION_ADD_TO_CONTAINER:
+                    iconButton.addToContainer();
+                    break;
+                case ACTION_TOUCHABLE:
+                    iconButton.setTouchState(true);
+                    break;
+                case ACTION_UNTOUCHABLE:
+                    iconButton.setTouchState(false);
+                    break;
+            };
+        }
+    }
+
+    hideButtons(int iconIds) {
+        actions(iconIds, ACTION_HIDE);
+        assistBar.refreshSize();
+    }
+
+    unhideButtons(int iconIds) {
+        actions(iconIds, ACTION_UNHIDE);
+        assistBar.refreshSize();
+    }
+
+    removeButtonsFromContainer(int iconIds) {
+        actions(iconIds, ACTION_REMOVE_FROM_CONTAINER);
+    }
+
+    addButtonsToContainer(int iconIds) {
+        actions(iconIds, ACTION_ADD_TO_CONTAINER);
+    }
+
+    setButtonsTouchState(int iconIds, boolean isActive) {
+        actions(iconIds, isActive ? ACTION_TOUCHABLE : ACTION_UNTOUCHABLE);
+    }
+
+    setIcon(int iconId, Drawable icon) {
+        This iconButton = getIconButton(iconId);
+        if (iconButton == null) return this;
+        iconButton.setIcon(icon);
+        return this;
+    }
+
+    setIcon(int iconId, String resourceId) {
+        This iconButton = getIconButton(iconId);
+        if (iconButton == null) return this;
+        iconButton.setIcon(resourceId);
+        return this;
+    }
+
+    setTemporaryIcon(int iconId, Drawable icon) {
+        This iconButton = getIconButton(iconId);
+        if (iconButton == null) return this;
+        iconButton.setTemporaryIcon(icon);
+        return this;
+    }
+
+    addButton(int buttonId, Drawable drawable, boolean isActive, boolean displayFirst, View.OnClickListener onClickListener) {
+		This iconButton = IconButton(assistBar);
+		iconButton.setId(buttonId);
+		MaterialButton button = iconButton.build();
+		iconButton.setIcon(drawable);
+		iconButton.setColorState(isActive);
+		if (!displayFirst) {
+			iconButton.hide();
+		}
+		if (onClickListener != null) {
+			button.setOnClickListener(onClickListener);
+		}
+        iconButton.addToContainer();
+		return button;
+	}
+
+
+    return this;
+}

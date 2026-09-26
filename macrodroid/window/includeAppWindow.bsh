@@ -1,0 +1,7 @@
+/*
+ * Include all application windows WindowInfo.TYPE_APPLICATION
+ */
+includeAppWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return addWindowFilter(WindowInfo.TYPE_APPLICATION);
+}

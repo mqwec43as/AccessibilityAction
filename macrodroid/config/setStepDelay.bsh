@@ -1,0 +1,7 @@
+/*
+ * Set step delay
+ */
+setStepDelay(long duration) {
+    A11yConfig.stepDelay = duration;
+    return duration;
+}

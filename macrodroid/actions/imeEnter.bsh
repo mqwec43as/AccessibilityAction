@@ -28,7 +28,7 @@ imeEnter(AccessibilityNodeInfo node) {
 	debugMe(node);
 	boolean success = node.performAction(0x00040000);
 	if (success) node.refresh();
-	if (stepDelay > 0) wait(stepDelay);
+	stepDelay();
 	return node;
 }
 

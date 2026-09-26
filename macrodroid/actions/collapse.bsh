@@ -46,7 +46,7 @@ collapse(AccessibilityNodeInfo node, int index, boolean checkparent) {
 	showOnScreen(candidate);
 	boolean success = candidate.performAction(AccessibilityNodeInfo.ACTION_COLLAPSE);
 	if (success) candidate.refresh();
-	if (stepDelay > 0) wait(stepDelay);
+	stepDelay();
 	return candidate;
 }
 

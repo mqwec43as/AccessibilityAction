@@ -38,7 +38,6 @@ DisplayInfos() {
 	}
 
 	Display[] displays = displayManager.getDisplays();
-	Handler mainHandler = new Handler(Looper.getMainLooper());
 
 	This DisplayInfo(Display display) {
 		String name = display.getName();
@@ -48,8 +47,7 @@ DisplayInfos() {
 		if (windowManager == null) {
 			continue;
 		}
-		boolean isRemoved;
-		boolean isShown;
+		
 		/* Create parent container view holding both separate children */
 		LinearLayout view = new LinearLayout(displayContext);
 		view.setOrientation(LinearLayout.VERTICAL);
@@ -100,32 +98,67 @@ DisplayInfos() {
 		params.format = PixelFormat.TRANSLUCENT;
 		params.gravity = Gravity.CENTER;
 		params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+		params.title = this.namespace.name + ": " + name + " #" + id;
 
 		show() {
-			if (!isShown) windowManager.addView(view, params);
+			if (!isShowing()) windowManager.addView(view, params);
 		}
 
 		remove() {
-			if (!isRemoved) {
+			if (!isRemoved()) {
 				windowManager.removeView(view);
 			}
 		}
 
+		toggle() {
+			if (!isShowing()) {
+				show();
+			} else {
+				remove();
+			}
+		}
+
+		isAdded() {
+			if (view == null) return false;
+			return view.getParent() != null && view.isAttachedToWindow();
+		}
+
+		isHidden() {
+			if (view == null) return false;
+			return view.getVisibility() == View.GONE && isAdded();
+		}
+
+		isShowing() {
+			if (view == null) return false;
+			return view.getVisibility() == View.VISIBLE && isAdded();
+		}
+
+		isRemoved() {
+			if (view == null) return false;
+			return !isAdded();
+		}
+
 		view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 			onViewAttachedToWindow(View v) {
-				isRemoved = false;
-				isShown = true;
 				a11Y.addOverlay(this);
 			}
 
 			onViewDetachedFromWindow(View v) {
-				isRemoved = true;
-				isShown = false;
 				a11Y.removeOverlay(this);
 			}
 		});
 
 		return this;
+	}
+
+	isDisplayExist(int displayId) {
+		Display[] displays = displayManager.getDisplays();
+		for (Display display: displays) {
+			if (display.getDisplayId() == displayId) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	getContext() {
@@ -141,6 +174,27 @@ DisplayInfos() {
 		}
 	}
 
+	show() {
+		load();
+		for (This displayInfo: displayInfos) {
+			try {
+				displayInfo.show();
+			} catch (e) {
+				log(e.getMessage(), "ERROR");
+				throw e;
+			}
+		}
+	}
+
+	show(long timeout) {
+		show();
+		a11Y.postDelayed(new Runnable() {
+			 run() { 
+				remove(); 
+			} 
+		}, timeout);
+	}
+
 	remove() {
 		if (displayInfos.isEmpty()) return;
 		for (This displayInfo: displayInfos) {
@@ -148,31 +202,65 @@ DisplayInfos() {
 				displayInfo.remove();
 			} catch (e) {
 				log(e.getMessage(), "ERROR");
+				throw e;
 			}
 		}
 		displayInfos.clear();
 	}
-	
-	show() {
-		load();
-		Runnable show = new Runnable() {
-			run() {
-				for (This displayInfo: displayInfos) {
-					try {
-						displayInfo.show();
-					} catch (Exception e) {
-						log(e.getMessage());
-					}
-				}
+
+	toggle() {
+		for (This displayInfo: displayInfos) {
+			try {
+				displayInfo.toggle();
+			} catch (e) {
+				log(e.getMessage(), "ERROR");
+				throw e;
 			}
-		};
-		mainHandler.post(show);
+		}
 	}
 
-	show(long timeout) {
-		show();
-		Thread.sleep(timeout);
-		remove();
+	isAdded() {
+		boolean isAdded = true;
+		for (This displayInfo: displayInfos) {
+			if (!displayInfo.isAdded()) {
+				isAdded = false;
+				break;
+			}
+		}
+		return isAdded;
+	}
+
+	isHidden() {
+		boolean isHidden = true;
+		for (This displayInfo: displayInfos) {
+			if (!displayInfo.isHidden()) {
+				isHidden = false;
+				break;
+			}
+		}
+		return isHidden;
+	}
+
+	isShowing() {
+		boolean isShowing = true;
+		for (This displayInfo: displayInfos) {
+			if (!displayInfo.isShowing()) {
+				isShowing = false;
+				break;
+			}
+		}
+		return isShowing;
+	}
+
+	isRemoved() {
+		boolean isRemoved = true;
+		for (This displayInfo: displayInfos) {
+			if (!displayInfo.isRemoved()) {
+				isRemoved = false;
+				break;
+			}
+		}
+		return isRemoved;
 	}
 
 	return this;

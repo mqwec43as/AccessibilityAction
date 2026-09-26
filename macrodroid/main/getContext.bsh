@@ -33,17 +33,17 @@ Context getContext(boolean useAccessibilityService, int displayId) {
 }
 
 Context getContext(int overlayType) {
-	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
 	return getContext(overlayType, displayId);
 }
 
 getContext(boolean useAccessibilityService) {
-	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
 	return getContext(useAccessibilityService, displayId);
 }
 
 Context getContext() {
-	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
 	return getContext(0, displayId);
 }
 

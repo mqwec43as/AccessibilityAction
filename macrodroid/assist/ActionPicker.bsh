@@ -7,21 +7,27 @@ import java.util.HashMap;
 import java.util.Comparator;
 import java.util.Arrays;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
+import io.reactivex.subjects.CompletableSubject;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
+import android.hardware.display.DisplayManager;
+import android.content.Context;
+import android.view.Display;
+
 /*
  * Requires SimilarNodes which consist of node details
  * Will prompt a series of dialog to select an action
  */
-ActionPicker() {
+ActionPicker(This assistBar) {
 
 	final This TOP = this;
 	int indexMinFilter = 6;
 
-	// parameter from top variable
-	if (includeAllMethods == void) includeAllMethods = false;
+	/* Parameter from top variable */
 	This a11Y = getA11yInstance();
-	This inspector = a11Y.inspector; // instance of MethodInspector
+	a11Y.setConstant(TOP, true);
+	This inspector = a11Y.inspector; /* Instance of MethodInspector */
 	DisplayManager displayManager = context.getSystemService(Context.DISPLAY_SERVICE);
 	int displayId = a11Y.assistBar.selectedDisplayId != void ? a11Y.assistBar.selectedDisplayId : 0;
 	Display display = displayManager.getDisplay(displayId);
@@ -30,9 +36,8 @@ ActionPicker() {
 		displayId = 0;
 	}
 	String displayName = display.getName();
-	AccessibilityWindowInfo focusedWindow = getFocusedWindow(displayId);
-	AccessibilityNodeInfo root = focusedWindow.getRoot();
-	String packageName; 
+	AccessibilityNodeInfo root = getRoot(displayId);
+	String packageName;
 	String className;
 	Map latestPackage;
 
@@ -43,10 +48,10 @@ ActionPicker() {
 			java.util.Map currentEvent = (java.util.Map) rawEvents.get(i);
 			String pkg = (String) currentEvent.get("packageName");
 			if (packageName.equals(pkg)) {
-				return currentEvent; 
+				return currentEvent;
 			}
 		}
-		return null; 
+		return null;
 	}
 
 	if (root != null) packageName = root.getPackageName();
@@ -54,16 +59,17 @@ ActionPicker() {
 	if (latestPackage != null) {
 		className = (String) latestPackage.get("className");
 	}
+
 	/*───────────────────────────────────────────────────────────────
-	  selectActions(This inspector, boolean includeAllMethods)
-	  * Select Action Group
+	  selectActions(This inspector, boolean includeAllMethods, String[] selectedGroups)
+	  **Select Action Group**
 	  Shows a dialog to pick a method action from available directories.
 	 ───────────────────────────────────────────────────────────────*/
 	public String selectActions(This inspector, boolean includeAllMethods, String[] selectedGroups) {
 		long defaultTimeout = 60000;
 		getActionList() {
 			List itemList = new ArrayList();
-			// Get key map from lib.MethodInspector which has actions of the projects
+			/* Get key map from lib.MethodInspector which has actions of the projects */
 			Map config = new HashMap(inspector.DIRECTORIES_MAP);
 			inspector.removeIgnore();
 
@@ -73,7 +79,7 @@ ActionPicker() {
 			}
 			List sortedKeys = new ArrayList(config.keySet());
 			Collections.sort(sortedKeys);
-			// Create list of actions without their overloads
+			/* Create list of actions without their overloads */
 			Map methodsMap = new HashMap();
 			for (String key: sortedKeys) {
 				Map entry = (Map) config.get(key);
@@ -82,7 +88,7 @@ ActionPicker() {
 				This list = MethodList(methods);
 				List capitalized = list.getCapitalized();
 
-				// Add each action to viewList, which required by ListDialog
+				/* Add each action to viewList, which required by ListDialog */
 				for (int i = 0; i < capitalized.size(); i++) {
 					Map item = new HashMap();
 					item.put("title", capitalized.get(i));
@@ -98,26 +104,47 @@ ActionPicker() {
 		}
 
 		List actionList = getActionList();
+		CompletableSubject signal = CompletableSubject.create();
+
 		dialog(This THIS) {
 			String title = "Select Action";
 			boolean showFilter;
-			long timeout = defaultTimeout;
 			List itemList = new ArrayList(THIS.actionList);
+			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 			if (itemList.size() > indexMinFilter) showFilter = true;
-			// On success, will update top variable selectedAction
+			
+			boolean useOverlay = !assistBar.shouldUseActivity();
+			boolean useAccessibility = true;
+			float dimAmount = 0.5f;
+
 			onSuccess(Map map) {
 				THIS.selectedAction = (String) map.get("methodName");
+				THIS.signal.onComplete();
 			}
 
-			onCancel() {}
-			onTimeout() {}
+			onCancel() {
+				THIS.signal.onComplete();
+			}
+
+			onTimeout() {
+				THIS.signal.onComplete();
+			}
 			return this;
 		}
-		This config = dialog(this);
-		This dialog = ListDialog(config);
 
-		// show will block and wait, then it return selectedAction if set
-		if (dialog.show() && selectedAction != void) {
+		This config = dialog(this);
+		final This dialog = ListDialog(config);
+
+		a11Y.post(new Runnable() {
+			run() {
+				dialog.show();
+			}
+		});
+
+		boolean isSuccess = signal.blockingAwait(defaultTimeout, TimeUnit.MILLISECONDS);
+		if (!isSuccess) dialog.remove();
+
+		if (signal.hasComplete() && selectedAction != void) {
 			return selectedAction;
 		}
 		return null;
@@ -136,7 +163,7 @@ ActionPicker() {
 			Map keys = inspector.getKeyMap();
 			List keyList = new ArrayList(keys.values());
 			Collections.sort(keyList, new Comparator() {
-				public int compare(Map m1, Map m2) {
+				compare(Map m1, Map m2) {
 					String value1 = m1.get("key");
 					String value2 = m2.get("key");
 					if (value1 == null) return (value2 == null) ? 0 : -1;
@@ -194,32 +221,52 @@ ActionPicker() {
 		}
 
 		List patternList = getList();
+		CompletableSubject signal = CompletableSubject.create();
 
 		keyDialog(This THIS) {
 			String title = "Select Pattern";
 			boolean showFilter;
-			long timeout = defaultTimeout;
+			boolean useOverlay = !assistBar.shouldUseActivity();
+			boolean useAccessibility = true;
+			float dimAmount = 0.5f;
+			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 			List itemList = new ArrayList(THIS.patternList);
 
 			onSuccess(Map map) {
 				THIS.selectedKey = map.get("map");
+				THIS.signal.onComplete();
 			}
 
-			onCancel() {}
+			onCancel() {
+				THIS.signal.onComplete();
+			}
 
-			onTimeout() {}
+			onTimeout() {
+				THIS.signal.onComplete();
+			}
 			return this;
 		}
+
 		This keyConfig = keyDialog(this);
-		This dialogInstance = ListDialog(keyConfig);
-		if (dialogInstance.show() && selectedKey != void) {
+		final This dialogInstance = ListDialog(keyConfig);
+
+		a11Y.post(new Runnable() {
+			run() {
+				dialogInstance.show();
+			}
+		});
+
+		boolean isSuccess = signal.blockingAwait(defaultTimeout, TimeUnit.MILLISECONDS);
+		if (!isSuccess) dialogInstance.remove();
+
+		if (signal.hasComplete() && selectedKey != void) {
 			return selectedKey;
 		}
 		return null;
 	}
 
 	/*───────────────────────────────────────────────────────────────
-	  OverloadDialog(This inspector, String action, Map keyMap, boolean isKeyRequired, boolean allMethods, This nodeData)
+	  OverloadDialog(This inspector, String selectedAction, Map selectedKey, boolean isKeyRequired, boolean includeAllMethods, This nodeData)
 	  **Select Method Overload**
 	  Builds and displays a dialog for picking the precise method overload.
 	 ───────────────────────────────────────────────────────────────*/
@@ -230,7 +277,7 @@ ActionPicker() {
 		getOverloadList() {
 			List overloads = new ArrayList();
 			List itemList = new ArrayList();
-			// Required params 
+			/* Required params */
 			List requiredParams = new ArrayList();
 			if (selectedKey != null && selectedKey.get("requiredParams") != null) {
 				Object rpObj = selectedKey.get("requiredParams");
@@ -250,16 +297,16 @@ ActionPicker() {
 			}
 
 			String targetKey = selectedKey != null ? (String) selectedKey.get("key") : null;
-			// Replace regex to target
+			/* Replace regex to target */
 			if ("regex".equals(targetKey)) targetKey = "text";
-			// Add each overload to viewList, which required by ListDialog
+			/* Add each overload to viewList, which required by ListDialog */
 			for (int i = 0; i < overloads.size(); i++) {
 				Map item = new HashMap();
 				Map method = (Map) overloads.get(i);
 				List methodParams = (List) method.get("parameterNames");
 				List updatedParams = new ArrayList();
 
-				// Loop through each method param
+				/* Loop through each method param */
 				for (int j = 0; j < methodParams.size(); j++) {
 					String param = (String) methodParams.get(j);
 					Object newParam = param;
@@ -267,17 +314,17 @@ ActionPicker() {
 						try {
 							switch (param) {
 								case "text":
-									// Replace only if selectedKey is text
+									/* Replace only if selectedKey is text */
 									if (targetKey.equals("text")) newParam = selectedKey.get("replacement");
 
 									break;
 								case "key":
-									// Skip when method has param "text"
+									/* Skip when method has param "text" */
 									if (!methodParams.contains("text")) newParam = selectedKey.get("key");
 
 									break;
 								case "value":
-									// Skip when method has param "text"
+									/* Skip when method has param "text" */
 									if (!methodParams.contains("text")) newParam = selectedKey.get("replacement");
 									break;
 
@@ -291,7 +338,9 @@ ActionPicker() {
 									break;
 
 							}
-						} catch (e) {}
+						} catch (e) {
+							log(e.getMessage(), "ERROR", TOP);
+						}
 
 					} else {
 						switch (param) {
@@ -325,13 +374,13 @@ ActionPicker() {
 				List shortReplacedParams = new ArrayList();
 				List replacedParams = new ArrayList();
 
-				// Loop through each updated method param to update the three above
+				/* Loop through each updated method param to update the three above */
 				for (int j = 0; j < updatedParams.size(); j++) {
 					String replaced = null;
 					String shortReplaced = null;
 					String param = (String) methodParams.get(j);
 
-					// Check if param is null
+					/* Check if param is null */
 					if (updatedParams.get(j) != null) {
 						Object selected = updatedParams.get(j);
 						if (!param.equals(selected)) {
@@ -373,65 +422,99 @@ ActionPicker() {
 			}
 			return itemList;
 		}
+
 		List overloadList = getOverloadList();
+		CompletableSubject signal = CompletableSubject.create();
 
 		overload(This THIS) {
 			String title = "Select Method";
 			boolean showFilter;
-			long timeout = defaultTimeout;
+			boolean useOverlay = !assistBar.shouldUseActivity();
+			boolean useAccessibility = true;
+			float dimAmount = 0.5f;
 			List itemList = new ArrayList(THIS.overloadList);
+			int displayId = assistBar.getContext().getDisplay().getDisplayId();
 			if (itemList.size() > indexMinFilter) showFilter = true;
+
 			onSuccess(Map map) {
 				THIS.selectedMethod = (Map) map.get("method");
+				THIS.signal.onComplete();
 			}
 
-			onCancel() {}
-			onTimeout() {}
+			onCancel() {
+				THIS.signal.onComplete();
+			}
+
+			onTimeout() {
+				THIS.signal.onComplete();
+			}
 
 			return this;
 		}
 
 		This overloadConfig = overload(this);
-		This overDialog = ListDialog(overloadConfig);
-		if (overDialog.show() && selectedMethod != void) {
+		final This overDialog = ListDialog(overloadConfig);
+
+		a11Y.post(new Runnable() {
+			run() {
+				overDialog.show();
+			}
+		});
+
+		boolean isSuccess = signal.blockingAwait(defaultTimeout, TimeUnit.MILLISECONDS);
+		if (!isSuccess) overDialog.remove();
+
+		if (signal.hasComplete() && selectedMethod != void) {
 			return selectedMethod;
 		}
 		return null;
 	}
 
 	/*───────────────────────────────────────────────────────────────
-	  executeDalog(String text)
+	  executeDialog(String text, int targetDisplayId, int windowFilter)
 	  **Executes code**
 	 ───────────────────────────────────────────────────────────────*/
-	public void executeDialog(String text) {
+	public void executeDialog(String code, int targetDisplayId, int windowFilter) {
 		This a11Y = getA11yInstance();
 		long defaultTimeout = 5000;
+
 		execute(This THIS) {
 			String title = "Run now";
 			boolean showFilter;
-			long timeout = defaultTimeout;
+			boolean useOverlay = !assistBar.shouldUseActivity();
+			boolean useAccessibility = true;
+			float dimAmount = 0.5f;
+			int displayId = assistBar.getContext().getDisplay().getDisplayId();
+
 			List itemList = new ArrayList();
 			Map runCode = new HashMap();
 			runCode.put("title", "Run code now");
-			runCode.put("subtitle", text);
+			runCode.put("subtitle", code);
 			itemList.add(runCode);
 
 			onSuccess(Map map) {
 				if (map.equals(runCode)) {
-					int displayId = a11Y.assistBar.selectedDisplayId;
-					log("Running code now on display " + displayId, "INFO", TOP);
-					runScript(text, 500, displayId);
+					log("Running code now on display " + targetDisplayId, "INFO", TOP);
+					runScript(code, 500, targetDisplayId, windowFilter);
 				}
 			}
 
-			onCancel() {}
-			onTimeout() {}
+			onCancel() {
+			}
+
+			onTimeout() {
+			}
 			return this;
 		}
 
 		This executeConfig = execute(this);
-		This executeDialog = ListDialog(executeConfig);
-		executeDialog.show();
+		final This executeDialog = ListDialog(executeConfig);
+
+		a11Y.post(new Runnable() {
+			run() {
+				executeDialog.show();
+			}
+		});
 
 	}
 
@@ -454,6 +537,7 @@ ActionPicker() {
 	 ───────────────────────────────────────────────────────────────*/
 	selectActionsFlow(This nodeData, boolean includeAllMethods, String[] selectedGroups) {
 		String finalSelectedAction = selectActions(inspector, includeAllMethods, selectedGroups);
+		tasker.setJavaVariable("nodeData", nodeData);
 		if (finalSelectedAction == null) {
 			log("No action selected", "INFO", TOP);
 			return null;
@@ -486,7 +570,7 @@ ActionPicker() {
 
 		boolean appended;
 		String text = "Stored to editor.";
-		if (actionPickerAddToEditor != void && actionPickerAddToEditor) {
+		if (a11Y.actionPickerAddToEditor != void && a11Y.actionPickerAddToEditor) {
 			if (a11Y.scriptEditor.length() > 0) a11Y.scriptEditor += "\n\n";
 			a11Y.scriptEditor += finalOverload.get("usage");
 			List notReplaced = (List) finalOverload.get("notReplacedParams");
@@ -497,29 +581,42 @@ ActionPicker() {
 				appended = true;
 				a11Y.lastActionPickerReminder = System.currentTimeMillis();
 			}
-		} else if (actionPickerAddToEditor != void && !actionPickerAddToEditor) {
+		} else if (a11Y.actionPickerAddToEditor != void && !a11Y.actionPickerAddToEditor) {
 			log("Copy to clipboard", "INFO", TOP);
 			setClipboard((String) finalOverload.get("usage"));
-			showToast("Copy to clipboard");
+			showToast(assistBar.getContext(), "Copy to clipboard");
 		}
 
-		if (appended) showToast(text);
+		int windowType;
+		int displayId;
+		if (nodeData != null) {
+			a11Y.assistBar.selectedWindowFilter = a11Y.assistBar.selectedWindowFilter | nodeData.windowType;
+			windowType = nodeData.windowType;
+			displayId = nodeData.displayId;
+		}
+
+		if (appended) {
+			showToast(assistBar.getContext(), text);
+		}
+
 		List notReplaced = (List) finalOverload.get("notReplacedParams");
 		if (notReplaced.isEmpty()) {
 			String code = (String) finalOverload.get("usage");
-			executeDialog(code);
+			executeDialog(code, displayId, windowType);
+		} else {
+			showToast(assistBar.getContext(), notReplaced.toString() + " are not set yet.");
 		}
 
 		return finalOverload;
 	}
 
 	selectNodeActions(This targetNodeData) {
-		if (includeAllMethods) {
+		if (A11yConfig.includeAllMethods) {
 			String[] selectedGroups = new String[] { "actions", "main" };
-			return selectActionsFlow(targetNodeData, includeAllMethods, selectedGroups);
+			return selectActionsFlow(targetNodeData, A11yConfig.includeAllMethods, selectedGroups);
 		} else {
 			String[] selectedGroups = new String[] { "actions" };
-			return selectActionsFlow(targetNodeData, includeAllMethods, selectedGroups);
+			return selectActionsFlow(targetNodeData, A11yConfig.includeAllMethods, selectedGroups);
 		}
 	}
 
@@ -534,7 +631,7 @@ ActionPicker() {
 	}
 
 	selectUtils() {
-		String[] selectedGroups = new String[] { "main" };
+		String[] selectedGroups = new String[] { "main", "config", "window" };
 		return selectActionsFlow(null, true, selectedGroups);
 	}
 

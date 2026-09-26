@@ -1,0 +1,41 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import android.graphics.Rect;
+import android.view.accessibility.AccessibilityNodeInfo;
+
+/*───────────────────────────────────────────────────────────────
+  Sorts nodes from largest screen area to smallest.
+
+  Arguments:
+   - nodes → List of AccessibilityNodeInfo instances to evaluate.
+
+  Returns:
+   - List of scrollable AccessibilityNodeInfo instances sorted by area.
+  ───────────────────────────────────────────────────────────────*/
+List sortByArea(List nodes) {
+    /* Sort nodes from biggest area to smallest area. */
+    Collections.sort(nodes, new Comparator() {
+        compare(Object o1, Object o2) {
+            AccessibilityNodeInfo node1 = (AccessibilityNodeInfo) o1;
+            AccessibilityNodeInfo node2 = (AccessibilityNodeInfo) o2;
+
+            Rect rect1 = new Rect();
+            Rect rect2 = new Rect();
+
+            node1.getBoundsInScreen(rect1);
+            node2.getBoundsInScreen(rect2);
+
+            int area1 = rect1.width() * rect1.height();
+            int area2 = rect2.width() * rect2.height();
+
+            /* Descending order: return positive if area2 > area1 */
+            if (area2 > area1) return 1;
+            if (area2 < area1) return -1;
+            return 0;
+        }
+    });
+
+    return nodes;
+}

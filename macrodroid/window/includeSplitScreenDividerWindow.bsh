@@ -1,0 +1,7 @@
+/*
+ * Include all split-screen divider windows WindowInfo.TYPE_SPLIT_SCREEN_DIVIDER
+ */
+includeSplitScreenDividerWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return addWindowFilter(WindowInfo.TYPE_SPLIT_SCREEN_DIVIDER);
+}

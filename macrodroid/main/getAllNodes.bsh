@@ -4,7 +4,7 @@ This code was primarily generated using AI with minimal human editing.
 
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.accessibilityservice.AccessibilityService;
-
+import java.util.ArrayList;
 /*───────────────────────────────────────────────────────────────
  * getAllNodes()
  * **Find All Nodes**
@@ -16,14 +16,14 @@ import android.accessibilityservice.AccessibilityService;
  * Example:
  *   nodes = getAllNodes();
  *───────────────────────────────────────────────────────────────*/
-List getAllNodes(AccessibilityNodeInfo root) {
+List getAllNodes(AccessibilityNodeInfo node) {
 	List nodes = new ArrayList();
-	if (root == null) {
+	if (node == null) {
 		return nodes;
 	}
 
 	List stack = new ArrayList();
-	stack.add(root);
+	stack.add(node);
 
 	while (!stack.isEmpty()) {
 		AccessibilityNodeInfo node = (AccessibilityNodeInfo) stack.remove(0);
@@ -47,8 +47,25 @@ List getAllNodes(AccessibilityNodeInfo root) {
 }
 
 List getAllNodes() {
-	AccessibilityNodeInfo root = getRoot();
-	return getAllNodes(root);
+	List roots = new ArrayList();
+	if (A11yConfig != void && A11yConfig.hasWindowFilter()) {
+		roots.addAll(getRoots());
+	} else {
+		AccessibilityNodeInfo node = getRoot();
+		if (node != null) {
+			roots.add(node);
+		}
+	}
+
+	if (roots.isEmpty()) {
+		return roots;
+	} else {
+		List nodes = new ArrayList();
+		for (AccessibilityNodeInfo node: roots) {
+			nodes.addAll(getAllNodes(node));
+		}
+		return nodes;
+	}
 }
 
 List getAllNodes(List nodes) {

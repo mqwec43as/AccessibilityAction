@@ -21,7 +21,7 @@ clearFocus(AccessibilityNodeInfo node) {
 	if (!success) success = node.performAction(AccessibilityNodeInfo.ACTION_CLEAR_SELECTION);
 	if (!success) success = node.performAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);
 	if (success) {
-		if (stepDelay > 0) wait(stepDelay);
+		stepDelay();
 		node.refresh();
 		return node;
 	} else {
@@ -65,6 +65,6 @@ clearFocus() {
 			}
 		}
 	}
-	if (stepDelay > 0) wait(stepDelay);
+	stepDelay();
 	return nodes;
 }

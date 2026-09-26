@@ -1,0 +1,11 @@
+/*
+ * Scroll again when failed
+ */
+scrollAgainWhenFailed(boolean state) {
+    A11yConfig.scrollAgainWhenFailed = state;
+    return A11yConfig.scrollAgainWhenFailed;
+}
+
+scrollAgainWhenFailed() {
+    return scrollAgainWhenFailed(true);
+}

@@ -1,0 +1,26 @@
+importCommands("window");
+
+import java.util.Iterator;
+import android.view.accessibility.AccessibilityWindowInfo;
+
+/* ───────────────────────────────────────────────────────────────
+ * Get all roots for a display
+ *
+ * Returns:
+ * - List of AccessibilityNodeInfo
+ ──────────────────────────────────────────────────────────── */
+List getRoots(int displayId) {
+	List windows = getWindows(displayId);
+	Iterator iterator = windows.iterator();
+	List nodes = new ArrayList();
+	while (iterator.hasNext()) {
+		AccessibilityWindowInfo window = iterator.next();
+		nodes.add(window.getRoot());
+	}
+	return nodes;
+}
+
+List getRoots() {
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
+	return getRoots(displayId);
+}

@@ -6,20 +6,25 @@ import bsh.This;
   **Executes Script**
   Runs the provided BeanShell script on a background thread.
  ───────────────────────────────────────────────────────────────*/
-public void runScript(String script, long delayMs, int displayId) {
+public void runScript(String script, long delayMs, int displayId, int windowFilter) {
     final This TOP = this;
 	String header ="""
 import bsh.This;
-This a11Y = getA11yInstance();
+This a11Y = tasker.getJavaVariable("a11Y");
 a11Y.set();
+A11yConfig.refresh();
+setWaitTimeout(2000);
+test = "Debug";
 """;
     
     header += "\nsetDisplay(" + displayId + ");\n";
     
+    header += "setWindowFilter(" + windowFilter + ");\n";
+    
     
     log("Running script on display " + displayId + ":\n" + header + script , "INFO", TOP);
     This a11Y = getA11yInstance();
-	a11Y.executor.submit(new Runnable() {
+	a11Y.executeA11y(new Runnable() {
         run() {
             if (delayMs > 0) {
                 wait(delayMs);
@@ -34,7 +39,7 @@ a11Y.set();
                this.interpreter.eval(header + script);
             } catch (Exception e) {
                 log("Script Error: " + e.getMessage(), "ERROR", TOP);
-                tasker.showToast("Script Error, see log for details.");
+                showToast(getContext(false, displayId), "Script Error, see log for details.");
             } finally {
                 if (a11Y != null && a11Y != void) {
                     a11Y.unmuteEvents();

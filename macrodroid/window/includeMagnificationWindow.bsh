@@ -1,0 +1,7 @@
+/*
+ * Include all magnification overlay windows WindowInfo.TYPE_MAGNIFICATION_OVERLAY
+ */
+includeMagnificationWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return addWindowFilter(WindowInfo.TYPE_MAGNIFICATION_OVERLAY);
+}

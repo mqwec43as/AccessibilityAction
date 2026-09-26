@@ -1,3 +1,5 @@
+importCommands("lib.ui");
+
 import java.util.function.Consumer;
 import android.app.Activity;
 import android.view.View;
@@ -13,6 +15,8 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import com.joaomgcd.taskerm.genericaction.ActivityLifecycleEvent;
+
 
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
@@ -24,11 +28,13 @@ import com.google.android.material.floatingtoolbar.FloatingToolbarLayout;
 
 import android.content.Context;
 import bsh.This;
+import android.os.Looper;
+import android.view.WindowManager;
 
 /*───────────────────────────────────────────────────────────────
-  AssistSetting()
+  AssistSetting(This assistBar)
   ───────────────────────────────────────────────────────────────*/
-AssistSetting() {
+AssistSetting(This assistBar) {
 
 	if (ENV == void || ENV == null) ENV = Environment();
 	ENV.checkMaterialLib(this);
@@ -37,62 +43,98 @@ AssistSetting() {
 	This a11Y = getA11yInstance();
 	final int WINDOW_TYPE = ENV.Layout.TYPE_SETTINGS;
 	a11Y.viewControl.addView(TOP);
-
+	float maxWidth = 0.5f;
+	Context layoutContext;
 	Activity activity;
-	FrameLayout baseRoot;
-	boolean isRemoved;
-	boolean isShown;
-	boolean hasShownOnce;
+	FrameLayout root;
+	WindowManager windowManager;
+	Window window;
+	This tm;
+
+	dp(int value) {
+		return tm.dp(value);
+	}
 
 	save() {
 		// Save config to file
 		if (a11Y.config != void) {
 			a11Y.config.loadFrom(a11Y);
 			a11Y.config.save();
+			A11yConfig.refresh();
 		}
 	}
 
-	remove() {
-		if (activity != null) {
-			activity.finish();
+	void remove() {
+		if (isAdded()) {
+			if (isActivityContext()) {
+				if (activity != null) activity.finish();
+			} else {
+				if (windowManager != null) windowManager.removeView(root);
+			}
 		}
-		isRemoved = true;
-		save();
 	}
 
-	layout(Activity act) {
-		activity = act;
-		float density = activity.getResources().getDisplayMetrics().density;
+	activityListener() {
+		// ! Might need to remove later if Tasker allows Activity to not be excluded in recents
+		// Remove when layoutContext is stopped
+		onStopped(ActivityLifecycleEvent event) {
+			event.activity.finish();
+		}
+		
+		return this;
+	}
 
-		window = activity.getWindow();
-		window.requestFeature(Window.FEATURE_NO_TITLE);
-		window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
-		window.setBackgroundDrawableResource(android.R.color.transparent);
-		window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-		window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS 
-            | WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS 
-            | WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-        
-		WindowManager.LayoutParams winParams = window.getAttributes();
-		winParams.gravity = Gravity.BOTTOM;
-		winParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-		winParams.dimAmount = 0.5f;
-		window.setAttributes(winParams);
-		This tm = ThemeManager(activity);
+	Context getContext() {
+		return layoutContext;
+	}
+
+	boolean isActivityContext() {
+		return getContext() instanceof Activity;
+	}
+
+	void attachStateListener() {
+		View.OnAttachStateChangeListener stateListener = new View.OnAttachStateChangeListener() {
+			onViewAttachedToWindow(View v) {
+
+			}
+			onViewDetachedFromWindow(View v) {
+				remove();
+				save();
+			}
+		};
+
+		if (isActivityContext() && activity != null) {
+			This monitor = SimpleActivityMonitor(activity, activityListener());
+			View decorView = activity.getWindow().getDecorView();
+			decorView.addOnAttachStateChangeListener(stateListener);
+		} else {
+			root.addOnAttachStateChangeListener(stateListener);
+		}
+	}
+
+	layout(Context context) {
+		layoutContext = context;
+		if (isActivityContext()) {
+			activity = context;
+		}
+		
+		float density = getContext().getResources().getDisplayMetrics().density;
+
+		tm = ThemeManager(getContext());
 		tm.setThemeDark();
-		baseRoot = new FrameLayout(activity);
+		root = new FrameLayout(getContext());
 
-		/* Applying requested shape to baseRoot */
+		/* Applying requested shape to root */
 		GradientDrawable shape = new GradientDrawable();
-		shape.setCornerRadius(28 * density);
+		shape.setCornerRadius(dp(18));
 		shape.setColor((int) tm.color("colorSurface"));
-		baseRoot.setBackground(shape);
-		baseRoot.setClipToOutline(true);
+		root.setBackground(shape);
+		root.setClipToOutline(true);
 
-		root = new FloatingToolbarLayout(activity);
-		root.setBackgroundColor(Color.TRANSPARENT);
+		floatingRoot = new FloatingToolbarLayout(getContext());
+		floatingRoot.setBackgroundColor(Color.TRANSPARENT);
 
-		final LinearLayout main = new LinearLayout(activity);
+		final LinearLayout main = new LinearLayout(getContext());
 		main.setOrientation(LinearLayout.VERTICAL);
 		int p = dp(ENV.Settings.PADDING);
 		// main.setPadding(p, 0, p, 0);
@@ -104,21 +146,21 @@ AssistSetting() {
 		mainParams.gravity = Gravity.BOTTOM;
 		main.setLayoutParams(mainParams);
 
-		toolbar = new MaterialToolbar(activity);
+		toolbar = new MaterialToolbar(getContext());
 		toolbar.setTitle("Settings");
 		toolbar.setTitleCentered(true);
 		main.addView(toolbar);
 
-		ScrollView scroller = new ScrollView(activity);
+		ScrollView scroller = new ScrollView(getContext());
 		scroller.setVerticalScrollBarEnabled(false);
 
-		LinearLayout content = new LinearLayout(activity);
+		LinearLayout content = new LinearLayout(getContext());
 		content.setOrientation(LinearLayout.VERTICAL);
 		scroller.addView(content);
 		main.addView(scroller, new LinearLayout.LayoutParams(-1, 0, 1.0f));
 
 		createSwitch(String text, String variableName) {
-			MaterialSwitch itemSwitch = new MaterialSwitch(activity);
+			MaterialSwitch itemSwitch = new MaterialSwitch(getContext());
 			itemSwitch.setText(text);
 			itemSwitch.setPadding(p, p, p, p);
 
@@ -141,7 +183,7 @@ AssistSetting() {
 		}
 
 		createInput(String hintText, String variableName, Object defaultValue) {
-			TextInputLayout textLayout = new TextInputLayout(activity);
+			TextInputLayout textLayout = new TextInputLayout(getContext());
 			textLayout.setHint(hintText);
 			textLayout.setHintMaxLines(2);
 			textLayout.setBoxBackgroundMode(2);
@@ -155,7 +197,6 @@ AssistSetting() {
 			float newSizePx = currentSizePx * ENV.Settings.TEXT_SIZE_MULTIPLIER;
 			editText.setTextSize(TypedValue.COMPLEX_UNIT_PX, newSizePx);
 			
-
 			String inputClass = value.getClass().getSimpleName();
 			switch (inputClass) {
 				case "Float":
@@ -213,7 +254,7 @@ AssistSetting() {
 		for (int i = 0; i < keys.length; i++) {
 			String groupName = keys[i];
 			List settingRows = (List) settings.get(groupName);
-			MaterialTextView groupTitle = new MaterialTextView(activity);
+			MaterialTextView groupTitle = new MaterialTextView(getContext());
 			groupTitle.setText(groupName);
 			groupTitle.setTypeface(null, 1);
 			groupTitle.setTextSize(ENV.Settings.GROUP_TITLE_TEXT_SIZE);
@@ -235,7 +276,7 @@ AssistSetting() {
 		TextInputLayout envInput = createInput("Project Path", "ENV_PATH", a11Y.ENV_PATH);
 		envInput.setEnabled(false);
 
-		MaterialButton saveBtn = new MaterialButton(activity);
+		MaterialButton saveBtn = new MaterialButton(getContext());
 		saveBtn.setText("CLOSE");
 		saveBtn.setOnClickListener(new View.OnClickListener() {
 			onClick(View v) {
@@ -244,43 +285,79 @@ AssistSetting() {
 		});
 		content.addView(saveBtn);
 
-		root.addView(main);
+		floatingRoot.addView(main);
+		root.addView(floatingRoot);
 
-		activity.getWindow().getDecorView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-			onViewAttachedToWindow(View v) {
-				hasShownOnce = true;
-				isShown = true;
-				if (isRemoved) isRemoved = false;
-			}
-			onViewDetachedFromWindow(View v) {
-				isRemoved = true;
-				isShown = false;
-				activity.finish();
-				save();
-			}
-		});
-		baseRoot.addView(root);
-		activity.setContentView(baseRoot);
+		attachStateListener();
+		
+		if (isActivityContext()) {
+			window = activity.getWindow();
+			window.requestFeature(Window.FEATURE_NO_TITLE);
+			window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+			window.setBackgroundDrawableResource(android.R.color.transparent);
+			window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+			window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS 
+				| WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS 
+				| WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+			
+			WindowManager.LayoutParams winParams = window.getAttributes();
+			winParams.gravity = Gravity.BOTTOM;
+			winParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+			winParams.dimAmount = 0.5f;
+			window.setAttributes(winParams);
+			activity.setContentView(root);
+		} else {
+			windowManager = getContext().getSystemService(Context.WINDOW_SERVICE);
+			DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+			int screenW = metrics.widthPixels;
+			int screenH = metrics.heightPixels;
+			int settingWidth = WindowManager.LayoutParams.MATCH_PARENT;
 
+			if (screenW > screenH) {
+				settingWidth = (int) (screenW * maxWidth);
+				if (settingWidth > screenW) {
+					settingWidth = WindowManager.LayoutParams.MATCH_PARENT;
+				}
+			}
+
+			WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+				settingWidth,
+				WindowManager.LayoutParams.WRAP_CONTENT,
+				WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+				android.graphics.PixelFormat.TRANSLUCENT
+			);
+			params.gravity = Gravity.BOTTOM;
+			params.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+			params.dimAmount = 0.5f;
+			windowManager.addView(root, params);
+		}
+		
 
 	}
 
-	java.util.function.Consumer uiLogic = new java.util.function.Consumer() {
-		accept(Object activityObj) {
-			layout((Activity) activityObj);
+	void show(boolean useOverlay) {
+		if (!isShowing()) {
+			if (!useOverlay) {
+				java.util.function.Consumer uiLogic = new java.util.function.Consumer() {
+					accept(Object activityObj) {
+						layout(activityObj);
+					}
+				};
+				tasker.doWithActivity(uiLogic);
+			} else {
+				layout(assistBar.getContext());
+			}
 		}
-	};
+	}
 
 	show() {
-		if (!isShown) {
-			isRemoved = false;
-			isShown = true;
-			tasker.doWithActivity(uiLogic);
-		}
+		boolean useOverlay = !assistBar.shouldUseActivity();
+		show(useOverlay);
 	}
 
 	toggle() {
-		if (!isShown) {
+		if (!isShowing()) {
 			show();
 		} else {
 			remove();
@@ -288,22 +365,22 @@ AssistSetting() {
 	}
 
 	isAdded() {
-		if (baseRoot == null) return false;
-		return baseRoot.getParent() != null && baseRoot.isAttachedToWindow();
+		if (root == null) return false;
+		return root.getParent() != null && root.isAttachedToWindow();
 	}
 
 	isHidden() {
-		if (baseRoot == null) return false;
-		return baseRoot.getVisibility() == View.GONE && isAdded();
+		if (root == null) return false;
+		return root.getVisibility() == View.GONE && isAdded();
 	}
 
-	isShown() {
-		if (baseRoot == null) return false;
-		return baseRoot.getVisibility() == View.VISIBLE && isAdded();
+	isShowing() {
+		if (root == null) return false;
+		return root.getVisibility() == View.VISIBLE && isAdded();
 	}
 
 	isRemoved() {
-		if (baseRoot == null) return false;
+		if (root == null) return false;
 		return !isAdded();
 	}
 

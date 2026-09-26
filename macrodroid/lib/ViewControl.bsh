@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+import android.os.Looper;
 
 /*───────────────────────────────────────────────────────────────
 ViewControl()
@@ -17,8 +19,8 @@ Returns:
 ViewControl() {
 	int visibleViews = 0;
 	int removedViews = 0;
-	// Stores view bsh.This containing show(), hide(), remove() and isShown, isRemoved, isHidden
-	Map viewMap = new HashMap();
+	// Stores view bsh.This containing show(), hide(), remove() and isShowing, isRemoved, isHidden
+	Map viewMap = new ConcurrentHashMap();
 	// Get a11Y to use stored flag constants
 	This a11Y = getA11yInstance();
 	Object[][] showRules = new Object[][] {
@@ -74,9 +76,14 @@ ViewControl() {
 			ENV.Layout.TYPE_DISPLAY_MENU,
 			0,
 			ENV.Layout.TYPE_ALL_ASSIST
+		},
+
+		// Actions group menu must be shown alone
+		{
+			ENV.Layout.TYPE_ACTIONS_GROUP_DIALOGS,
+			0,
+			ENV.Layout.TYPE_ALL_ASSIST
 		}
-
-
 
 	};
 
@@ -101,7 +108,20 @@ ViewControl() {
 
 	isVisible(int myView) {
         This myViewThis = (This) viewMap.get(myView);
-		return myViewThis.isShown();
+		return myViewThis.isShowing();
+	}
+
+	isAnyVisible(int targetViewsBit) {
+		Set viewSet = viewMap.keySet();
+		Iterator it = viewSet.iterator();
+		while (it.hasNext()) {
+			Integer currentKey = (Integer) it.next();
+			int myView = currentKey.intValue();
+			if ((targetViewsBit & myView) == myView) {
+				if (isVisible(myView)) return true;
+			}
+		}
+		return false;
 	}
 
 	isRemoved(int myView) {
@@ -121,7 +141,10 @@ ViewControl() {
 			if (!isVisible(myView)) continue;
 
 			This myViewThis = (This) viewMap.get(currentKey);
-			myViewThis.hide();
+			boolean hasHide = myViewThis.namespace.getMethod("hide", new Class[] {}) != null;
+			boolean hasRemove = myViewThis.namespace.getMethod("remove", new Class[] {}) != null;
+			if (hasHide) myViewThis.hide();
+			else if (hasRemove) myViewThis.remove();
 			visibleViews &= ~myView;
 		}
 	}
@@ -138,15 +161,15 @@ ViewControl() {
 			if (isRemoved(myView)) continue;
 
 			This myViewThis = (This) viewMap.get(currentKey);
-			myViewThis.remove();
+			if (myViewThis != null) myViewThis.remove();
 			removedViews |= myView;
 			visibleViews &= ~myView;
 		}
 
 
 	}
+
 	show(int targetViewsBit) {
-		/* Process dependent rule alterations prior to performing the display actions */
 		for (int i = 0; i < showRules.length; i++) {
 			int ruleView = showRules[i][0];
 
@@ -179,6 +202,60 @@ ViewControl() {
 			removedViews &= ~myView;
 		}
 
+		This assistBar = getView(ENV.Layout.TYPE_ASSIST_BAR);
+		assistBar.toggle();
+
+	}
+
+	toggle(int targetViewsBit) {
+		if (isAnyVisible(targetViewsBit)) {
+			hide(targetViewsBit);
+		} else {
+			show(targetViewsBit);
+		}
+	}
+
+	/*
+	 * Toggle the visibility of a view directly
+	 */
+	toggleView(int myView) {
+		This myViewThis = (This) viewMap.get(myView);
+		boolean hasToggle;
+		if (myViewThis != null) {
+			hasToggle = myView.namespace.getMethod("toggle", new Class[] {}) != null;
+		}
+		if (!hasToggle) return;
+		if (isVisible(myView)) {
+			myViewThis.remove();
+			visibleViews &= ~myView;
+			removedViews |= myView;
+		} else {
+			myViewThis.show(myView);
+			visibleViews |= myView;
+			removedViews &= ~myView;
+		}
+	}
+
+	/*
+	 * Show a view directly
+	 */
+	showView(int myView) {
+		This myViewThis = (This) viewMap.get(myView);
+		if (myViewThis == null) return;
+		myViewThis.show();
+		visibleViews |= myView;
+		removedViews &= ~myView;
+	}
+
+	/*
+	 * removeView directly
+	 */
+	removeView(int myView) {
+		This myViewThis = (This) viewMap.get(myView);
+		if (myViewThis == null) return;
+		myViewThis.remove();
+		visibleViews &= ~myView;
+		removedViews |= myView;
 	}
 
 	return this;

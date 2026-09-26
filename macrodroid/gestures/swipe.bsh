@@ -38,9 +38,8 @@ boolean swipe(double startX, double startY, double endX, double endY, long durat
 	// * Use wait because Macrodroid can't declare AccessibilityService.GestureResultCallback
 	// TODO: Fix when Macrodroid is able to use abstract class
 	wait(duration);
-	
-	return result;
 
+	return result;
 }
 
 boolean swipe(double startX, double startY, double endX, double endY, long duration) {

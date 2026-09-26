@@ -1,4 +1,7 @@
+importCommands("others.screenshot");
+
 import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.AccessibilityService.TakeScreenshotCallback;
 import android.accessibilityservice.AccessibilityService.ScreenshotResult;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
@@ -11,44 +14,65 @@ import java.io.FileOutputStream;
 import java.util.concurrent.Executor;
 import android.view.accessibility.AccessibilityNodeInfo;
 import bsh.This;
+import android.graphics.drawable.BitmapDrawable;
+import android.content.Context;
+import java.util.concurrent.TimeUnit;
 
-/*───────────────────────────────────────────────────────────────
-  takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo node)
-  **Takes Node, Window, or Display Screenshot**
-  Captures a screenshot asynchronously and wraps the result in an inline 
-  BeanShell control object allowing lazy saving, analysis, and clean up.
+/* ───────────────────────────────────────────────────────────────
+ * Captures a screenshot asynchronously, converts the HardwareBuffer bitmap to a
+ * software-rendered bitmap (ARGB_8888), and wraps the result in an inline
+ * BeanShell control object allowing lazy saving, analysis, and clean up.
 
-  Arguments:
-   - windowId  → The target window ID, or -1 to use display instead.
-   - displayId → The logical display ID (fallback if windowId is -1).
-   - node      → Optional AccessibilityNodeInfo to crop the image to.
+ * Arguments:
 
-  Returns:
-   - This      → A ScreenshotHelper interface script object.
+ * 	windowId  → The target window ID, or -1 to use display instead.
+ * 	displayId → The logical display ID (fallback if windowId is -1).
+ * 	node      → Optional AccessibilityNodeInfo to crop the image to.
+ * 	listener  → Optional callback object with onSuccess and/or onError methods.
 
-  Helper:
-   - saveTo(String path) → Save the screenshot to the specified path.
-   - recycle()           → Recycle the screenshot.
-   - getBitmap()         → Get the screenshot Bitmap.
-  ───────────────────────────────────────────────────────────────*/
-public This takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo node) {
+ * Returns:
+
+ *	This      → A ScreenshotHelper interface script object.
+───────────────────────────────────────────────────────────────*/
+public This takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo node, This listener) {
+
+	boolean useCallback = listener != null;
+    boolean hasOnSuccess;
+    boolean hasOnError;
+
+	if (useCallback) {
+		hasOnSuccess = listener.namespace.getMethod("onSuccess", new Class[] { This.class }) != null;
+		hasOnError = listener.namespace.getMethod("onError", new Class[] { int.class }) != null;
+	}
+
+	if (useCallback && !(hasOnSuccess || hasOnError)) {
+		throw new Exception("Callback must have onSuccess(This screenshotHelper) or onError(int errorCode) methods.");
+	}
+
 	final This TOP = this;
-	AccessibilityService service = tasker.getAccessibilityService();
-	if (service == null) {
+	Context context = getService();
+
+	if (context == null) {
 		throw new Exception("Accessibility Service is not running. Please enable it first.");
 	}
 
 	if (node != null) {
-		displayId = node.getWindow().getDisplayId();
+		if (node.getWindow() != null) {
+			displayId = node.getWindow().getDisplayId();
+		}
 		windowId = node.getWindowId();
 	}
 
 	SingleSubject signal = SingleSubject.create();
 	Executor executor = context.getMainExecutor();
 
-	Bitmap fullBitmap = null;
-	Bitmap finalBitmap = null;
-	HardwareBuffer buffer = null;
+	Bitmap fullBitmap;
+	Bitmap finalBitmap;
+	HardwareBuffer buffer;
+
+	getContext() {
+		return context;
+	}
 
 	recycle() {
 		if (finalBitmap != null && !finalBitmap.isRecycled()) finalBitmap.recycle();
@@ -62,107 +86,117 @@ public This takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo no
 				buffer = screenshotResult.getHardwareBuffer();
 				ColorSpace colorSpace = screenshotResult.getColorSpace();
 				fullBitmap = Bitmap.wrapHardwareBuffer(buffer, colorSpace);
-				finalBitmap = fullBitmap;
+
+				/* Convert hardware bitmap to a software bitmap to allow drawing and cropping */
+				Bitmap softwareBitmap = fullBitmap.copy(Bitmap.Config.ARGB_8888, false);
+				fullBitmap.recycle();
+				fullBitmap = null;
+				finalBitmap = softwareBitmap;
 
 				/* If a node is specified, crop the bitmap using its screen bounds */
 				if (node != null) {
 					Rect bounds = new Rect();
 					node.getBoundsInScreen(bounds);
 
-					/* Handle hardware buffer to software bitmap extraction before cropping */
-					Bitmap softwareBitmap = fullBitmap.copy(Bitmap.Config.ARGB_8888, false);
+					/* Clamp coordinates to non-negative bounds and ensure inside bitmap dimensions */
+					int x = Math.max(0, Math.min(bounds.left, softwareBitmap.getWidth() - 1));
+					int y = Math.max(0, Math.min(bounds.top, softwareBitmap.getHeight() - 1));
 
-					/* Safeguard boundaries against screen limits */
-					int x = Math.max(0, bounds.left);
-					int y = Math.max(0, bounds.top);
-					int width = Math.min(bounds.width(), softwareBitmap.getWidth() - x);
-					int height = Math.min(bounds.height(), softwareBitmap.getHeight() - y);
+					/* Adjust crop dimensions considering clamped origin offset */
+					int right = Math.min(bounds.right, softwareBitmap.getWidth());
+					int bottom = Math.min(bounds.bottom, softwareBitmap.getHeight());
+					int width = Math.max(1, right - x);
+					int height = Math.max(1, bottom - y);
+
+					/* Double check bounds safety before cropping */
+					if (x + width > softwareBitmap.getWidth()) {
+						width = softwareBitmap.getWidth() - x;
+					}
+					if (y + height > softwareBitmap.getHeight()) {
+						height = softwareBitmap.getHeight() - y;
+					}
 
 					if (width > 0 && height > 0) {
 						finalBitmap = Bitmap.createBitmap(softwareBitmap, x, y, width, height);
 						if (softwareBitmap != finalBitmap) {
 							softwareBitmap.recycle();
 						}
-					} else {
-						finalBitmap = softwareBitmap;
 					}
 				}
 
-				ScreenshotHelper() {
-
-					getBitmap() {
-						return finalBitmap;
-					}
-
-					recycle() {
-						try {
-							TOP.recycle();
-						} catch (Exception e) {
-							log("Error during recycling: " + e.getMessage(), "ERROR", TOP);
-						}
-					}
-
-					saveTo(String path) {
-						FileOutputStream fos = null;
-						try {
-							File file = new File(path);
-							fos = new FileOutputStream(file);
-							finalBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-							log("Screenshot saved to: " + path, "INFO", TOP);
-							return file;
-						} finally {
-							if (fos != null) {
-								fos.close();
-							}
-						}
-					}
-
-					getPixelColor(int x, int y) {
-						return finalBitmap.getPixel(x, y);
-					}
-
-					return this;
+				This screenshotHelper = ScreenshotHelper(TOP, finalBitmap);
+				if (useCallback) {
+					listener.onSuccess(screenshotHelper);
+				} else {
+					signal.onSuccess(screenshotHelper);
 				}
-
-				This screenshotHelper = ScreenshotHelper();
-				signal.onSuccess(screenshotHelper);
 			} catch (Exception e) {
-				log("Exception in screenshot processing: " + e.getMessage(), "ERROR", TOP);
+				tasker.log("Exception in screenshot processing: " + e.getMessage());
 				TOP.recycle();
-				signal.onError(e);
+				if (!useCallback) signal.onError(e);
 			}
 		}
 
 		onFailure(int errorCode) {
-			log("Screenshot failed with error code: " + errorCode, "ERROR", TOP);
-			signal.onError(new RuntimeException("Screenshot failed with error code: " + errorCode));
+			tasker.log("Screenshot failed with error code: " + errorCode);
+			if (useCallback) {
+				listener.onError(errorCode);
+			} else {
+				signal.onError(new RuntimeException("Screenshot failed with error code: " + errorCode));
+			}
 		}
 	};
 
 	if (windowId > -1) {
-		service.takeScreenshotOfWindow(windowId, executor, callback);
+		getService().takeScreenshotOfWindow(windowId, executor, callback);
 	} else {
-		service.takeScreenshot(displayId, executor, callback);
+		getService().takeScreenshot(displayId, executor, callback);
 	}
 
-	return (This) signal.blockingGet();
+	if (useCallback) {
+		return this;
+	} else {
+		return signal.timeout(2000, TimeUnit.MILLISECONDS).blockingGet();
+	}
+	
+}
+
+public This takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo node) {
+	return takeScreenshot(windowId, displayId, node, null);
 }
 
 public This takeScreenshot() {
-	return takeScreenshot(-1, 0, null);
+	return takeScreenshot(-1, 0, null, null);
 }
 
 public This takeScreenshot(AccessibilityNodeInfo node) {
-	return takeScreenshot(-1, 0, node);
+	return takeScreenshot(-1, 0, node, null);
 }
 
 public This takeScreenshot(int displayId) {
-	return takeScreenshot(-1, displayId, null);
+	return takeScreenshot(-1, displayId, null, null);
 }
+
+public This takeScreenshot(This callback) {
+	return takeScreenshot(-1, 0, null, callback);
+}
+
+public This takeScreenshot(AccessibilityNodeInfo node, This callback) {
+	return takeScreenshot(-1, 0, node, callback);
+}
+
+public This takeScreenshot(int displayId, This callback) {
+	return takeScreenshot(-1, displayId, null, callback);
+}
+
+public This takeScreenshot(int displayId, AccessibilityNodeInfo node, This callback) {
+	return takeScreenshot(-1, displayId, node, callback);
+}
+
 /*───────────────────────────────────────────────────────────────
-  takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo node, String path)
-  **Helper Method to Auto-Save and Automatically Clean Up**
-  ───────────────────────────────────────────────────────────────*/
+takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo node, String path)
+**Helper Method to Auto-Save and Automatically Clean Up**
+───────────────────────────────────────────────────────────────*/
 public String takeScreenshot(int windowId, int displayId, AccessibilityNodeInfo node, String path) {
 	This helper = takeScreenshot(windowId, displayId, node);
 	File savedFile = helper.saveTo(path);

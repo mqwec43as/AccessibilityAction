@@ -6,8 +6,7 @@ import java.util.Iterator;
 import android.view.Display;
 
 getFocusedWindow(int displayId) {
-	android.content.Context service = getService();
-	SparseArray allDisplaysWindows = service.getWindowsOnAllDisplays();
+	SparseArray allDisplaysWindows = getService().getWindowsOnAllDisplays();
 	if (allDisplaysWindows == null) {
 		return null;
 	}

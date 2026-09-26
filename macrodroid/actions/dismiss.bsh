@@ -26,7 +26,7 @@ dismiss(AccessibilityNodeInfo node) {
 	} 
 	if (node == null) return null;
 	boolean success = node.performAction(AccessibilityNodeInfo.ACTION_DISMISS);
-	if (stepDelay > 0) wait(stepDelay);
+	stepDelay();
 	if (success) node.refresh();
 	return node;
 }

@@ -1,0 +1,222 @@
+importCommands("others");
+
+import bsh.This;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.graphics.Point;
+import android.util.SparseArray;
+import android.view.accessibility.AccessibilityWindowInfo;
+import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.graphics.Color;
+import android.graphics.drawable.Drawable;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import android.os.Looper;
+
+
+
+/*───────────────────────────────────────────────────────────────
+  DisplayMenu()
+  ───────────────────────────────────────────────────────────────*/
+WindowMenu(This assistBar) {
+	final This TOP = this;
+	This a11Y = getA11yInstance();
+	final int WINDOW_TYPE = ENV.Layout.TYPE_NODE_SEARCH;
+	a11Y.viewControl.addView(TOP);
+	List windowList = new ArrayList();
+	This config;
+	This listDialog;
+	This onClickListener;
+	This WindowInfo = a11Y.WindowInfo;
+    long screenshotDelay = a11Y.screenshotDelay != void ? a11Y.screenshotDelay : 500;
+	Map snapshots = new ConcurrentHashMap();
+
+	loadList() {
+		windowList.clear();
+		Thread.sleep(200);
+		SparseArray allDisplaysWindows = getService().getWindowsOnAllDisplays();
+		if (allDisplaysWindows == null) {
+			showToast(assistBar.getContext(), "No windows found");
+			return;
+		}
+		// Loop through all displays windows
+		List windows = new ArrayList();
+		for (int i = 0; i < allDisplaysWindows.size(); i++) {
+			int displayId = allDisplaysWindows.keyAt(i);
+			try {
+				This snapshot = StructureSnapshot(displayId);
+				snapshots.put(displayId, snapshot);
+				listener() {
+					onSuccess(This screenshotHelper) {
+						log("Screenshot complete for display " + displayId, "INFO", TOP);
+					}
+
+					onError(int errorCode) {
+						log("Screenshot failed with error code: " + errorCode, "ERROR", TOP);
+					}
+					
+					return this;
+				}
+				snapshot.takeScreenshot(listener());
+				Thread.sleep(screenshotDelay);
+			} catch (e) {
+				log(e.getMessage(), "ERROR", TOP);
+				throw e;
+			}
+			windows.addAll(allDisplaysWindows.valueAt(i));
+		}
+
+		for (int i = 0; i < windows.size(); i++) {
+			AccessibilityWindowInfo window = windows.get(i);
+			Map item = new HashMap();
+			String title = window.getTitle() == null ? "No Title" : window.getTitle().toString();
+			item.put("title", title);
+
+			int displayId = window.getDisplayId();
+			int id = window.getId();
+			Rect rect = new Rect();
+			window.getBoundsInScreen(rect);
+			String description = "ID: " + id + "\nDisplay: " + displayId + "\nBounds: " + rect.toString();
+
+			AccessibilityNodeInfo root = window.getRoot();
+			if (root != null) {
+				String packageName = root.getPackageName();
+				String packageLabel = a11Y.packageManager.getLabel(packageName);
+				description += "\nPackage: " + packageName + " (" + packageLabel + ")";
+			}
+			boolean isApplication = WindowInfo.hasFlag(window, WindowInfo.TYPE_APPLICATION);
+			String packageName = window.getRoot() != null ? window.getRoot().getPackageName() : null;
+			boolean isSystemUi = WindowInfo.hasFlag(window, WindowInfo.TYPE_SYSTEM) && "com.android.systemui".equals(packageName);
+			This snapshot = snapshots.get(displayId);
+			
+			if (snapshot != null && root != null) {
+				int key = root.hashCode();
+				Callable getIcon = new Callable() {
+					call() {
+						return snapshot.getDrawable(key, rect);
+					}
+				};
+				item.put("getIcon", getIcon);
+			} else {
+				Drawable emptyDrawable = new ColorDrawable(Color.TRANSPARENT);
+				item.put("icon", emptyDrawable);
+			}
+
+			item.put("subtitle", description);
+			item.put("window", window);
+			windowList.add(item);
+		}
+	}
+
+
+	config(This THIS) {
+		List itemList = TOP.windowList;
+		String title = "Window Menu";
+		boolean showFilter = true;
+		int iconSize = 200;
+		int displayId = assistBar.getContext().getDisplay().getDisplayId();
+
+		boolean useOverlay = !assistBar.shouldUseActivity();
+		boolean useAccessibility = true;
+		float dimAmount = 0.5f;
+
+		onSuccess(Map map) {
+			AccessibilityWindowInfo window = map.get("window");
+			if (TOP.onClickListener != null) {
+				Runnable runMe = new Runnable() {
+					run() {
+						try {
+							if (TOP.namespace.getVariable("onClickListener") != null) {
+								TOP.onClickListener.onClick(window);
+							} else {
+								log("No onClickListener set", "INFO", TOP);
+								showToast(assistBar.getContext(), "No onClickListener set");
+							}
+						} catch (Exception e) {
+							log(e.getMessage(), "ERROR", TOP);
+							showToast(e.getMessage());
+						}
+					};
+				};
+				a11Y.postDelayed(runMe, 500);
+			} else {
+				log("No onClickListener set", "ERROR", TOP);
+			}
+			TOP.remove();
+		}
+
+		onCancel() {
+
+		}
+
+		onDetach() {
+			Set set = snapshots.keySet();
+			for (int displayId : set) {
+				try {
+					This snapshot = snapshots.get(displayId);
+					snapshot.recycle();
+				} catch (e) {
+					log(e.getMessage(), "ERROR", TOP);
+				}
+			}
+			snapshots.clear();
+		}
+
+		return this;
+	}
+
+	setOnClickListener(This listener) {
+		TOP.onClickListener = listener;
+	}
+
+	show() {
+		loadList();
+		config = config(TOP);
+		listDialog = ListDialog(config);
+		boolean isMainThread = Looper.getMainLooper().isCurrentThread();
+        if (config.useOverlay) {
+            if (isMainThread) {
+                listDialog.show();
+            } else {
+                Runnable showRun = new Runnable() {
+                    run() {
+                        listDialog.show();
+                    }
+                };
+                a11Y.post(showRun);
+            }
+		} else {
+			listDialog.show();
+		}
+	}
+
+	remove() {
+		if (listDialog != null) listDialog.remove();
+	}
+
+	toggle() {
+		if (listDialog != null) listDialog.toggle();
+	}
+
+	isAdded() {
+		if (listDialog == null) return false;
+		return listDialog.isAdded();
+	}
+
+	isHidden() {
+		if (listDialog == null) return false;
+		return listDialog.isHidden();
+	}
+
+	isShowing() {
+		if (listDialog == null) return false;
+		return listDialog.isShowing();
+	}
+
+	isRemoved() {
+		if (listDialog == null) return false;
+		return listDialog.isRemoved();
+	}
+
+	return this;
+}

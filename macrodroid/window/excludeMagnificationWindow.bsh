@@ -1,0 +1,7 @@
+/*
+ * Exclude all magnification overlay windows WindowInfo.TYPE_MAGNIFICATION_OVERLAY
+ */
+excludeMagnificationWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return removeWindowFilter(WindowInfo.TYPE_MAGNIFICATION_OVERLAY);
+}

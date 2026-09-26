@@ -21,7 +21,8 @@ import bsh.This;
 import android.text.TextUtils;
 import java.util.Map;
 import java.util.HashMap;
-
+import android.os.Looper;
+import android.util.TypedValue;
 
 /*────────────────────────────────────────────────────────────────
 	InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType)
@@ -52,34 +53,23 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	This a11Y = getA11yInstance();
 	final int WINDOW_TYPE = ENV.Layout.TYPE_INFO_TOAST;
 	a11Y.viewControl.addView(TOP);
+
+	dp(int value) {
+		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, overlayContext.getResources().getDisplayMetrics());
+	}
 	
 	WindowManager windowManager = (WindowManager) overlayContext.getSystemService(Context.WINDOW_SERVICE);
-	final Handler mainHandler = new Handler(Looper.getMainLooper());
 
 	boolean useA11y = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY == overlayType ? true : false;
+	
 	int getStatusBarHeight() {
 		int result = 0;
 		int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
 		if (resourceId > 0) {
 			result = context.getResources().getDimensionPixelSize(resourceId);
 		}
-		if (useA11y) {
-			if (a11Y.useA11yOffset) {
-				return result;
-			} else {
-				return 0;
-			}
-		} else {
-			if (a11Y.useOffset) {
-				return result;
-			} else {
-				return 0;
-			}
-		}
+		return result;
 	}
-
-	boolean isRemoved;
-	boolean isShown;
 
 	/* Row storage */
 	final Map rows = new HashMap();
@@ -111,17 +101,17 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	/* Container */
 	final LinearLayout container = new LinearLayout(overlayContext);
 	container.setOrientation(LinearLayout.VERTICAL);
-	container.setPadding(25, 15, 25, 15);
+	container.setPadding(dp(12), dp(8), dp(12), dp(8));
 
 	GradientDrawable bg = new GradientDrawable();
 	bg.setColor(surfaceColor);
 	bg.setCornerRadius(12f);
-	bg.setStroke(3, outlineColor);
+	bg.setStroke(dp(1), outlineColor);
 	container.setBackgroundDrawable(bg);
 
 	/*──────────── ROW SYSTEM ────────────*/
 	addRow(String key, String label, String value, int maxLines, int color) {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				TextView rowText = (TextView) rows.get(key);
 				// Add directly
@@ -148,15 +138,15 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	addRow(String key, String label, String value) {
-		addRow(key, label, value, 1, primaryColor);
+		addRow(key, label, value, 1, secondaryColor);
 	}
 	
 	addRow(String key, String label, String value, int maxLines) {
-		addRow(key, label, value, maxLines, primaryColor);
+		addRow(key, label, value, maxLines, secondaryColor);
 	}
 
 	updateRow(String key, String value) {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				TextView rowText = (TextView) rows.get(key);
 				if (rowText != null) {
@@ -171,7 +161,7 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	removeRow(String key) {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				TextView rowText = (TextView) rows.get(key);
 				if (rowText != null) {
@@ -184,7 +174,7 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	clearRows() {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				container.removeAllViews();
 				rows.clear();
@@ -193,11 +183,6 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 		});
 	}
 
-	/*──────────── INITIAL DATA ────────────*/
-	addRow("id", "ID", nodeId, 1, primaryColor);
-	addRow("class", "Class", nodeClass, 1, primaryColor);
-	if (nodeStatus != null && nodeStatus.length() > 0) addRow("status", "Status", nodeStatus, 1, primaryColor);
-	if (nodeText != null && nodeText.length() > 0) addRow("text", "Text", nodeText, 2, primaryColor);
 
 	/*──────────── MEASURE + POSITION ────────────*/
 	DisplayMetrics metrics = overlayContext.getResources().getDisplayMetrics();
@@ -255,23 +240,15 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 
 	container.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
 		onViewAttachedToWindow(View v) {
-			isRemoved = false;
-			isShown = true;
 			a11Y.addOverlay(TOP);
 		}
 		onViewDetachedFromWindow(View v) {
-			isRemoved = true;
-			isShown = false;
 			a11Y.removeOverlay(TOP);
 		}
 	});
 
-	isRemoved() {
-		return isRemoved;
-	}
-
 	remove() {
-		mainHandler.post(new Runnable() {
+		a11Y.post(new Runnable() {
 			run() {
 				try {
 					windowManager.removeView(container);
@@ -281,12 +258,43 @@ InfoToast(AccessibilityNodeInfo node, Context overlayContext, int overlayType) {
 	}
 
 	show() {
-		mainHandler.post(new Runnable() {
+		Runnable showRun = new Runnable() {
 			run() {
 				windowManager.addView(container, params);
 			}
-		});
+		};
+		if (Looper.getMainLooper().isCurrentThread()) {
+			showRun.run();
+		} else {
+			a11Y.post(showRun);
+		}
 	}
+
+	isAdded() {
+		if (container == null) return false;
+		return container.getParent() != null && view.isAttachedToWindow();
+	}
+
+	isHidden() {
+		if (container == null) return false;
+		return container.getVisibility() == View.GONE && isAdded();
+	}
+
+	isShowing() {
+		if (container == null) return false;
+		return container.getVisibility() == View.VISIBLE && isAdded();
+	}
+
+	isRemoved() {
+		if (container == null) return false;
+		return !isAdded();
+	}
+
+	/*──────────── INITIAL DATA ────────────*/
+	addRow("id", "ID", nodeId, 1, primaryColor);
+	addRow("class", "Class", nodeClass, 1, secondaryColor);
+	if (nodeStatus != null && nodeStatus.length() > 0) addRow("status", "Status", nodeStatus, 1, onSurfaceColor);
+	if (nodeText != null && nodeText.length() > 0) addRow("text", "Text", nodeText, 2, onSurfaceColor);
 
 	show();
 	return this;

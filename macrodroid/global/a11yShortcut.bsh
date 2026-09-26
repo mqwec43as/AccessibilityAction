@@ -1,6 +1,3 @@
-import android.accessibilityservice.AccessibilityService;
-
 a11yShortcut() {
-	android.content.Context svc = getService();
-	svc.performGlobalAction(AccessibilityService.GLOBAL_ACTION_ACCESSIBILITY_SHORTCUT);
+	getService().performGlobalAction(AccessibilityService.GLOBAL_ACTION_ACCESSIBILITY_SHORTCUT);
 }

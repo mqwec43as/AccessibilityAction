@@ -44,38 +44,38 @@ boolean waitUntilGone(Object[][] argsConfigs, long timeout, boolean allGone) {
 		if (currentNodes.keySet().size() < argsConfigs.length) return true;
 	}
 
-	boolean oldDebug = debugMe;
-	if (oldDebug == true) debugMe = false;
+	boolean oldDebug = A11yConfig.debugMe;
+	if (oldDebug == true) setDebugMode(false);
 
 	Exception executionException = null;
 	boolean result = false;
 
-		long startTime = System.currentTimeMillis();
-		long whileDelay = stepDelay > 200 ? stepDelay : 200;
-		while (System.currentTimeMillis() - startTime < timeout) {
-			AccessibilityNodeInfo rootNode = getRoot();
-			if (rootNode != null) {
-				Map found = findNodes(rootNode, argsConfigs, true);
-				boolean goneState = allGone ? found.isEmpty() : found.keySet().size() < argsConfigs.length;
-				rootNode.recycle();
-				if (goneState) {
-					result = true;
-					break;
-				}
-			}
-			try {
-				Thread.sleep(whileDelay);
-			} catch (InterruptedException e) {
-				executionException = new Exception("Timeout reached while waiting for nodes to disappear: " + e.getMessage());
+	long startTime = System.currentTimeMillis();
+	long whileDelay = A11yConfig.stepDelay > 200 ? A11yConfig.stepDelay : 200;
+	while (System.currentTimeMillis() - startTime < timeout) {
+		AccessibilityNodeInfo rootNode = getRoot();
+		if (rootNode != null) {
+			Map found = findNodes(rootNode, argsConfigs, true);
+			boolean goneState = allGone ? found.isEmpty() : found.keySet().size() < argsConfigs.length;
+			rootNode.recycle();
+			if (goneState) {
+				result = true;
 				break;
 			}
 		}
-		
-		if (executionException == null && !result) {
-			executionException = new Exception("Timeout reached while waiting for nodes to disappear");
+		try {
+			wait(whileDelay);
+		} catch (InterruptedException e) {
+			executionException = new Exception("Timeout reached while waiting for nodes to disappear: " + e.getMessage());
+			break;
 		}
+	}
 
-	debugMe = oldDebug;
+	if (executionException == null && !result) {
+		executionException = new Exception("Timeout reached while waiting for nodes to disappear");
+	}
+
+	setDebugMode(oldDebug);
 
 	if (executionException != null) {
 		log(executionException.getMessage(), "ERROR");
@@ -106,7 +106,7 @@ boolean waitUntilGone(String key, String value, long timeout) {
 }
 
 boolean waitUntilGone(String key, String value) {
-	return waitUntilGone(key, value, null, waitNodesTimeout);
+	return waitUntilGone(key, value, null, A11yConfig.waitNodesTimeout);
 }
 
 boolean waitUntilGone(String text, long timeout) {
@@ -114,7 +114,7 @@ boolean waitUntilGone(String text, long timeout) {
 }
 
 boolean waitUntilGone(String text) {
-	return waitUntilGone("text", text, null, waitNodesTimeout);
+	return waitUntilGone("text", text, null, A11yConfig.waitNodesTimeout);
 }
 
 boolean waitUntilGone(String key, String value, long timeout, int parentLevel, String nearbyKey, String nearbyValue) {
@@ -150,37 +150,36 @@ Returns: Boolean true if node is gone, false/Exception if timeout.
 boolean waitUntilGone(AccessibilityNodeInfo node, long timeout) {
 	if (node == null) return true;
 
-	if (ENV.TASKER || ENV.KID_APP) {
+	Exception executionException = null;
+	boolean goneState = !node.refresh();
+
+	long startTime = System.currentTimeMillis();
+	long whileDelay = A11yConfig.stepDelay > 200 ? A11yConfig.stepDelay : 200;
+	while (System.currentTimeMillis() - startTime < timeout) {
+		if (!node.refresh()) {
+			goneState = true;
+			break;
+		}
 		try {
-			return (Boolean) tasker.getAccessibilityEvents()
-				.map(new io.reactivex.functions.Function() {
-					apply(Object event) {
-						/* Check if node is still refreshed/valid in the window */
-						try {
-							/* Refresh returns false if node is no longer visible/exists */
-							return !node.refresh();
-						} catch (Exception e) {
-							return true;
-						}
-					}
-				})
-				.filter(new io.reactivex.functions.Predicate() {
-					test(Object isGone) {
-						return (Boolean) isGone;
-					}
-				})
-				.timeout(timeout, java.util.concurrent.TimeUnit.MILLISECONDS)
-				.firstOrError()
-				.blockingGet();
-		} catch (Exception e) {
-			throw new Exception("Timeout waiting for specific node to disappear");
-			return false;
+			wait(whileDelay);
+		} catch (InterruptedException e) {
+			executionException = new Exception("Timeout reached while waiting for nodes to disappear: " + e.getMessage());
+			break;
 		}
 	}
-	return !node.refresh();
 
+	if (executionException == null && !result) {
+		executionException = new Exception("Timeout reached while waiting for nodes to disappear");
+	}
+
+	if (executionException != null) {
+		log(executionException.getMessage(), "ERROR");
+		throw executionException;
+	}
+
+	return goneState;
 }
 
 boolean waitUntilGone(AccessibilityNodeInfo node) {
-	return waitUntilGone(node, waitNodesTimeout);
+	return waitUntilGone(node, A11yConfig.waitNodesTimeout);
 }

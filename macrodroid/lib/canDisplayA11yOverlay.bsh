@@ -1,0 +1,78 @@
+importCommands("lib");
+
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
+import android.accessibilityservice.AccessibilityService;
+import android.os.Looper;
+import bsh.This;
+
+/* ───────────────────────────────────────────────────────────────
+ * Determines if accessibility service properly running by attempting to add 
+ * and immediately remove a temporary view.
+ * 
+ * It will throw Unable to add window -- token null is not valid
+ * when accessibility service is not working properly. 
+ * 
+ * Usually can be checked in the accessibility dashboard, the service is labeled
+ * with "Not Working".
+
+ * Returns:
+ *  - true if overlay was successfully created and removed.
+ *  - false if an error occurred or AccessibilityService is null.
+  ───────────────────────────────────────────────────────────────*/
+boolean canDisplayA11yOverlay() {
+	WindowManager windowManager = (WindowManager) getService().getSystemService(Context.WINDOW_SERVICE);
+	WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+		1, 1,
+		WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+		WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+		PixelFormat.TRANSLUCENT
+	);
+	params.gravity = Gravity.CENTER;
+
+	View overlayView = new View(getService());
+	overlayView.setBackgroundColor(Color.RED);
+	overlayView.setVisibility(View.VISIBLE);
+
+	Runnable check = new Runnable() {
+		run() {
+			windowManager.addView(overlayView, params);
+			windowManager.removeView(overlayView);
+		}
+	};
+
+	boolean isMainThread = Looper.getMainLooper() == Looper.myLooper();
+	
+	if (isMainThread) {
+		try {
+			check.run();
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	This signal = CompletableImpl();
+
+	getService().getMainExecutor().execute(new Runnable() {
+		run() {
+			try {
+				check.run();
+				signal.onComplete();
+			} catch (Exception e) {
+				signal.onError(e);
+			}
+		}
+	});
+
+	try {
+		signal.blockingAwait(2, TimeUnit.SECONDS);
+		return true;
+	} catch (Exception e) {
+		return false;
+	}
+}

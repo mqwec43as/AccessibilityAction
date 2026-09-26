@@ -1,0 +1,248 @@
+importCommands("others.screenshot");
+
+import bsh.This;
+import android.graphics.Bitmap;
+import android.graphics.Rect;
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import android.graphics.drawable.Drawable;
+import java.util.concurrent.ConcurrentHashMap;
+import android.accessibilityservice.AccessibilityService.ScreenshotCallback;
+import android.accessibilityservice.AccessibilityService;
+import io.reactivex.subjects.SingleSubject;
+import java.util.concurrent.TimeUnit;
+
+/*───────────────────────────────────────────────────────────────
+  StructureSnapshot(int displayId)
+  **Captures Display Screenshots and Maps Node Bitmaps by Hashcode**
+  Helper object to capture a display screenshot once, crop node bounds,
+  and store created Bitmaps in an internal Map keyed by node.hashCode() for tracking and cleanup.
+
+  Arguments:
+   - displayId → Logical display ID to capture
+
+  Returns:
+   - This → Scripted screenshotHelper object with screenshot and Map utilities.
+
+  Helper:
+   - takeScreenshot()                   → Triggers/updates full display screenshot.
+   - getNodeBitmap(AccessibilityNodeInfo) → Extracts cropped Bitmap for node and maps it by node.hashCode().
+   - recycle()                            → Recycles base screenshot and all mapped node Bitmaps.
+  ───────────────────────────────────────────────────────────────*/
+This StructureSnapshot(int displayId) {
+	This screenshotHelper = null;
+	Map bitmapMap = new ConcurrentHashMap();
+	This screenshotListener;
+
+	This structureSnapshotListener;
+
+	final int NOT_AVAILABLE = 0;
+	final int TAKING_SCREENSHOT = 1;
+	final int TAKING_SCREENSHOT_COMPLETE = 2;
+	final int SCREENSHOT_RECYCLED = 3;
+
+	int sreentshotState = NOT_AVAILABLE;
+
+	boolean hasOnSuccess() {
+		if (structureSnapshotListener == null) {
+			return false;
+		}
+		return structureSnapshotListener.namespace.getMethod("onSuccess", new Class[] { This.class }) != null;
+	}
+
+	boolean hasOnError() {
+		if (structureSnapshotListener == null) {
+			return false;
+		}
+		return structureSnapshotListener.namespace.getMethod("onError", new Class[] { int.class }) != null;
+	}
+
+	boolean hasListener() {
+		return structureSnapshotListener != null;
+	}
+
+	addListener(This listener) {
+		structureSnapshotListener = listener;
+	}
+
+	This screenshotListener() {
+
+		onSuccess(This newHelper) {
+			screenshotHelper = newHelper;
+			screenshotState = TAKING_SCREENSHOT_COMPLETE;
+			if (hasOnSuccess()) structureSnapshotListener.onSuccess(super);
+		}
+
+		onError(int errorCode) {
+			screenshotState = NOT_AVAILABLE;
+			if (hasOnError()) structureSnapshotListener.onError(errorCode);
+		}
+
+		return this;
+	}
+
+	screenshotListener = screenshotListener();
+
+
+	void takeScreenshot(This newListener) {
+		if (screenshotHelper != null) {
+			screenshotHelper;
+			return;
+		}
+		addListener(newListener);
+		screenshotState = TAKING_SCREENSHOT;
+		takeScreenshot(displayId, screenshotListener);
+	}
+	
+	/*
+	 * Triggers/updates full display screenshot
+	 ! Use Single by default and has to be ran on background thread
+	 */
+	void takeScreenshot() {
+		SingleSubject single = SingleSubject.create();
+		listener() {
+			onSuccess(This screenshotHelper) {
+				single.onSuccess(screenshotHelper);
+			}
+
+			onError(int errorCode) {
+				single.onError(new RuntimeException("Screenshot failed with error code: " + errorCode));
+			}
+
+			return this;
+		}
+		takeScreenshot(listener());
+		single.timeout(2000, TimeUnit.MILLISECONDS).blockingGet();
+	}
+
+	getBitmap(int key, Rect targetBounds) {
+
+		if (screenshotHelper == null) {
+			takeScreenshot();
+			return null;
+		}
+
+		if (bitmapMap.containsKey(key)) {
+			Bitmap cachedBmp = bitmapMap.get(key);
+			if (cachedBmp != null) {
+				if (!cachedBmp.isRecycled()) {
+					return cachedBmp;
+				} else {
+					log("Bitmap is recycled for " + key, "ERROR");
+					return null;
+				}
+			} else {
+				log("Bitmap is null for " + key, "ERROR");
+				return;
+			}
+		} 
+
+		if (screenshotHelper.isRecycled()) {
+			log("Screenshot is recycled can't get bitmap", "ERROR", TOP);
+			return null;
+		}
+
+		Bitmap bmp = screenshotHelper.getBitmap(targetBounds);
+		if (bmp != null) {
+			bitmapMap.put(key, bmp);
+		}
+		return bmp;
+	}
+
+	getDrawable(int key, Rect targetBounds) {
+		Bitmap bmp = getBitmap(key, targetBounds);
+		if (bmp != null) {
+			return new BitmapDrawable(screenshotHelper.getContext().getResources(), bmp);
+		}
+		return null;
+	}
+
+	getNodeBitmap(AccessibilityNodeInfo node) {
+		if (node == null) {
+			return null;
+		}
+		if (screenshotHelper == null) {
+			takeScreenshot();
+			return null;
+		}
+
+		int key = node.hashCode();
+		Rect bounds = new Rect();
+		node.getBoundsInScreen(bounds);
+		Bitmap bmp = getBitmap(key, bounds);
+		return bmp;
+	}
+
+	getNodeDrawable(AccessibilityNodeInfo node) {
+		Bitmap bmp = getNodeBitmap(node);
+		if (bmp != null) {
+			return new BitmapDrawable(screenshotHelper.getContext().getResources(), bmp);
+		}
+		return null;
+	}
+
+	getNodeBoxBitmap(This nodebox) {
+		if (nodebox == null) {
+			return null;
+		}
+		if (screenshotHelper == null) {
+			takeScreenshot();
+			return null;
+		}
+
+		int key = nodebox.hashCode;
+		Rect bounds = nodebox.bounds;
+		Bitmap bmp = getBitmap(key, bounds);
+		return bmp;
+	}
+
+	getNodeBoxDrawable(This nodebox) {
+		Bitmap bmp = getNodeBoxBitmap(nodebox);
+		if (bmp != null) {
+			return new BitmapDrawable(screenshotHelper.getContext().getResources(), bmp);
+		}
+		return null;
+	}
+
+	recycle() {
+		if (screenshotHelper != null) {
+			screenshotHelper.recycle();
+			screenshotHelper = null;
+		}
+		Iterator iterator = bitmapMap.values().iterator();
+		while (iterator.hasNext()) {
+			Object item = iterator.next();
+			if (item instanceof Bitmap) {
+				Bitmap bmp = (Bitmap) item;
+				if (!bmp.isRecycled()) {
+					bmp.recycle();
+				}
+			}
+		}
+		bitmapMap.clear();
+		screenshotState = SCREENSHOT_RECYCLED;
+	}
+
+	isTakingScreenshot() {
+		return screenshotState == TAKING_SCREENSHOT;
+	}
+
+	isScreenshotRecycled() {
+		if (screenshotHelper != null ) {
+			return screenshotHelper.isRecycled();
+		}
+		return screenshotState == SCREENSHOT_RECYCLED;
+	}
+
+	isScreenshotAvailable() {
+		return screenshotState == TAKING_SCREENSHOT_COMPLETE;
+	}
+
+	return this;
+}
+
+This StructureSnapshot() {
+	return StructureSnapshot(0);
+}

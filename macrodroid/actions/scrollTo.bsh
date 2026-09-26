@@ -25,17 +25,26 @@ import bsh.This;
   ───────────────────────────────────────────────────────────────*/
 scrollTo(String key, String value, int scrollCount, double startY, double endY, long duration) {
 	List nodes = new ArrayList();
+	boolean oldDebug = A11yConfig.debugMe;
+	setDebugMode(false);
+
 	for (int i = 0; i < scrollCount; i++) {
 		nodes = findNodes(key, value);
-		if (hasNode(nodes)) {
-			Object node = toNode(nodes);
-			showOnScreen(node);
-			break;
-		}
+		if (hasNode(nodes)) break;
 		swipe(0.5, startY, 0.5, endY, duration, true);
 	}
-	if (hasNode(nodes)) return toNode(nodes);
-	return null;
+
+	setDebugMode(oldDebug);
+
+	if (hasNode(nodes)) {
+		AccessibilityNodeInfo node = toNode(nodes);
+		showOnScreen(node);
+		debugMe(node);
+		stepDelay();
+		return node;
+	} else {
+		return null;
+	}
 }
 
 scrollTo(String key, String value, int scrollCount, double startY, double endY)  {
@@ -44,6 +53,10 @@ scrollTo(String key, String value, int scrollCount, double startY, double endY) 
 
 scrollTo(String text, int scrollCount, double startY, double endY) {
 	return scrollTo("text", text, scrollCount, startY, endY, 200);
+}
+
+scrollTo(String text, double startY, double endY) {
+	return scrollTo("text", text, 20, startY, endY, 200);
 }
 
 scrollTo(String text, int scrollCount) {
@@ -63,20 +76,35 @@ scrollTo(String text) {
 }
 
 scrollTo(This multiKeys) {
-	List nodes = new ArrayList();
 	int scrollCount = multiKeys.scrollCount == void ? 20 : multiKeys.scrollCount;
 	double startY = multiKeys.startY == void ? 0.8 : multiKeys.startY;
 	double endY = multiKeys.endY == void ? 0.2 : multiKeys.endY;
-	long duration = multiKeys.duration == void ? 200 : multiKeys.duration;	
+	long duration = multiKeys.duration == void ? 200 : multiKeys.duration;
+	boolean oldDebug = A11yConfig.debugMe;
+	setDebugMode(false);
+
+	// * Initial search
+	List nodes = new ArrayList();
+
 	for (int i = 0; i < scrollCount; i++) {
 		nodes = findNodes(multiKeys);
-		if (hasNode(nodes)) {
-			Object node = toNode(nodes);
-			showOnScreen(node);
-			break;
+		if (hasNode(nodes)) break;
+		if (tasker.isShizukuAvailable() && tasker.isAdbWifiAvailable()) {
+			swipeShizuku(0.5, startY, 0.5, endY, duration, true);
+		} else {
+			swipe(0.5, startY, 0.5, endY, duration, true);
 		}
-		swipe(0.5, startY, 0.5, endY, duration, true);
 	}
-	if (hasNode(nodes)) return toNode(nodes);
-	return null;
+
+	setDebugMode(oldDebug);
+
+	if (hasNode(nodes)) {
+		AccessibilityNodeInfo node = toNode(nodes);
+		showOnScreen(node);
+		debugMe(node);
+		stepDelay();
+		return node;
+	} else {
+		return null;
+	}
 }

@@ -1,0 +1,180 @@
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.List;
+import java.util.HashMap;
+import java.util.regex.Pattern;
+import java.lang.CharSequence;
+import bsh.This;
+import com.joaomgcd.taskerm.action.java.JavaCodeException;
+import java.util.LinkedHashSet;
+
+/* ─────────────────────────────────────────────────────────────── 
+ * This code was primarily generated using AI with minimal human editing.
+───────────────────────────────────────────────────────────────*/
+
+/* ───────────────────────────────────────────────────────────────
+ * Finds all scrollable nodes matching a selector ("id", "text", "regex", "focus").
+ *
+ * Arguments:
+ * * - root → The starting node for the search.
+ * * - key → Selector type ("id", "text", etc.)
+ * * - value → Selector value.
+ *
+ * Example:
+ * List buttons = findScrollNodes(getRoot(), "text", "Save");
+ * ───────────────────────────────────────────────────────────────*/
+List findScrollNodes(List nodes) {
+	List scrollableNodes = new ArrayList();
+
+	for (AccessibilityNodeInfo node: nodes) {
+		AccessibilityNodeInfo found;
+		if (node.isScrollable()) {
+			found = node;
+		} else {
+			AccessibilityNodeInfo parent = getScrollableParent(node);
+			if (parent != null) found = parent;
+		}
+
+		if (found != null && !scrollableNodes.contains(found)) scrollableNodes.add(found);
+
+		if (A11yConfig.findFirstForRecursive && !scrollableNodes.isEmpty()) break;
+	}
+
+	if (scrollableNodes.isEmpty()) {
+		scrollableNodes = sortByArea(nodes);
+		debugMe(scrollableNodes);
+	}
+	
+	return scrollableNodes;
+}
+
+List findScrollNodes(AccessibilityNodeInfo root, String key, String value) {
+	List nodes = findNodes(root, key, value);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(String key, String value) {
+	List nodes = findNodes(key, value);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(String text) {
+	List nodes = findNodes(text);
+	return findScrollNodes(nodes);
+}
+
+/* ───────────────────────────────────────────────────────────────
+ * Finds multiple sets of scrollable nodes simultaneously and maps them to custom IDs.
+
+ * Arguments:
+	* root → The starting node for the search.
+	* argsConfigs → Array of configurations: { "id", "key", "value", [proximity] }.
+	* allFound → Until all configurations are found or not.
+
+ * Returns:
+	* HashMap: keys are the provided IDs, values are ArrayLists of nodes.
+	* Returns an empty HashMap if no matches are found.
+───────────────────────────────────────────────────────────────*/
+findScrollNodes(AccessibilityNodeInfo root, Object[][] argsConfigs, boolean allFound) {
+	Map nodes = findNodes(root, argsConfigs, allFound);
+	Iterator iterator = nodes.keySet().iterator();
+	Map scrollableNodes = new HashMap();
+	while (iterator.hasNext()) {
+		String key = (String) iterator.next();
+		List nodesList = (List) nodes.get(key);
+		List scrollableNodesList = findScrollNodes(nodesList);
+		if (!scrollableNodesList.isEmpty()) scrollableNodes.put(key, scrollableNodesList);
+	}
+	return scrollableNodes;
+}
+
+findScrollNodes(Object[][] argsConfigs, boolean allFound) {
+	Map nodes = findNodes(argsConfigs, allFound);
+	Iterator iterator = nodes.keySet().iterator();
+	Map scrollableNodes = new HashMap();
+	while (iterator.hasNext()) {
+		String key = (String) iterator.next();
+		List nodesList = (List) nodes.get(key);
+		List scrollableNodesList = findScrollNodes(nodesList);
+		if (!scrollableNodesList.isEmpty()) scrollableNodes.put(key, scrollableNodesList);
+	}
+	return nodes;
+}
+
+/* ───────────────────────────────────────────────────────────────
+ * Finds scrollablenodes by criteria and filters them through sequential proximity checks.
+
+ * Arguments:
+	* root → The starting node for the search.
+	* key → Selector type (e.g., "id", "text", "regex").
+	* value → Value to match for the initial search.
+	* argsConfigs → Nested arrays for isNearby/isNotNearby logic.
+
+ * Example:
+	args = new Object[][] { { "Label" }, { 2, "text", "Status", false } };
+	results = findScrollNodes(root, "id", "my_btn", args);
+ ───────────────────────────────────────────────────────────────*/
+List findScrollNodes(AccessibilityNodeInfo root, String key, String value, Object[][] argsConfigs) {
+	List nodes = findNodes(root, key, value, argsConfigs);
+	return findScrollNodes(nodes);
+}
+
+
+List findScrollNodes(String key, String value, Object[][] argsConfigs) {
+	List nodes = findNodes(key, value, argsConfigs);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
+	List nodes = findNodes(root, key, value, parentLevel, nearbyKey, nearbyValue);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(String key, String value, int parentLevel, String nearbyKey, String nearbyValue) {
+	List nodes = findNodes(key, value, parentLevel, nearbyKey, nearbyValue);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyKey, String nearbyValue) {
+	List nodes = findNodes(root, text, parentLevel, nearbyKey, nearbyValue);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(AccessibilityNodeInfo root, String key, String value, int parentLevel, String nearbyText) {
+	List nodes = findNodes(root, key, value, parentLevel, nearbyText);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(AccessibilityNodeInfo root, String text, int parentLevel, String nearbyText) {
+	List nodes = findNodes(root, text, parentLevel, nearbyText);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(String text, int parentLevel, String nearbyKey, String nearbyValue) {
+	List nodes = findNodes(text, parentLevel, nearbyKey, nearbyValue);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(String key, String value, int parentLevel, String nearbyText) {
+	List nodes = findNodes(key, value, parentLevel, nearbyText);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(String text, int parentLevel, String nearbyText) {
+	List nodes = findNodes(text, parentLevel, nearbyText);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(AccessibilityNodeInfo root, This multiKeys) {
+	List nodes = findNodes(root, multiKeys);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes(This multiKeys) {
+	List nodes = findNodes(multiKeys);
+	return findScrollNodes(nodes);
+}
+
+List findScrollNodes() {
+	int flags = NodeInfo.SCROLLABLE;
+	return sortByArea(findNodes("flags", flags.toString()));
+}

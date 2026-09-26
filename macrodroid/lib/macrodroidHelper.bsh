@@ -24,15 +24,6 @@ import com.arlosoft.macrodroid.java.ActivityCallback;
 import java.util.function.Consumer;
 import bsh.NameSpace;
 import com.arlosoft.macrodroid.AppContext;
-import com.google.gson.Gson;
-import android.content.Context;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
-import android.content.ContentUris;
-import android.database.Cursor;
 
 /*
 com.arlosoft.macrodroid.java.AccessibilityServiceAccessImpl.dispatchGesture(android.accessibilityservice.GestureDescription,android.accessibilityservice.AccessibilityService$GestureResultCallback,android.os.Handler)
@@ -48,6 +39,12 @@ public void com.arlosoft.macrodroid.java.ActivityHelperImpl.withActivity(com.arl
 macrodroidHelper() {
 	int intentTimeout = 30000;
 	final This TOP = this;
+
+	set() {
+		This CALLER = this.caller;
+		CALLER.namespace.setVariable("tasker", TOP, false);
+		CALLER.namespace.setVariable("context", getContext(), false);
+	}
 
 	getContext() {
 		return com.arlosoft.macrodroid.AppContext.getContext();
@@ -103,7 +100,7 @@ macrodroidHelper() {
 	  convertToRealFilePath(android.net.Uri)
 	  ───────────────────────────────────────────────────────────────*/
 	public String convertToRealFilePath(Uri uri) {
-		return getPath(getContext(), uri);
+		return null;
 	}
 
 	/*───────────────────────────────────────────────────────────────
@@ -332,168 +329,27 @@ macrodroidHelper() {
 	  toJson(...)
 	  ───────────────────────────────────────────────────────────────*/
 	public String toJson(Object obj) {
-		Gson gson = new Gson();
-		return gson.v(obj);
-	}
-
-	public String toJson(Object obj, boolean pretty) {
-		String json = toJson(obj);
-		return json;
-	}
-
-	set() {
-		This CALLER = this.caller;
-		CALLER.namespace.setVariable("tasker", TOP, false);
-		CALLER.namespace.setVariable("context", getContext(), false);
-	}
-
-	/*───────────────────────────────────────────────────────────────
-	getPath(Context context, Uri uri)
-	**Get Absolute File Path from Uri**
-	Converts content Uris (including Document & Tree Uris) or file Uris
-	into a standard absolute file path executable within BeanShell.
-	───────────────────────────────────────────────────────────────*/
-	String getPath(Context context, Uri uri) {
-		if (context == null || uri == null) {
-			return null;
-		}
-
-		boolean isKitKat = Build.VERSION.SDK_INT >= 19;
-		boolean isLollipop = Build.VERSION.SDK_INT >= 21;
-
-		/* Nested helper methods within the main namespace to encapsulate all logic */
-		getDataColumn(Context ctx, Uri u, String sel, String[] selArgs) {
-			Cursor cursor = null;
-			String column = "_data";
-			String[] projection = new String[] { column };
-			try {
-				cursor = ctx.getContentResolver().query(u, projection, sel, selArgs, null);
-				if (cursor != null && cursor.moveToFirst()) {
-					int index = cursor.getColumnIndexOrThrow(column);
-					return cursor.getString(index);
-				}
-			} catch (Exception e) {
-				return null;
-			} finally {
-				if (cursor != null) {
-					cursor.close();
-				}
-			}
-			return null;
-		}
-
-		isExternalStorageDocument(Uri u) {
-			return "com.android.externalstorage.documents".equals(u.getAuthority());
-		}
-
-		isDownloadsDocument(Uri u) {
-			return "com.android.providers.downloads.documents".equals(u.getAuthority());
-		}
-
-		isMediaDocument(Uri u) {
-			return "com.android.providers.media.documents".equals(u.getAuthority());
-		}
-
-		isGooglePhotosUri(Uri u) {
-			return "com.google.android.apps.photos.content".equals(u.getAuthority());
-		}
-
-		/* 1. Handle Tree URIs (Folders / SAF Storage Access Framework trees) */
-		if (isLollipop && DocumentsContract.isTreeUri(uri)) {
-			String treeId = DocumentsContract.getTreeDocumentId(uri);
-			if (isExternalStorageDocument(uri) && treeId != null) {
-				String[] split = treeId.split(":");
-				String type = split[0];
-				String pathSuffix = "";
-				if (split.length > 1) {
-					pathSuffix = split[1];
-				}
-
-				if ("primary".equalsIgnoreCase(type)) {
-					return Environment.getExternalStorageDirectory() + "/" + pathSuffix;
-				} else {
-					return "/storage/" + type + "/" + pathSuffix;
-				}
-			}
-		}
-
-		/* 2. DocumentProvider check (Individual files) */
-		if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
-
-			/* ExternalStorageProvider processing */
-			if (isExternalStorageDocument(uri)) {
-				String docId = DocumentsContract.getDocumentId(uri);
-				String[] split = docId.split(":");
-				String type = split[0];
-				String pathSuffix = "";
-
-				if (split.length > 1) {
-					pathSuffix = split[1];
-				}
-
-				if ("primary".equalsIgnoreCase(type)) {
-					return Environment.getExternalStorageDirectory() + "/" + pathSuffix;
-				} else {
-					return "/storage/" + type + "/" + pathSuffix;
-				}
-			}
-
-			/* DownloadsProvider processing */
-			if (isDownloadsDocument(uri)) {
-				String id = DocumentsContract.getDocumentId(uri);
-				if (id != null && id.startsWith("raw:")) {
-					return id.substring(4);
-				}
-				try {
-					Uri contentUri = ContentUris.withAppendedId(
-						Uri.parse("content://downloads/public_downloads"),
-						Long.valueOf(id)
-					);
-					return getDataColumn(context, contentUri, null, null);
-				} catch (Exception ex) {
-					return null;
-				}
-			}
-
-			/* MediaProvider processing */
-			if (isMediaDocument(uri)) {
-				String docId = DocumentsContract.getDocumentId(uri);
-				String[] split = docId.split(":");
-				String type = split[0];
-
-				Uri contentUri = null;
-				if ("image".equals(type)) {
-					contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-				} else if ("video".equals(type)) {
-					contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-				} else if ("audio".equals(type)) {
-					contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-				}
-
-				String selection = "_id=?";
-				String[] selectionArgs = new String[] { split[1] };
-
-				return getDataColumn(context, contentUri, selection, selectionArgs);
-			}
-		}
-
-		/* MediaStore and generic content providers */
-		if ("content".equalsIgnoreCase(uri.getScheme())) {
-			if (isGooglePhotosUri(uri)) {
-				return uri.getLastPathSegment();
-			}
-			return getDataColumn(context, uri, null, null);
-		}
-
-		/* Standard raw file protocol */
-		if ("file".equalsIgnoreCase(uri.getScheme())) {
-			return uri.getPath();
-		}
-
 		return null;
 	}
 
-	
+	public String toJson(Object obj, boolean pretty) {
+		return null;
+	}
+
+	/*───────────────────────────────────────────────────────────────
+	  Privileged Shell
+	  ───────────────────────────────────────────────────────────────*/
+	boolean isRootAvailable() {
+		return false;
+	}
+
+	boolean isShizukuAvailable() {
+		return false;
+	}
+
+	boolean isAdbWifiAvailable() {
+		return false;
+	}
 
 	return this;
 }

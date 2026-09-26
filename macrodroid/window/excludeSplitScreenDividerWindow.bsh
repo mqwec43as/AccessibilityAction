@@ -1,0 +1,7 @@
+/*
+ * Exclude all split-screen divider windows WindowInfo.TYPE_SPLIT_SCREEN_DIVIDER
+ */
+excludeSplitScreenDividerWindow() {
+    if (WindowInfo == void) WindowInfo = WindowInfo();
+    return removeWindowFilter(WindowInfo.TYPE_SPLIT_SCREEN_DIVIDER);
+}

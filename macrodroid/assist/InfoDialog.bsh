@@ -40,20 +40,6 @@ import java.util.Map;
 
 import bsh.This;
 
-
-
-/*───────────────────────────────────────────────────────────────
-  UTILITY METHODS
-  Helper functions for data processing and UI scaling
-  ───────────────────────────────────────────────────────────────*/
-public int dp(int value) {
-	return (int) TypedValue.applyDimension(
-		TypedValue.COMPLEX_UNIT_DIP,
-		value,
-		context.getResources().getDisplayMetrics()
-	);
-}
-
 /*───────────────────────────────────────────────────────────────
 	GET NODE DATA
 	Extracts data from a given node
@@ -134,12 +120,11 @@ public Chip createPropertyChip(Context ctx, String value, boolean isActive) {
   ───────────────────────────────────────────────────────────────*/
 
 public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overlayType) {
-	
+
 	if (ENV == void || ENV == null) ENV = Environment();
 	ENV.checkMaterialLib(this);
 
 	final WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
-	final Handler mainHandler = new Handler(Looper.getMainLooper());
 
 	final This TOP = this;
 	This a11Y = getA11yInstance();
@@ -149,6 +134,10 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 	tm = ThemeManager(ctx);
 	tm.setThemeDark();
 	info = getNodeData(targetNode);
+
+	dp(int dp) {
+		return tm.dp(dp);
+	}
 
 	/*  ROOT CONTAINER SETUP */
 	final LinearLayout root = new LinearLayout(ctx);
@@ -177,7 +166,7 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 	ScrollView scroller = new ScrollView(ctx);
 	LinearLayout content = new LinearLayout(ctx);
 	content.setOrientation(LinearLayout.VERTICAL);
-	content.setPadding(40, 0, 40, 0);
+	content.setPadding(dp(12), 0, dp(12), 0);
 
 	/*  CHIP GROUP (Properties & Actions) */
 	ChipGroup chipGroup = new ChipGroup(ctx);
@@ -218,7 +207,7 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 					ClipData clip = ClipData.newPlainText("NodeData", toCopy);
 					clipboard.setPrimaryClip(clip);
 					String display = toCopy.length() > 20 ? toCopy.substring(0, 20) + "..." : toCopy;
-					showToast("Copied: " + display);
+					showToast(v.getContext(),"Copied: " + display);
 				}
 			}
 		});
@@ -248,12 +237,30 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 		WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
 		android.graphics.PixelFormat.TRANSLUCENT
 	);
-	params.gravity = Gravity.CENTER;
+	DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
+	float maxWidth = 0.5f;
+	int screenW = metrics.widthPixels;
+	int screenH = metrics.heightPixels;
+	int infoWidth = WindowManager.LayoutParams.MATCH_PARENT;
+	if (screenW > screenH) {
+		infoWidth = (int) (screenW * maxWidth);
+		if (infoWidth > screenW) {
+			infoWidth = screenW;
+		}
+	}
+	params.gravity = Gravity.CENTER | Gravity.BOTTOM;
+	params.width = infoWidth;
 
 	/* Logic Definitions */
 	remove() {
-		mainHandler.post(new Runnable() {
-			run() { try { wm.removeView(root); } catch (e) {} }
+		a11Y.post(new Runnable() {
+			run() {
+				try {
+					wm.removeView(root);
+				} catch (e) {
+					log(e.getMessage(), "ERROR", TOP);
+				}
+			}
 		});
 	}
 
@@ -263,7 +270,7 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 	}
 
 	This listener = listen();
-	// This rootGesture = SimpleGesture(root, listener);
+	This rootGesture = SimpleGesture(root, listener);
 
 	handle.setOnTouchListener(new View.OnTouchListener() {
 		float initialX, initialY;
@@ -286,9 +293,9 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 		}
 	});
 
-	mainHandler.post(new Runnable() {
+	a11Y.post(new Runnable() {
 		run() {
-			// rootGesture.listen();
+			rootGesture.listen();
 			wm.addView(root, params);
 		}
 	});
@@ -301,7 +308,7 @@ public This InfoDialog(AccessibilityNodeInfo targetNode, Context ctx, int overla
 		return root.getVisibility() == View.GONE && isAdded();
 	}
 
-	isShown() {
+	isShowing() {
 		return root.getVisibility() == View.VISIBLE && isAdded();
 	}
 

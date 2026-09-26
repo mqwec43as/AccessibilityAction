@@ -1,0 +1,6 @@
+/*
+ * Checks if the window filter is set
+ */
+hasWindowFilter(int windowType) {
+    return (A11yConfig.filterWindowType & windowType) == windowType;
+}

@@ -1,9 +1,6 @@
-import android.accessibilityservice.AccessibilityService;
-
 lastapp() {
-	android.content.Context svc = getService();
 	// Press Recents twice to switch to the last app
-	svc.performGlobalAction(AccessibilityService.GLOBAL_ACTION_RECENTS);
+	getService().performGlobalAction(AccessibilityService.GLOBAL_ACTION_RECENTS);
 	wait(50);
-	svc.performGlobalAction(AccessibilityService.GLOBAL_ACTION_RECENTS);
+	getService().performGlobalAction(AccessibilityService.GLOBAL_ACTION_RECENTS);
 }

@@ -1,0 +1,28 @@
+/*
+ * Get parent with matching key/value
+ */
+getParent(AccessibilityNodeInfo node, String key, Object value) {
+    AccessibilityNodeInfo parent = node.getParent();
+    while (parent != null) {
+        if (isMatch(parent, key, value)) {
+            return parent;
+        }
+        parent = parent.getParent();
+    }
+    return null;
+}
+
+getParent(AccessibilityNodeInfo node, String text) {
+    return getParent(node, "text", text);
+}
+
+getParent(AccessibilityNodeInfo node, This multiKeys) {
+    AccessibilityNodeInfo parent = node.getParent();
+    while (parent != null) {
+        if (isMatch(parent, multiKeys)) {
+            return parent;
+        }
+        parent = parent.getParent();
+    }
+    return null;
+}

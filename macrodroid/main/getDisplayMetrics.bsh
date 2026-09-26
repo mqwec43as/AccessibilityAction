@@ -37,6 +37,6 @@ public DisplayMetrics getDisplayMetrics(int displayId) {
 }
 
 getDisplayMetrics() {
-	int displayId = DISPLAY_ID == void ? 0 : DISPLAY_ID;
+	int displayId = A11yConfig == void ? 0 : A11yConfig.displayId;
 	return getDisplayMetrics(displayId);
 }
