@@ -17,7 +17,7 @@ scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toKey, String toValue,
 	boolean hasScrolled;
 	long scrollDelay = A11yConfig.scrollDelay;
 	if (scrollNode.isScrollable()) {
-		setDebugMode(true);
+		if (oldDebug) setDebugMode(true);
     	debugMe(scrollNode);
 		setDebugMode(false);
 		for (int i = 0; i < scrollCount; i++) {
@@ -109,12 +109,11 @@ scrollFromNodeTo(AccessibilityNodeInfo scrollNode, String toText) {
  * Scroll overloads with key and value for scroll node
   ───────────────────────────────────────────────────────────────*/
 scrollFromNodeTo(String key, String value, String toKey, String toValue, int scrollCount, boolean scrollForward) {
-    AccessibilityNodeInfo fromNode = getNode(key, value);
-    List nodes = new ArrayList();
-    if (fromNode != null) {
-        nodes.add(fromNode);
-    }
+	boolean oldDebug = A11yConfig.debugMe;
+    List nodes = waitNodes(key, value);
+	setDebugMode(false);
     List scrollNodes = findScrollNodes(nodes);
+	setDebugMode(oldDebug);
     if (hasNode(scrollNodes)) {
         return scrollFromNodeTo(toNode(scrollNodes), toKey, toValue, scrollCount, scrollForward);
     } else {
