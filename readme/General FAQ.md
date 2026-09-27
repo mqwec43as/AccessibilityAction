@@ -1,10 +1,10 @@
 
 # Clipboard
 
-### getClipboard returning Null when phone is locked.
+### getClipboard returns null when phone is locked.
 It's the limitation for both Shizuku or overlay method. 
 
-The API uses to get clipboard checks the state of the phone and will return android.content.ClipData with null data.
+The API uses to get clipboard `Clipboard.getPrimaryClip` checks whether the phone is locked or not.
 
 Link:
 

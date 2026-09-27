@@ -117,6 +117,9 @@ Create and test UI automation script by choosing through dialogs.
 </div>
 
 1. [What is a11Y?](/readme/What%20is%20a11Y.md)
-2. [Why this won't work on some screen?](/readme/Why%20this%20won't%20work%20on%20some%20screen.md)
+2. [getClipboard returns null when phone is locked.](readme/General%20FAQ.md#getclipboard-returns-null-when-phone-is-locked)
 3. [How to use this wihtout taskernet project?](/readme/Use%20without%20taskernet%20project.md)
 4. [How to target specific display and windows](/readme/How%20to%20target%20specific%20display%20and%20windows.md)
+5. [Is it safe to upgrade from another version?](readme/General%20FAQ.md#is-it-safe-to-upgrade-from-another-version)
+6. [The background color is transparent.](readme/General%20FAQ.md#the-background-color-is-transparent)
+7. [Why this won't work on some screen?](/readme/Why%20this%20won't%20work%20on%20some%20screen.md)
