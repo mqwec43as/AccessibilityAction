@@ -433,8 +433,14 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 				if (nodeBoxListener == null) nodeBoxListener = getDefaultListener();
 				// Stack will be pair of node and their depth
 				AccessibilityWindowInfo window = root.getWindow();
-				int windowType = 1 << window.type;
-				int displayId = window.getDisplayId();
+				int windowType = WindowInfo.TYPE_APPLICATION;
+				int displayId;
+
+				if (window != null) {
+					windowType = 1 << window.type;
+					displayId = window.getDisplayId();
+				}
+
 				if (windowType == WindowInfo.TYPE_APPLICATION && a11Y.captureAllWindowsAsDefault) {
 					List roots = getRoots(displayId);
 					for (int i = 0; i < roots.size(); i++) {
@@ -527,7 +533,7 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 						showToast(getContext(), "Found " + nodeList.size() + " nodes in " + (end) + " ms");
 						if (TOP.listener != null) {
 							log("Calling onStructureReady", TOP);
-							TOP.listener.onStructureReady(TOP);
+							if (isAdded()) TOP.listener.onStructureReady(TOP);
 						} 
 
 						// * Structure is Ready
@@ -617,11 +623,13 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 	}
 
 	isVisible() {
-		return rootLayout.getVisibility() == View.VISIBLE;
+		if (rootLayout == null) return false;
+		return rootLayout.getVisibility() == View.VISIBLE && isAdded();
 	}
 
 	isHidden() {
-		return rootLayout.getVisibility() == View.GONE;
+		if (rootLayout == null) return false;
+		return rootLayout.getVisibility() == View.GONE && isAdded();
 	}
 
 	toggleHide() {
@@ -638,14 +646,17 @@ StructureOverlay(This listener, AccessibilityNodeInfo root, boolean useA11y, int
 	}
 
 	isShowing() {
+		if (rootLayout == null) return false;
 		return rootLayout.getParent() != null && isVisible();
 	}
 
 	isAdded() {
+		if (rootLayout == null) return false;
 		return rootLayout.getParent() != null;
 	}
 
 	isRemoved() {
+		if (rootLayout == null) return false;
 		return rootLayout.getParent() == null;
 	}
 

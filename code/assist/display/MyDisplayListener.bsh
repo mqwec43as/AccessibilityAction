@@ -65,6 +65,7 @@ MyDisplayListener(This assistBar) {
 				onDisplayRemoved(int displayId) {
                     showToast("Display #" + displayId + " removed");
                     if (!isStructureOnValidDisplay()) {
+						log("Removing structure overlay because Display #" + displayId + " was removed", "INFO", assistBar);
                         assistBar.removeStructure();
                     }
 
@@ -79,7 +80,9 @@ MyDisplayListener(This assistBar) {
 						boolean onDisplay = displayId == getStructure().getContext().getDisplay().getDisplayId();
 						if (onDisplay) {
 							assistBar.removeStructure();
-							showToast(getContext(), "Display #" + displayId + " changed properties, removing structure overlay");
+							String message = "Removing structure overlay because Display #" + displayId + " changed properties, removing structure overlay";
+							showToast(getContext(), message);
+							log(message, "INFO", assistBar);
 						}
 					}
 				}

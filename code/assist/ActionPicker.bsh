@@ -41,6 +41,27 @@ ActionPicker(This assistBar) {
 	String className;
 	Map latestPackage;
 
+	getDefaultListener() {
+		onCreated() {
+			assistBar.setHandleTouch(false);
+		}
+
+		onAttach() {
+			assistBar.setHandleTouch(false);
+		}
+
+		onDetach() {
+			assistBar.setHandleTouch(true);
+		}
+
+		onDestroyed() {
+			assistBar.setHandleTouch(true);
+		}
+
+		bind(this.caller, this.namespace);
+		return this;
+	}
+
 	Map getLatest(String packageName) {
 		if (packageName == null) return null;
 		List rawEvents = getUsageEvents(1000 * 60 * 5, null, 0, true);
@@ -129,6 +150,9 @@ ActionPicker(This assistBar) {
 			onTimeout() {
 				THIS.signal.onComplete();
 			}
+
+			getDefaultListener();
+
 			return this;
 		}
 
@@ -244,6 +268,9 @@ ActionPicker(This assistBar) {
 			onTimeout() {
 				THIS.signal.onComplete();
 			}
+			
+			getDefaultListener();
+
 			return this;
 		}
 
@@ -449,6 +476,8 @@ ActionPicker(This assistBar) {
 				THIS.signal.onComplete();
 			}
 
+			getDefaultListener();
+
 			return this;
 		}
 
@@ -477,6 +506,7 @@ ActionPicker(This assistBar) {
 	public void executeDialog(String code, int targetDisplayId, int windowFilter) {
 		This a11Y = getA11yInstance();
 		long defaultTimeout = 5000;
+		This execute = this;
 
 		execute(This THIS) {
 			String title = "Run now";
@@ -490,20 +520,19 @@ ActionPicker(This assistBar) {
 			Map runCode = new HashMap();
 			runCode.put("title", "Run code now");
 			runCode.put("subtitle", code);
+			runCode.put("execute", execute);
 			itemList.add(runCode);
 
 			onSuccess(Map map) {
 				if (map.equals(runCode)) {
-					log("Running code now on display " + targetDisplayId, "INFO", TOP);
-					runScript(code, 500, targetDisplayId, windowFilter);
+					This execute = map.get("execute");
+					log("Running code now on display " + map, "INFO", TOP);
+					runScript(execute.code, 500, execute.targetDisplayId, execute.windowFilter);
 				}
 			}
 
-			onCancel() {
-			}
+			getDefaultListener();
 
-			onTimeout() {
-			}
 			return this;
 		}
 
