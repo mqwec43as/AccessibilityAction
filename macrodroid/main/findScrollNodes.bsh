@@ -39,8 +39,8 @@ List findScrollNodes(List nodes) {
 		if (A11yConfig.findFirstForRecursive && !scrollableNodes.isEmpty()) break;
 	}
 
-	if (scrollableNodes.isEmpty()) {
-		scrollableNodes = sortByArea(nodes);
+	if (!scrollableNodes.isEmpty()) {
+		scrollableNodes = sortByArea(scrollableNodes);
 		debugMe(scrollableNodes);
 	}
 	

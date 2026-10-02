@@ -658,8 +658,6 @@ ScriptEditor(This assistBar) {
 			activity.setContentView(root);
 		} else {
 			windowManager = getContext().getSystemService(Context.WINDOW_SERVICE);
-			int overlayType = isAccessibilityContext() ? WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY : WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-			
 			DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
 			int screenW = metrics.widthPixels;
 			int screenH = metrics.heightPixels;
@@ -676,13 +674,14 @@ ScriptEditor(This assistBar) {
 			WindowManager.LayoutParams params = new WindowManager.LayoutParams(
 				editorWidth,
 				WindowManager.LayoutParams.WRAP_CONTENT,
-				overlayType,
+				WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
 				WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL 
 					| WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH 
 					| WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED 
 					| WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
 				android.graphics.PixelFormat.TRANSLUCENT
 			);
+
 			params.gravity = Gravity.BOTTOM;
 			params.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
 			params.dimAmount = 0.5f;
@@ -718,12 +717,7 @@ ScriptEditor(This assistBar) {
 				};
 				tasker.doWithActivity(uiLogic);
 			} else {
-				AccessibilityService a11yService = tasker.getAccessibilityService();
-				if (a11yService != null) {
-					layout(assistBar.getContext());
-				} else {
-					layout(assistBar.getContext());
-				}
+				layout(assistBar.getContext());
 			}
 		}
 	}

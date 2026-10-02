@@ -47,13 +47,15 @@ WindowInfo() {
     /*
      * Window type: A system window used to show the UI for the interaction with
      * window-based magnification, which includes the magnified content and the option menu.
+     * AccessibilityWindowInfo.TYPE_MAGNIFICATION_OVERLAY = 6
      */
-    public static final int TYPE_MAGNIFICATION_OVERLAY = 1 << AccessibilityWindowInfo.TYPE_MAGNIFICATION_OVERLAY;
+    public static final int TYPE_MAGNIFICATION_OVERLAY = 1 << 6;
 
     /* 
      * Window type: A system window that has the function to control an associated window.
+     * AccessibilityWindowInfo.TYPE_WINDOW_CONTROL = 7
      */
-    public static final int TYPE_WINDOW_CONTROL = 1 << AccessibilityWindowInfo.TYPE_WINDOW_CONTROL;
+    public static final int TYPE_WINDOW_CONTROL = 1 << 7;
 
     /*
      * Window type: All window types

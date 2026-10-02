@@ -51,16 +51,19 @@ NodeSearch(This assistBar, This structureOverlay) {
         }
 
         onAttach() {
+            if (!structureOverlay.isAdded()) return;
             structureOverlay.hide();
             assistBar.setHandleMode(assistBar.DELETE_CAPTURE_MODE, false);
         }
 
         onCreated() {
+            if (!structureOverlay.isAdded()) return;
             structureOverlay.hide();
             assistBar.setHandleMode(assistBar.DELETE_CAPTURE_MODE, false);
         }
 
         onDetach() {
+            if (!structureOverlay.isAdded()) return;
             structureOverlay.unhide();
             assistBar.setHandleMode(assistBar.DELETE_CAPTURE_MODE, true);
         }
