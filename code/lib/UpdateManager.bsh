@@ -37,6 +37,7 @@ import org.json.JSONArray;
 import android.app.Activity;
 
 UpdateManager() {
+	long timeoutDuration = 15000;
 	String repo = "AccessibilityAction";
 	String owner = "mqwec43as";
 	String targetFile = "AccessibilityAction.zip";
@@ -235,8 +236,20 @@ UpdateManager() {
 
 		long downloadId = dm.enqueue(request);
 		boolean downloading = true;
+		long startTime = System.currentTimeMillis();
 
 		while (downloading) {
+			if (System.currentTimeMillis() - startTime > timeoutDuration) {
+				dm.remove(new long[] { downloadId });
+				if (dlFile.exists()) {
+					dlFile.delete();
+				}
+				String errorTitle = "Native Download Failed";
+				String errorMessage = "Native Download Failed. Reason Code: Timeout after " + timeoutDuration + "ms";
+				tasker.showToast(errorMessage, errorTitle);
+				throw new RuntimeException(errorMessage);
+			}
+
 			DownloadManager.Query query = new DownloadManager.Query();
 			query.setFilterById(new long[] { downloadId });
 
