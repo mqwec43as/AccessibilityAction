@@ -265,6 +265,14 @@ public This AssistBar(int initialX, int initialY) {
 		return buttons.get(id);
 	}
 
+
+	/*
+	 * Check if device is locked
+	 */
+	boolean isLocked() {
+		return getContext().getSystemService(Context.KEYGUARD_SERVICE).isDeviceLocked();
+	}
+
 	/*
 	 * Determine if activity dialog should be used
 	 * Activity should be used if assistBar is on the default display 
@@ -272,9 +280,26 @@ public This AssistBar(int initialX, int initialY) {
 	 * @returns	boolean
 	*/
 	boolean shouldUseActivity() {
-
 		boolean isDefaultDisplay = getContext().getDisplay().getDisplayId() == Display.DEFAULT_DISPLAY;
-		if (!isDefaultDisplay) return false;
+		
+		/*
+		 * Do not use activity dialog if not on default display
+		 * Tasker doesn't support displaying activity on non-default display on single display devices
+		 * 
+		 * Unless Tasker itself is already running on those displays, 
+		 * however this is not safe to assume.
+		 */
+		if (!isDefaultDisplay) {
+			return false;
+		} 
+
+		/*
+		 * Do not use activity dialog if device is locked
+		 * Activity can only be used when the phone is not in lock screen.
+		 */
+		else if (isLocked() && isDefaultDisplay) {
+			return false;
+		}
 
 		List windows = getWindows(selectedDisplayId);
 		boolean hasAppWindow;
@@ -290,6 +315,9 @@ public This AssistBar(int initialX, int initialY) {
 			};
 		};
 
+		/*
+		 * Use activity dialog if there is an application window without an input window
+		 */
 		return hasAppWindow && !hasInputWindow;
 	}
 
