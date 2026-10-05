@@ -35,8 +35,14 @@ validate(This criteria, Object object) {
 		}
 
 		Object targetVariable = criteria.namespace.getVariable(key);
-		if (targetVariable == null) continue;
-		String targetValue = targetVariable.toString();
+		if (targetVariable == null || targetVariable == void) continue;
+		String targetValue;
+
+		if (targetVariable instanceof String) {
+			targetValue = targetVariable;
+		} else {
+			targetValue = targetVariable.toString();
+		}
 
 		Object actualValue = null;
 		String firstChar = key.substring(0, 1);

@@ -21,7 +21,7 @@ startMonitor() {
 		throw new JavaCodeException("The a11E object is missing.");
 	}
 
-	if (!a11E.disposable.isDisposed()) {
+	if (a11E.disposable != null && !a11E.disposable.isDisposed()) {
 		log("Monitor is already running.");
 		return;
 	}
@@ -77,6 +77,9 @@ startMonitor() {
 						boolean hasEvent = listener.EVENT_TYPES.containsKey(eventType);
 						if (!hasEvent) continue;
 						This sourceListener;
+
+						// * Skip if has no PackageName
+						if (!listener.HAS_PACKAGE) continue;
 
 						// * Validate listener first while ignoring packageName
 						String savedTemp = listener.PackageName;

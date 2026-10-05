@@ -208,6 +208,14 @@ a11Y() {
 		if (a11E != null) a11E.removeEvents();
 	}
 
+	This getEvent(String eventId) {
+		if (a11E != null) {
+			return a11E.get(eventId);
+		} else {
+			throw new JavaCodeException("No monitor is running.");
+		}
+	}
+
 	List getEvents() {
 		if (a11E != null) {
 			Set keyset = a11E.listeners.keySet();
