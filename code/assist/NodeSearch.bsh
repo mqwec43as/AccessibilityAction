@@ -18,6 +18,8 @@ NodeSearch(This assistBar, This structureOverlay) {
     Map map = structureOverlay.map;
     List itemList = new ArrayList();
     int iconSize = dp(48);
+    This NodeInfo = a11Y.NodeInfo;
+    This WindowInfo = a11Y.WindowInfo;
 
 	config(This THIS) {
         List itemList = TOP.itemList;
@@ -28,6 +30,7 @@ NodeSearch(This assistBar, This structureOverlay) {
 	    boolean useAccessibility = true;
         float dimAmount = 0.5f;
         int displayId = assistBar.getContext().getDisplay().getDisplayId();
+        boolean useTags = true;
 		
         onSuccess(Map map) {
             This nodeBox = map.get("nodeBox");
@@ -108,6 +111,24 @@ NodeSearch(This assistBar, This structureOverlay) {
             item.put("getIcon", getIcon);
             // Attach nodeBox
             item.put("nodeBox", nodeBox);
+
+            List tags = new ArrayList();
+            if (NodeInfo.hasProperty(nodeBox.properties, NodeInfo.HAS_VIEW_ID_RESOURCE_NAME)) {
+                tags.add("View Id");
+            }
+
+            if (NodeInfo.hasProperty(nodeBox.properties, NodeInfo.HAS_TEXT)) {
+                tags.add("Text");
+            }
+
+            if (nodeBox.windowType == WindowInfo.TYPE_APPLICATION) {
+                tags.add("App");
+            }
+
+            if (!tags.isEmpty()) {
+                String[] tagsArray = tags.toArray(new String[0]);
+                item.put("tags", tagsArray);
+            }
 
 			itemList.add(item);
 		}

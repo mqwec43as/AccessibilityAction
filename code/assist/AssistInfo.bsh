@@ -25,5 +25,17 @@ AssistInfo() {
     final String DELETE_ICON = "mw_action_delete_forever";
     final String INFO_ICON = "mw_action_info_outline";
 
+    final String CHIP_RUN_LINE_ICON = "mw_av_play_arrow";
+    final String CHIP_SET_TO_CODE_ICON = "mw_editor_border_color";
+    final String CHIP_COPY_ICON = "mw_content_content_copy";
+    final String CHIP_CLEAR_ICON = "mw_action_delete_forever";
+    final String CHIP_CLOSE_KEYBOARD_ICON = "mw_hardware_keyboard_hide";
+
+    final String CHIP_RUN_LINE_TEXT = "Run Line";
+    final String CHIP_SET_TO_CODE_TEXT = "Set to code";
+    final String CHIP_COPY_TEXT = "Copy";
+    final String CHIP_CLEAR_TEXT = "Clear";
+    final String CHIP_CLOSE_KEYBOARD_TEXT = "Close Keyboard";
+    
     return this;
 }

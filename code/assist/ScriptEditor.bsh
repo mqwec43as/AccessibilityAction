@@ -316,8 +316,8 @@ ScriptEditor(This assistBar) {
 		// { Chip text, checkable, listener}
 		Object[][] editChips = {
 			{
-				"Run Line",
-				tm.attr("mw_av_play_arrow"),
+				AssistInfo.CHIP_RUN_LINE_TEXT,
+				tm.attr(AssistInfo.CHIP_RUN_LINE_ICON),
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
@@ -329,8 +329,8 @@ ScriptEditor(This assistBar) {
 				}
 			},
 			{
-				"Set to code",
-				tm.attr("mw_editor_border_color"),
+				AssistInfo.CHIP_SET_TO_CODE_TEXT,
+				tm.attr(AssistInfo.CHIP_SET_TO_CODE_ICON),
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
@@ -340,8 +340,8 @@ ScriptEditor(This assistBar) {
 				}
 			},
 			{
-				"Copy",
-				tm.attr("mw_content_content_copy"),
+				AssistInfo.CHIP_COPY_TEXT,
+				tm.attr(AssistInfo.CHIP_COPY_ICON),
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
@@ -351,8 +351,8 @@ ScriptEditor(This assistBar) {
 				}
 			},
 			{
-				"Clear",
-				tm.attr("mw_action_delete_forever"),
+				AssistInfo.CHIP_CLEAR_TEXT,
+				tm.attr(AssistInfo.CHIP_CLEAR_ICON),
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
@@ -362,8 +362,8 @@ ScriptEditor(This assistBar) {
 				}
 			},
 			{
-				"Close Keyboard",
-				tm.attr("mw_hardware_keyboard_hide"),
+				AssistInfo.CHIP_CLOSE_KEYBOARD_TEXT,
+				tm.attr(AssistInfo.CHIP_CLOSE_KEYBOARD_ICON),
 				false,
 				new View.OnClickListener() {
 					onClick(View view) {
@@ -464,40 +464,7 @@ ScriptEditor(This assistBar) {
 		content.addView(windowGroup);
 
 		// { Chip text, checkable, flag}
-		Object[][] editChips = {
-			{
-				"All",
-				WindowInfo.TYPE_ALL_WINDOWS
-			},
-			{
-				"App",
-				WindowInfo.TYPE_APPLICATION
-			},
-			{
-				"Input",
-				WindowInfo.TYPE_INPUT_METHOD
-			},
-			{
-				"System",
-				WindowInfo.TYPE_SYSTEM
-			},
-			{
-				"Accessibility",
-				WindowInfo.TYPE_ACCESSIBILITY_OVERLAY
-			},
-			{
-				"Split screen divider",
-				WindowInfo.TYPE_SPLIT_SCREEN_DIVIDER
-			},
-			{
-				"Magnification",
-				WindowInfo.TYPE_MAGNIFICATION_OVERLAY
-			},
-			{
-				"Window Control",
-				WindowInfo.TYPE_WINDOW_CONTROL
-			}
-		};
+		Object[][] editChips = WindowInfo.WINDOW_TYPES;
 
 		int initialFlags = a11Y.assistBar.selectedWindowFilter;
 		for (Object[] chip: editChips) {

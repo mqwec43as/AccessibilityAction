@@ -37,6 +37,7 @@ ActionPicker(This assistBar) {
 	}
 	String displayName = display.getName();
 	AccessibilityNodeInfo root = getRoot(displayId);
+	long defaultTimeout = 120000;
 	String packageName;
 	String className;
 	Map latestPackage;
@@ -87,7 +88,7 @@ ActionPicker(This assistBar) {
 	  Shows a dialog to pick a method action from available directories.
 	 ───────────────────────────────────────────────────────────────*/
 	public String selectActions(This inspector, boolean includeAllMethods, String[] selectedGroups) {
-		long defaultTimeout = 60000;
+		boolean shouldUseTags;
 		getActionList() {
 			List itemList = new ArrayList();
 			/* Get key map from lib.MethodInspector which has actions of the projects */
@@ -97,6 +98,9 @@ ActionPicker(This assistBar) {
 			if (selectedGroups != null) {
 				if (!includeAllMethods) inspector.ignoreNearby();
 				config.keySet().retainAll(Arrays.asList(selectedGroups));
+				shouldUseTags = selectedGroups.length > 1;
+			} else {
+				shouldUseTags = true;
 			}
 			List sortedKeys = new ArrayList(config.keySet());
 			Collections.sort(sortedKeys);
@@ -117,6 +121,10 @@ ActionPicker(This assistBar) {
 						item.put("subtitle", entry.get("name"));
 					}
 					item.put("key", key);
+					if (shouldUseTags) {
+						String[] tags = {entry.get("name")};
+						item.put("tags", tags);
+					}
 					item.put("methodName", methods.get(i));
 					itemList.add(item);
 				}
@@ -135,6 +143,7 @@ ActionPicker(This assistBar) {
 			if (itemList.size() > indexMinFilter) showFilter = true;
 			
 			boolean useOverlay = !assistBar.shouldUseActivity();
+			boolean useTags = shouldUseTags;
 			boolean useAccessibility = true;
 			float dimAmount = 0.5f;
 
@@ -181,7 +190,6 @@ ActionPicker(This assistBar) {
 	  Consist of key, description title, subtitle, map, and replacement for key
 	 ───────────────────────────────────────────────────────────────*/
 	public Map selectPattern(This inspector, This nodeData) {
-		long defaultTimeout = 60000;
 		getList() {
 			List itemList = new ArrayList();
 			Map keys = inspector.getKeyMap();
@@ -298,7 +306,6 @@ ActionPicker(This assistBar) {
 	  Builds and displays a dialog for picking the precise method overload.
 	 ───────────────────────────────────────────────────────────────*/
 	public Map OverloadDialog(This inspector, String selectedAction, Map selectedKey, boolean isKeyRequired, boolean includeAllMethods, This nodeData) {
-		long defaultTimeout = 60000;
 		This TOP_THIS = this;
 
 		getOverloadList() {
@@ -324,6 +331,7 @@ ActionPicker(This assistBar) {
 			}
 
 			String targetKey = selectedKey != null ? (String) selectedKey.get("key") : null;
+			boolean hasTargetkey;
 			/* Replace regex to target */
 			if ("regex".equals(targetKey)) targetKey = "text";
 			/* Add each overload to viewList, which required by ListDialog */
@@ -363,8 +371,8 @@ ActionPicker(This assistBar) {
 									break;
 								default:
 									break;
-
 							}
+							hasTargetkey = !newParam.equals(targetKey);
 						} catch (e) {
 							log(e.getMessage(), "ERROR", TOP);
 						}
@@ -400,6 +408,7 @@ ActionPicker(This assistBar) {
 				List notReplacedParams = new ArrayList();
 				List shortReplacedParams = new ArrayList();
 				List replacedParams = new ArrayList();
+				boolean hasReplacedParams;
 
 				/* Loop through each updated method param to update the three above */
 				for (int j = 0; j < updatedParams.size(); j++) {
@@ -418,6 +427,7 @@ ActionPicker(This assistBar) {
 							} else {
 								replaced = selected.toString();
 							}
+							hasReplacedParams = true;
 						} else {
 							notReplacedParams.add(updatedParams.get(j));
 							replaced = selected.toString();
@@ -442,6 +452,17 @@ ActionPicker(This assistBar) {
 				method.put("notReplacedParams", notReplacedParams);
 				method.put("selectedKey", selectedKey);
 
+				List tagsList = new ArrayList();
+				if (notReplacedParams.isEmpty()) {
+					tagsList.add("Easy");
+				} else if (hasReplacedParams) {
+					tagsList.add("Partial");
+				} else {
+					tagsList.add("Manual");
+				}
+
+				String[] tags = tagsList.toArray(new String[0]);
+				item.put("tags", tags);
 				item.put("title", shortUsage);
 				item.put("subtitle", method.get("declarationSimple"));
 				item.put("method", method);
@@ -458,6 +479,7 @@ ActionPicker(This assistBar) {
 			boolean showFilter;
 			boolean useOverlay = !assistBar.shouldUseActivity();
 			boolean useAccessibility = true;
+			boolean useTags = true;
 			float dimAmount = 0.5f;
 			List itemList = new ArrayList(THIS.overloadList);
 			int displayId = assistBar.getContext().getDisplay().getDisplayId();
@@ -505,7 +527,6 @@ ActionPicker(This assistBar) {
 	 ───────────────────────────────────────────────────────────────*/
 	public void executeDialog(String code, int targetDisplayId, int windowFilter) {
 		This a11Y = getA11yInstance();
-		long defaultTimeout = 5000;
 		This execute = this;
 
 		execute(This THIS) {

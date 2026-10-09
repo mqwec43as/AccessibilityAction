@@ -143,7 +143,13 @@ ViewControl() {
 			This myViewThis = (This) viewMap.get(currentKey);
 			boolean hasHide = myViewThis.namespace.getMethod("hide", new Class[] {}) != null;
 			boolean hasRemove = myViewThis.namespace.getMethod("remove", new Class[] {}) != null;
-			if (hasHide) myViewThis.hide();
+			if (hasHide) {
+				try {
+					myViewThis.hide();
+				} catch (e) {
+					if (hasRemove) myViewThis.remove();
+				}
+			}
 			else if (hasRemove) myViewThis.remove();
 			visibleViews &= ~myView;
 		}
