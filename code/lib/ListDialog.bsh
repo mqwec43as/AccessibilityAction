@@ -154,6 +154,11 @@ This ListDialog(This config) {
 
 		onDestroyed(ActivityLifecycleEvent event) {
 			if (hasDestroyed) config.onDestroyed();
+			filterWrapper = null;
+			filterInput = null;
+			toolbar = null;
+			textView = null;
+			tagsGroup = null;
 		}
 
 		// ! Might need to remove later if Tasker allows Activity to not be excluded in recents
@@ -176,6 +181,10 @@ This ListDialog(This config) {
 			getWindowManager() = getContext().getSystemService(Context.WINDOW_SERVICE);
 		}
 		return getWindowManager();
+	}
+
+	int dp(int dp) {
+		return tm.dp(dp);
 	}
 
 	boolean isActivityContext() {
@@ -612,10 +621,6 @@ This ListDialog(This config) {
 		tm = ThemeManager(getContext());
 		if (themeId == 0) tm.setThemeDark();
 		else getContext().setTheme(themeId);
-
-		dp(int dp) {
-			return tm.dp(dp);
-		}
 
 		root = new FloatingToolbarLayout(getContext());
 		root.setBackgroundColor(Color.TRANSPARENT);
