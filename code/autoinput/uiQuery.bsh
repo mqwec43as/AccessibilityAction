@@ -1,0 +1,11 @@
+/*
+ * Replicate UI Query that AutoInput has
+ */
+void uiQuery(boolean skipEmpty) {
+    List nodes = getAllNodes();
+    toAutoInputVars(nodes, skipEmpty);
+}
+
+void uiQuery() {
+    uiQuery(true);
+}

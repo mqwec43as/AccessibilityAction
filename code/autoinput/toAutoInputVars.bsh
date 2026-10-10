@@ -1,0 +1,77 @@
+import android.view.accessibility.AccessibilityNodeInfo;
+import bsh.This;
+import android.graphics.Point;
+
+/*
+ * Convert AccessibilityNodeInfo to AutoInput compatible variables
+ * 
+ * AutoInput variables prefixed with "ai" and passes the following variables: 
+ *  1. text, Text for the node
+ *  2. id, ViewIdResourceName 
+ *  3. package, the package name
+ *  4. app, the application name
+ *  5. and coordinates, the x and y coordinates separated by a comma
+ */
+void toAutoInputVars(List nodes, boolean skipEmpty) {
+	This a11Y = getA11yInstance();
+	This packageManager = a11Y.packageManager;
+	List ids = new ArrayList();
+	List texts = new ArrayList();
+	List coordinates = new ArrayList();
+	List packages = new ArrayList();
+	List apps = new ArrayList();
+	Map appNames = new HashMap();
+
+	for (AccessibilityNodeInfo node: nodes) {
+		String text = getText(node);
+		String id = node.getViewIdResourceName();
+
+		if (skipEmpty && (text.isEmpty() && id == null)) continue;
+
+		Rect bounds = node.getBoundsInScreen();
+		// x,y center
+		Point point = getCoordinates(node);
+		String coordinate = point.x + "," + point.y;
+		String packageName = node.getPackageName();
+		String appName = appNames.get(packageName);
+
+		if (appName == null) {
+			appName = packageManager.getLabel(packageName);
+			appNames.put(packageName, appName);
+		}
+
+		ids.add(id);
+		texts.add(text);
+		coordinates.add(coordinate);
+		packages.add(packageName);
+		apps.add(appName);
+	}
+
+	setVariable(String name, List values) {
+		if (name != null && values != null && !values.isEmpty()) {
+			tasker.setVariable("ai" + name, values.get(0), true);
+			tasker.setVariable("ai" + name, values, true);
+		}
+	}
+
+	setVariable("id", ids);
+	setVariable("text", texts);
+	setVariable("coordinate", coordinates);
+	setVariable("package", packages);
+	setVariable("app", apps);
+
+}
+
+void toAutoInputVars(AccessibilityNodeInfo node, boolean skipEmpty) {
+	List nodes = new ArrayList();
+	nodes.add(node);
+	toAutoInputVars(nodes, skipEmpty);
+}
+
+void toAutoInputVars(List nodes) {
+	toAutoInputVars(nodes, true);
+}
+
+void toAutoInputVars(AccessibilityNodeInfo node) {
+	toAutoInputVars(node, true);
+}
