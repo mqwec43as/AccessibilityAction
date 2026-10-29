@@ -107,6 +107,28 @@ Create and test UI automation script by choosing through dialogs.
 &nbsp;
 <div align="center">
 
+# HOW TO DOWNLOAD
+</div>
+
+### Tasker 
+1. Download the [project here](/import/Accessibility_Action_With_Java.prj.xml) and import manually.
+2. After importing, Tasker should ask you to run `Import Accessibility Action` task. If doesn't, then run the task manually.
+3. It will prompt the download dialog.
+4. Confirm and select the a folder. It's recommended to create new folder instead.
+
+
+### Macrodroid
+1. Download the [macro here](/import/Text-Based_UI_Automation_with_Java.macro) and import manually.
+2. Open the macro.
+3. Run the first empty trigger with label `Click here to import neccessary files`.
+4. It will prompt the download dialog.
+5. Confirm and select the a folder. It's recommended to create new folder instead.
+
+
+
+&nbsp;
+<div align="center">
+
 # [DOCUMENTATION](/readme/Documentation.md)
 [Read here](/readme/Documentation.md) | [Examples](/code/examples/)
 </div>
@@ -118,7 +140,7 @@ Create and test UI automation script by choosing through dialogs.
 
 1. [What is a11Y?](/readme/What%20is%20a11Y.md)
 2. [getClipboard returns null when phone is locked.](readme/General%20FAQ.md#getclipboard-returns-null-when-phone-is-locked)
-3. [How to use this wihtout taskernet project?](/readme/Use%20without%20taskernet%20project.md)
+3. [How to use this wihtout the project?](/readme/Use%20without%20taskernet%20project.md)
 4. [How to target specific display and windows](/readme/How%20to%20target%20specific%20display%20and%20windows.md)
 5. [Is it safe to upgrade from another version?](readme/General%20FAQ.md#is-it-safe-to-upgrade-from-another-version)
 6. [The background color is transparent.](readme/General%20FAQ.md#the-background-color-is-transparent)
